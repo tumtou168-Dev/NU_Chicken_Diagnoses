@@ -26,7 +26,7 @@
             <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
                 <div class="brand-section">
                     <a href="{{ url_for('dashboard.index') }}" class="text-decoration-none">
-                        <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="IDNS Logo" class="brand-logo">
+                        <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="{{ _('និមិត្តសញ្ញា IDNS') }}" class="brand-logo">
                         <div class="brand-text">
                             <h5 class="brand-font mb-0">IDNS</h5>
                             <small class="text-muted">{{ _('ការធ្វើរោគវិនិច្ឆ័យមាន់') }}</small>
@@ -194,7 +194,7 @@
                             {% endif %}
                             <div>{{ message }}</div>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ _('បិទ') }}"></button>
                       </div>
                     {% endfor %}
                   {% endif %}
@@ -220,7 +220,7 @@
             data-bs-target="#sidebarMenu"
             aria-controls="sidebarMenu"
             aria-expanded="false"
-            aria-label="Toggle navigation"
+            aria-label="{{ _('បើក/បិទម៉ឺនុយ') }}"
             style="width: 56px; height: 56px; z-index: 1060;">
         <i class="bi bi-list fs-4"></i>
     </button>

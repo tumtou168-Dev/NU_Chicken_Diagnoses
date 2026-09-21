@@ -1,51 +1,39 @@
 {% extends "layouts/base.html" %}
-
-{% block title %}ការគ្រប់គ្រងរោគសញ្ញា{% endblock %}
-{% block page_title %}បណ្ណាល័យរោគសញ្ញា{% endblock %}
-{% block page_subtitle %}គ្រប់គ្រងរោគសញ្ញាដែលប្រើសម្រាប់ការធ្វើរោគវិនិច្ឆ័យ។{% endblock %}
+{% from "layouts/_admin_macros.html" import table_filter, empty_state %}
+{% block title %}{{ _('ការគ្រប់គ្រងរោគសញ្ញា') }}{% endblock %}
+{% block page_title %}{{ _('បណ្ណាល័យរោគសញ្ញា') }}{% endblock %}
+{% block page_subtitle %}{{ _('គ្រប់គ្រងរោគសញ្ញាដែលប្រើសម្រាប់ការធ្វើរោគវិនិច្ឆ័យ។') }}{% endblock %}
 
 {% block content %}
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white py-3 border-bottom">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold text-muted">
-                <i class="bi bi-thermometer-half me-2"></i>រោគសញ្ញាទាំងអស់
-            </h5>
-            <a href="{{ url_for('expert_system.symptoms_create') }}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg"></i> រោគសញ្ញាថ្មី
-            </a>
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5 class="admin-card-title">{{ _('រោគសញ្ញាទាំងអស់ (%(n)s)', n=symptoms | length) }}</h5>
+        <div class="admin-toolbar">
+            {{ table_filter('#symptomsTable', _('ស្វែងរករោគសញ្ញា...')) }}
+            <a href="{{ url_for('expert_system.symptoms_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ _('រោគសញ្ញាថ្មី') }}</a>
         </div>
     </div>
-
-    <div class="list-group list-group-flush">
-        {% for symptom in symptoms %}
-        <div class="list-group-item py-3 px-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="flex-grow-1">
-                    <h6 class="fw-bold mb-1 text-dark">{{ symptom.name }}</h6>
-                    <p class="text-muted mb-0">{{ symptom.description }}</p>
-                </div>
-                <div class="ms-4">
-                    <div class="btn-group">
-                        <a href="{{ url_for('expert_system.symptoms_edit', symptom_id=symptom.id) }}" class="btn btn-sm btn-outline-secondary" title="កែប្រែ">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <a href="{{ url_for('expert_system.symptoms_delete', symptom_id=symptom.id) }}" class="btn btn-sm btn-outline-danger" title="លុប">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% else %}
-        <div class="text-center py-5">
-            <div class="text-muted mb-2"><i class="bi bi-clipboard-x display-4"></i></div>
-            <p class="text-muted mb-3">មិនទាន់មានរោគសញ្ញាត្រូវបានបន្ថែមទេ។</p>
-            <a href="{{ url_for('expert_system.symptoms_create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-2"></i>បន្ថែមរោគសញ្ញាដំបូង
-            </a>
-        </div>
-        {% endfor %}
+    <div class="table-responsive">
+        <table class="table table-hover admin-table" id="symptomsTable">
+            <thead><tr><th>{{ _('ឈ្មោះ') }}</th><th>{{ _('ការពិពណ៌នា') }}</th><th class="text-end">{{ _('សកម្មភាព') }}</th></tr></thead>
+            <tbody>
+                {% for symptom in symptoms %}
+                <tr data-row>
+                    <td class="fw-semibold text-nowrap">{{ symptom.pair("name") }}</td>
+                    <td class="text-muted">{{ symptom.pair("description") or "—" }}</td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ url_for('expert_system.symptoms_edit', symptom_id=symptom.id) }}" class="icon-btn" title="{{ _('កែប្រែ') }}"><i class="bi bi-pencil"></i></a>
+                        <a href="{{ url_for('expert_system.symptoms_delete', symptom_id=symptom.id) }}" class="icon-btn danger" title="{{ _('លុប') }}"><i class="bi bi-trash"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr data-empty {% if symptoms %}hidden{% endif %}>
+                    <td colspan="3">
+                        {{ empty_state('clipboard-x', _('មិនទាន់មានរោគសញ្ញាត្រូវបានបន្ថែមទេ។')) }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

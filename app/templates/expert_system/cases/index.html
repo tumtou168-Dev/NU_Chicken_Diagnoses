@@ -1,90 +1,66 @@
 {% extends "layouts/base.html" %}
+{% from "layouts/_admin_macros.html" import avatar, confidence_pill, table_filter, empty_state %}
 
-{% block title %}ប្រវត្តិករណី{% endblock %}
-{% block page_title %}ប្រវត្តិករណី{% endblock %}
-{% block page_subtitle %}ពិនិត្យមើលរបាយការណ៍រោគវិនិច្ឆ័យកន្លងមក និងលទ្ធផល។{% endblock %}
+{% block title %}{{ _('ប្រវត្តិករណី') }}{% endblock %}
+{% block page_title %}{{ _('ប្រវត្តិករណី') }}{% endblock %}
+{% block page_subtitle %}{{ _('ពិនិត្យមើលរបាយការណ៍រោគវិនិច្ឆ័យកន្លងមក និងលទ្ធផល។') }}{% endblock %}
 
 {% block content %}
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white py-3 border-bottom">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold text-muted">
-                <i class="bi bi-clock-history me-2"></i>ការធ្វើរោគវិនិច្ឆ័យថ្មីៗ
-            </h5>
+{% set show_user = current_user.has_role('Admin') or current_user.has_role('Doctor') %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5 class="admin-card-title">{{ _('ការធ្វើរោគវិនិច្ឆ័យថ្មីៗ') }}</h5>
+        <div class="admin-toolbar">
+            {{ table_filter('#casesTable', _('ស្វែងរកករណី...')) }}
+            <a href="{{ url_for('expert_system.diagnose') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ _('ធ្វើរោគវិនិច្ឆ័យថ្មី') }}</a>
         </div>
     </div>
-
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light">
+        <table class="table table-hover admin-table" id="casesTable">
+            <thead>
                 <tr>
-                    <th class="ps-4 py-3 text-uppercase small fw-bold text-muted">កាលបរិច្ឆេទ</th>
-                    {% if current_user.has_role('Admin') or current_user.has_role('Doctor') %}
-                    <th class="py-3 text-uppercase small fw-bold text-muted">អ្នកប្រើប្រាស់</th>
-                    {% endif %}
-                    <th class="py-3 text-uppercase small fw-bold text-muted">ជំងឺដែលបានកំណត់អត្តសញ្ញាណ</th>
-                    <th class="py-3 text-uppercase small fw-bold text-muted">ទំនុកចិត្ត</th>
-                    <th class="py-3 text-uppercase small fw-bold text-muted">រោគសញ្ញា</th>
-                    <th class="pe-4 py-3 text-end text-uppercase small fw-bold text-muted">សកម្មភាព</th>
+                    <th>{{ _('កាលបរិច្ឆេទ') }}</th>
+                    {% if show_user %}<th>{{ _('អ្នកប្រើប្រាស់##one') }}</th>{% endif %}
+                    <th>{{ _('ជំងឺដែលបានកំណត់អត្តសញ្ញាណ') }}</th>
+                    <th>{{ _('ទំនុកចិត្ត') }}</th>
+                    <th>{{ _('រោគសញ្ញា') }}</th>
+                    <th class="text-end">{{ _('សកម្មភាព') }}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for case in cases %}
-                <tr>
-                    <td class="ps-4 text-nowrap">
-                        <div class="fw-semibold">{{ case.created_at.strftime('%Y-%m-%d') }}</div>
+                <tr data-row>
+                    <td class="text-nowrap">
+                        <div class="fw-medium">{{ case.created_at.strftime('%Y-%m-%d') }}</div>
                         <div class="small text-muted">{{ case.created_at.strftime('%H:%M') }}</div>
                     </td>
-                    {% if current_user.has_role('Admin') or current_user.has_role('Doctor') %}
+                    {% if show_user %}
                     <td>
-                        <div class="d-flex align-items-center">
-                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                <span class="small fw-bold text-muted">{{ case.user.username[0]|upper if case.user else '?' }}</span>
-                            </div>
-                            <span class="small">{{ case.user.username if case.user else 'មិនស្គាល់' }}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            {{ avatar(case.user.username if case.user else '?', 'sm', avatar_url(case.user) if case.user else None) }}
+                            <span>{{ case.user.username if case.user else _('មិនស្គាល់') }}</span>
                         </div>
                     </td>
                     {% endif %}
                     <td>
-                        {% if case.disease %}
-                            <span class="fw-medium text-dark">{{ case.disease.name }}</span>
-                        {% else %}
-                            <span class="text-muted fst-italic">មិនស្គាល់</span>
-                        {% endif %}
+                        {% if case.disease %}<span class="fw-medium">{{ case.disease.inline("name") }}</span>
+                        {% else %}<span class="text-muted">{{ _('មិនស្គាល់') }}</span>{% endif %}
                     </td>
+                    <td>{{ confidence_pill(case.confidence) }}</td>
                     <td>
-                        {% if case.confidence is not none %}
-                            <span class="badge rounded-pill {% if case.confidence > 80 %}bg-success{% elif case.confidence > 50 %}bg-warning text-dark{% else %}bg-danger{% endif %} bg-opacity-10 border {% if case.confidence > 80 %}border-success text-success{% elif case.confidence > 50 %}border-warning text-warning-emphasis{% else %}border-danger text-danger{% endif %}">
-                                {{ case.confidence }}%
-                            </span>
-                        {% else %}
-                            <span class="text-muted">-</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <div class="d-flex flex-wrap gap-1" style="max-width: 300px;">
-                            {% for s in case.symptoms[:3] %}
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10 fw-normal">{{ s.name }}</span>
-                            {% endfor %}
-                            {% if case.symptoms|length > 3 %}
-                            <span class="badge bg-light text-muted border fw-normal">+{{ case.symptoms|length - 3 }}</span>
-                            {% endif %}
+                        <div class="tag-list" style="max-width: 320px;">
+                            {% for s in case.symptoms[:3] %}<span class="badge-soft badge-soft-neutral">{{ s.inline("name") }}</span>{% endfor %}
+                            {% if case.symptoms | length > 3 %}<span class="badge-soft badge-soft-neutral">+{{ case.symptoms | length - 3 }}</span>{% endif %}
                         </div>
                     </td>
-                    <td class="pe-4 text-end">
-                        <a href="{{ url_for('expert_system.cases_detail', case_id=case.id) }}" class="btn btn-sm btn-outline-primary">
-                            មើលលម្អិត
-                        </a>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6" class="text-center py-5">
-                        <div class="text-muted mb-2"><i class="bi bi-clipboard-x display-4"></i></div>
-                        <p class="text-muted mb-0">រកមិនឃើញប្រវត្តិរោគវិនិច្ឆ័យទេ។</p>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ url_for('expert_system.cases_detail', case_id=case.id) }}" class="btn btn-soft btn-sm">{{ _('មើលលម្អិត') }}</a>
                     </td>
                 </tr>
                 {% endfor %}
+                <tr data-empty {% if cases %}hidden{% endif %}>
+                    <td colspan="{{ 6 if show_user else 5 }}">{{ empty_state('clipboard-x', _('រកមិនឃើញប្រវត្តិរោគវិនិច្ឆ័យទេ។')) }}</td>
+                </tr>
             </tbody>
         </table>
     </div>

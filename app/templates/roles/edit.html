@@ -1,22 +1,13 @@
 {% extends "layouts/base.html" %}
-{% block title %}កែប្រែតួនាទី{% endblock %}
+{% block title %}{{ _('កែប្រែតួនាទី') }}{% endblock %}
+{% block page_title %}{{ _('កែប្រែតួនាទី') }}{% endblock %}
+{% block page_subtitle %}{{ _('កែប្រែព័ត៌មាន និងសិទ្ធិរបស់តួនាទី %(name)s។', name=role.name | dt) }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-8 col-xl-7">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h1 class="h3 mb-0">កែប្រែតួនាទី៖ {{ role.name }}</h1>
-            <a href="{{ url_for('tbl_roles.detail', role_id=role.id) }}"
-                class="btn btn-outline-secondary btn-sm">
-                ← ត្រឡប់ទៅព័ត៌មានលម្អិត
-            </a>
-        </div>
-
-        <div class="card">
-            <div class="card-body">
-                {% include "roles/_form.html" %}
-            </div>
-        </div>
-    </div>
+<a href="{{ url_for('tbl_roles.detail', role_id=role.id) }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅព័ត៌មានលម្អិត') }}</a>
+<div class="admin-card form-narrow">
+    <form method="post" novalidate>
+        {% include "roles/_form.html" %}
+    </form>
 </div>
 {% endblock %}

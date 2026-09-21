@@ -1,31 +1,35 @@
 # app/forms/user_forms.py
 import re
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
 from wtforms import ( BooleanField, StringField, SubmitField, PasswordField, SelectField)
-from wtforms.validators import (DataRequired, Email, Length, EqualTo, ValidationError, Optional)
+from wtforms.validators import ValidationError, Optional
+from app.forms import validation as val
+from app.i18n import lazy, gettext as _, data_text
 from app.models.user import UserTable
 from app.models.role import RoleTable
 from extensions import db
+from app.services.avatar_service import AvatarService, ALLOWED_EXTENSIONS
 
 # --------- helprt validators ---------
 def strong_password(form, field):
     """Require: min 8 chars, upper, lower, digit, special."""
     password = field.data or ""
     if len(password) < 8:
-        raise ValidationError("Password must be at least 8 characters long.")
+        raise ValidationError(_("ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។"))
     if not re.search(r"[A-Z]", password):
-        raise ValidationError("Password must contain at least one uppercase letter.")
+        raise ValidationError(_("ពាក្យសម្ងាត់ត្រូវមានអក្សរធំ (A-Z) យ៉ាងតិចមួយ។"))
     if not re.search(r"[a-z]",password):
-        raise ValidationError("Password must contain at least one lowercase letter.")
+        raise ValidationError(_("ពាក្យសម្ងាត់ត្រូវមានអក្សរតូច (a-z) យ៉ាងតិចមួយ។"))
     if not re.search(r"[0-9]", password):
-        raise ValidationError("Password must contain at least one digit.")
+        raise ValidationError(_("ពាក្យសម្ងាត់ត្រូវមានលេខ (0-9) យ៉ាងតិចមួយ។"))
     if not re.search(r"[!@#$%^&*()<>?\"{}|<>_\-+=]", password):
-        raise ValidationError("Password must contain at least one special character.")
+        raise ValidationError(_("ពាក្យសម្ងាត់ត្រូវមាននិមិត្តសញ្ញាពិសេសយ៉ាងតិចមួយ (ឧ. ! @ # $)។"))
     
 def _role_choices():
     """Return list of (id, name) tuples for all roles. orderd by name."""
     return [
-        (role.id, role.name)
+        (role.id, data_text(role.name))
         for role in db.session.scalars(
             db.select(RoleTable).order_by(RoleTable.name)
         )
@@ -34,96 +38,107 @@ def _role_choices():
 # ------------------------ create from ------------------------
 class UserCreateForm(FlaskForm):
     username = StringField(
-        "Username",
-        validators=[DataRequired(), Length(min=3, max=80)],
-        render_kw={"placeholder": "Enter username"},
+        lazy("ឈ្មោះអ្នកប្រើប្រាស់"),
+        validators=[val.required(), val.length(min=3, max=80)],
+        render_kw={"placeholder": lazy("បញ្ចូលឈ្មោះអ្នកប្រើប្រាស់")},
     )
     email = StringField(
-        "Email",
-        validators=[DataRequired(), Email(), Length(max=120)],
-        render_kw={"placeholder": "Enter email"},
+        lazy("អាសយដ្ឋានអ៊ីមែល"),
+        validators=[val.required(), val.email(), val.length(max=120)],
+        render_kw={"placeholder": lazy("បញ្ចូលអាសយដ្ឋានអ៊ីមែល")},
     )
     full_name = StringField(
-        "Full name",
-        validators=[DataRequired(), Length(min=3, max=120)],
-        render_kw={"placeholder": "Enter full name"},
+        lazy("ឈ្មោះពេញ"),
+        validators=[val.required(), val.length(min=3, max=120)],
+        render_kw={"placeholder": lazy("បញ្ចូលឈ្មោះពេញ")},
     )
-    is_active = BooleanField("Active", default=True)
+    is_active = BooleanField(lazy("គណនីសកម្ម"), default=True)
     
     role_id = SelectField(
-        "Role",
+        lazy("តួនាទី##one"),
         coerce=int,
-        validators=[DataRequired()],
-        render_kw={"placeholder": "Select role"},
+        validators=[val.required()],
+        render_kw={"placeholder": lazy("ជ្រើសរើសតួនាទី")},
     )
     
     password = PasswordField(
-        "Password",
-        validators=[DataRequired(), strong_password],
-        render_kw={"placeholder": "Strong password"},
+        lazy("ពាក្យសម្ងាត់"),
+        validators=[val.required(), strong_password],
+        render_kw={"placeholder": lazy("ពាក្យសម្ងាត់រឹងមាំ")},
     )
     confirm_password = PasswordField(
         "Confirm_password",
         validators=[
-            DataRequired(),
-            EqualTo("password", message="Password must match."),
+            val.required(),
+            val.passwords_match(),
         ],
-        render_kw={"placeholder": "Confirm password"}
+        render_kw={"placeholder": lazy("បញ្ជាក់ពាក្យសម្ងាត់")}
     )
     
-    submit = SubmitField("Save")
+    submit = SubmitField(lazy("រក្សាទុក"))
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.role_id.choices = _role_choices()
+        
+        # Default to the least-privileged role so an admin never creates an Admin by accident.
+        if not self.is_submitted():
+            self.role_id.data = next((rid for rid, name in self.role_id.choices if name == data_text("User")), None)
         
     def validate_username(self, field):
         exists = db.session.scalar(
             db.select(UserTable).filter(UserTable.username == field.data)
         )
         if exists:
-            raise ValidationError("This username is already taken.")
+            raise ValidationError(_("ឈ្មោះអ្នកប្រើប្រាស់នេះមានគេប្រើរួចហើយ។"))
         
     def validate_email(self, field):
         exists = db.session.scalar(
             db.select(UserTable).filter(UserTable.email == field.data)
         )
         if exists:
-            raise ValidationError("This email is already registered.")
+            raise ValidationError(_("អ៊ីមែលនេះត្រូវបានចុះឈ្មោះរួចហើយ។"))
         
 # ---------------- edit form ----------------
 class UserEditForm(FlaskForm):
     username = StringField(
-        "Username",
-        validators=[DataRequired(), Length(min=3, max=80)],
+        lazy("ឈ្មោះអ្នកប្រើប្រាស់"),
+        validators=[val.required(), val.length(min=3, max=80)],
     )
     email = StringField(
-        "Email",
-        validators=[DataRequired(), Email(), Length(max=120)],
+        lazy("អាសយដ្ឋានអ៊ីមែល"),
+        validators=[val.required(), val.email(), val.length(max=120)],
     )
     full_name = StringField(
-        "Full name",
-        validators=[DataRequired(), Length(min=3, max=120)],
+        lazy("ឈ្មោះពេញ"),
+        validators=[val.required(), val.length(min=3, max=120)],
     )
-    is_active = BooleanField("Active")
+    is_active = BooleanField(lazy("គណនីសកម្ម"))
+    
+    avatar = FileField(
+        lazy("រូបភាពប្រវត្តិរូប"),
+        validators=[FileAllowed(list(ALLOWED_EXTENSIONS), lazy("អនុញ្ញាតតែរូបភាព JPG, PNG ឬ WebP ប៉ុណ្ណោះ។"))],
+        render_kw={"accept": "image/jpeg,image/png,image/webp"},
+    )
+    remove_avatar = BooleanField(lazy("លុបរូបភាពបច្ចុប្បន្ន"))
     
     role_id = SelectField(
-        "Role",
+        lazy("តួនាទី##one"),
         coerce=int,
-        validators=[DataRequired()],
+        validators=[val.required()],
     )
     
     password = PasswordField(
-        "New password (leave blank to keep current)",
+        lazy("ពាក្យសម្ងាត់ថ្មី"),
         validators=[Optional(), strong_password],
-        render_kw={"placeholder": "New strong password (optional)"},
+        render_kw={"placeholder": lazy("ពាក្យសម្ងាត់ថ្មីដ៏រឹងមាំ (មិនបង្ខំ)")},
     )
     confirm_password = PasswordField(
-        "Confirm new password",
-        validators=[EqualTo("password", message="Passwords must match.")],
+        lazy("បញ្ជាក់ពាក្យសម្ងាត់ថ្មី"),
+        validators=[val.passwords_match()],
     )
     
-    submit = SubmitField("Update")
+    submit = SubmitField(lazy("រក្សាទុកការផ្លាស់ប្តូរ"))
     
     def __init__(self, original_user: UserTable, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -136,6 +151,12 @@ class UserEditForm(FlaskForm):
             else:
                 self.role_id.data = None
                 
+    def validate_avatar(self, field):
+        if field.data and getattr(field.data, "filename", ""):
+            error = AvatarService.validate(field.data)
+            if error:
+                raise ValidationError(error)
+                
     def validate_username(self, field):
         q = db.select(UserTable).filter(
             UserTable.username == field.data,
@@ -143,7 +164,7 @@ class UserEditForm(FlaskForm):
         )
         exists = db.session.scalar(q)
         if exists:
-            raise ValidationError("This username is already taken.")
+            raise ValidationError(_("ឈ្មោះអ្នកប្រើប្រាស់នេះមានគេប្រើរួចហើយ។"))
         
     def validate_email(self, field):
         q = db.select(UserTable).filter(
@@ -152,9 +173,9 @@ class UserEditForm(FlaskForm):
         )
         exists = db.session.scalar(q)
         if exists:
-            raise ValidationError("This email is already registered.")
+            raise ValidationError(_("អ៊ីមែលនេះត្រូវបានចុះឈ្មោះរួចហើយ។"))
         
 # ----------- confirm delete form -----------
 class UserConfirmDeleteForm(FlaskForm):
-    submit = SubmitField("Confirm Delete")
+    submit = SubmitField(lazy("បញ្ជាក់ការលុប"))
     

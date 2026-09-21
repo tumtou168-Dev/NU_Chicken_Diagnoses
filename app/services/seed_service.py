@@ -86,27 +86,13 @@ def seed_admin_user():
 
 
 def seed_expert_data():
-    if db.session.scalar(db.select(Symptom).limit(1)):
+    if db.session.scalar(db.select(Disease).limit(1)):
         return
 
     cat_resp = _get_or_create(Category, name="Respiratory", defaults={"description": "Breathing-related illnesses"})
     cat_digest = _get_or_create(Category, name="Digestive", defaults={"description": "Gastrointestinal illnesses"})
     cat_neuro = _get_or_create(Category, name="Neurological", defaults={"description": "Nervous system illnesses"})
     cat_bact = _get_or_create(Category, name="Bacterial", defaults={"description": "Bacterial infections"})
-
-    symptoms = {
-        "coughing": Symptom(name="Coughing", description="Persistent cough or respiratory distress"),
-        "sneezing": Symptom(name="Sneezing", description="Frequent sneezing"),
-        "nasal_discharge": Symptom(name="Nasal discharge", description="Mucus from nostrils"),
-        "drop_egg": Symptom(name="Drop in egg production", description="Reduced egg output"),
-        "diarrhea": Symptom(name="Diarrhea", description="Loose or watery droppings"),
-        "bloody_diarrhea": Symptom(name="Bloody diarrhea", description="Blood in droppings"),
-        "lethargy": Symptom(name="Lethargy", description="Low energy or inactivity"),
-        "ruffled": Symptom(name="Ruffled feathers", description="Unkempt feathers"),
-        "swollen_face": Symptom(name="Swollen face", description="Facial swelling"),
-        "lameness": Symptom(name="Lameness", description="Difficulty walking"),
-    }
-    db.session.add_all(symptoms.values())
 
     diseases = {
         "infectious_bronchitis": Disease(
@@ -143,67 +129,27 @@ def seed_expert_data():
     db.session.add_all(diseases.values())
     db.session.flush()
 
-    rules = [
-        Rule(
-            title="Respiratory infection pattern",
-            description="Coughing + sneezing + nasal discharge",
-            priority=1,
-            confidence=85.0,
-            disease=diseases["infectious_bronchitis"],
-            symptoms=[
-                symptoms["coughing"],
-                symptoms["sneezing"],
-                symptoms["nasal_discharge"],
-            ],
-        ),
-        Rule(
-            title="Neurological respiratory combo",
-            description="Coughing + nasal discharge + lethargy",
-            priority=2,
-            confidence=80.0,
-            disease=diseases["newcastle"],
-            symptoms=[
-                symptoms["coughing"],
-                symptoms["nasal_discharge"],
-                symptoms["lethargy"],
-            ],
-        ),
-        Rule(
-            title="Coccidiosis signature",
-            description="Bloody diarrhea + lethargy",
-            priority=1,
-            confidence=90.0,
-            disease=diseases["coccidiosis"],
-            symptoms=[
-                symptoms["bloody_diarrhea"],
-                symptoms["lethargy"],
-            ],
-        ),
-        Rule(
-            title="Fowl cholera indicators",
-            description="Swollen face + lethargy + ruffled feathers",
-            priority=2,
-            confidence=78.0,
-            disease=diseases["fowl_cholera"],
-            symptoms=[
-                symptoms["swollen_face"],
-                symptoms["lethargy"],
-                symptoms["ruffled"],
-            ],
-        ),
-        Rule(
-            title="Marek's disease pattern",
-            description="Lameness + lethargy",
-            priority=3,
-            confidence=75.0,
-            disease=diseases["marek"],
-            symptoms=[
-                symptoms["lameness"],
-                symptoms["lethargy"],
-            ],
-        ),
+    # Symptoms live in the database, not in code: a rule is only seeded when every symptom it names exists.
+    rule_specs = [
+        ("Respiratory infection pattern", "Coughing + sneezing + nasal discharge", 1, 85.0, "infectious_bronchitis",
+         ["Coughing", "Sneezing", "Nasal discharge"]),
+        ("Neurological respiratory combo", "Coughing + nasal discharge + lethargy", 2, 80.0, "newcastle",
+         ["Coughing", "Nasal discharge", "Lethargy"]),
+        ("Coccidiosis signature", "Bloody diarrhea + lethargy", 1, 90.0, "coccidiosis",
+         ["Bloody diarrhea", "Lethargy"]),
+        ("Fowl cholera indicators", "Swollen face + lethargy + ruffled feathers", 2, 78.0, "fowl_cholera",
+         ["Swollen face", "Lethargy", "Ruffled feathers"]),
+        ("Marek's disease pattern", "Lameness + lethargy", 3, 75.0, "marek",
+         ["Lameness", "Lethargy"]),
     ]
-    db.session.add_all(rules)
+    by_name = {sym.name: sym for sym in db.session.scalars(db.select(Symptom))}
+    for title, description, priority, confidence, disease_key, symptom_names in rule_specs:
+        if not all(name in by_name for name in symptom_names):
+            continue
+        db.session.add(Rule(
+            title=title, description=description, priority=priority, confidence=confidence,
+            disease=diseases[disease_key], symptoms=[by_name[name] for name in symptom_names],
+        ))
     db.session.commit()
 
 

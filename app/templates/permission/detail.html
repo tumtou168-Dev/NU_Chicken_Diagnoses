@@ -1,30 +1,26 @@
 {% extends "layouts/base.html" %}
-{% block title %}ព័ត៌មានលម្អិតសិទ្ធិ{% endblock %}
+{% block title %}{{ _('ព័ត៌មានលម្អិតសិទ្ធិ') }}{% endblock %}
+{% block page_title %}{{ _('ព័ត៌មានលម្អិតសិទ្ធិ') }}{% endblock %}
+{% block page_subtitle %}{{ permission.name | dt }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">សិទ្ធិ៖ {{ permission.code }}</h1>
-    <div>
-        <a href="{{ url_for('tbl_permissions.edit', permission_id=permission.id) }}" 
-            class="btn btn-warning">
-            កែប្រែ
-        </a>
-        <a href="{{ url_for('tbl_permissions.delete_confirm', permission_id=permission.id) }}" 
-            class="btn btn-danger">
-            លុប
-        </a>
-        <a href="{{ url_for('tbl_permissions.index') }}" class="btn btn-secondary">
-            ត្រឡប់ក្រោយ
-        </a>
-    </div>
-</div>
+<a href="{{ url_for('tbl_permissions.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅសិទ្ធិ') }}</a>
 
-<div class="card">
-    <div class="card-body">
-        <p><strong>កូដ៖</strong>{{ permission.code }}</p>
-        <p><strong>ឈ្មោះ៖</strong>{{ permission.name }}</p>
-        <p><strong>ម៉ូឌុល៖</strong>{{ permission.module }}</p>
-        <p><strong>ការពិពណ៌នា៖</strong>{{ permission.description or '-' }}</p>
+<div class="admin-card form-narrow">
+    <div class="admin-card-header">
+        <span class="perm-code fs-6">{{ permission.code }}</span>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('tbl_permissions.edit', permission_id=permission.id) }}" class="btn btn-soft btn-sm"><i class="bi bi-pencil me-1"></i>{{ _('កែប្រែ') }}</a>
+            <a href="{{ url_for('tbl_permissions.delete_confirm', permission_id=permission.id) }}" class="btn btn-soft btn-sm text-danger"><i class="bi bi-trash me-1"></i>{{ _('លុប') }}</a>
+        </div>
+    </div>
+    <div class="admin-card-body">
+        <dl class="detail-list">
+            <div class="detail-item"><dt>{{ _('កូដ') }}</dt><dd><span class="perm-code">{{ permission.code }}</span></dd></div>
+            <div class="detail-item"><dt>{{ _('ឈ្មោះ') }}</dt><dd>{{ permission.name | dt }}</dd></div>
+            <div class="detail-item"><dt>{{ _('ម៉ូឌុល') }}</dt><dd><span class="badge-soft badge-soft-neutral">{{ permission.module | module_label }}</span></dd></div>
+            <div class="detail-item"><dt>{{ _('ការពិពណ៌នា') }}</dt><dd>{{ (permission.description | dt) or "—" }}</dd></div>
+        </dl>
     </div>
 </div>
 {% endblock %}

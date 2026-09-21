@@ -1,82 +1,51 @@
+{% from "layouts/_admin_macros.html" import field, switch, form_actions %}
+{% set editing = user is defined %}
+{% set pw_hint = _('យ៉ាងតិច ៨ តួអក្សរ រួមមានអក្សរធំ អក្សរតូច លេខ និងនិមិត្តសញ្ញាពិសេស។') %}
 {{ form.hidden_tag() }}
 
-<div class="mb-3">
-  {{ form.username.label(class="form-label") }} {{
-  form.username(class="form-control") }} {% if form.username.errors %}
-  <div class="text-danger small">
-    {% for error in form.username.errors %}
-    <div>{{ error }}</div>
-    {% endfor %}
-  </div>
-  {% endif %}
+<div class="admin-card-body">
+    {% if editing and form.avatar %}
+    <div class="form-section-title">{{ _('រូបភាពប្រវត្តិរូប') }}</div>
+    <div class="avatar-upload mb-2">
+        <span id="avatarPreview" class="avatar avatar-xl">{% if avatar_url(user) %}<img src="{{ avatar_url(user) }}" alt="">{% else %}{{ user.username[0] | upper }}{% endif %}</span>
+        <div class="avatar-actions">
+            <div>
+                <label for="avatar" class="btn btn-soft btn-sm mb-0"><i class="bi bi-upload me-1"></i>{{ _('ជ្រើសរើសរូបភាព') }}</label>
+                {{ form.avatar() }}
+            </div>
+            {% if user.avatar %}
+            <div class="form-check">
+                {{ form.remove_avatar(class="form-check-input") }}
+                <label class="form-check-label small" for="remove_avatar">{{ _('លុបរូបភាពបច្ចុប្បន្ន') }}</label>
+            </div>
+            {% endif %}
+            <div class="field-hint mt-0">{{ _('JPG, PNG ឬ WebP · ទំហំអតិបរមា 2MB') }}</div>
+            {% for error in form.avatar.errors %}<div class="field-error mt-0">{{ error }}</div>{% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="form-section-title">{{ _('ព័ត៌មានផ្ទាល់ខ្លួន') if editing and not form.role_id else _('ព័ត៌មានគណនី') }}</div>
+    <div class="row">
+        <div class="col-md-6">{{ field(form.full_name, label=_('ឈ្មោះពេញ')) }}</div>
+        <div class="col-md-6">{{ field(form.username, label=_('ឈ្មោះអ្នកប្រើប្រាស់')) }}</div>
+    </div>
+    {{ field(form.email, label=_('អាសយដ្ឋានអ៊ីមែល')) }}
+
+    {% if form.role_id %}
+    <div class="form-section-title">{{ _('ការចូលប្រើប្រាស់') }}</div>
+    <div class="row">
+        <div class="col-md-6">{{ field(form.role_id, kind="select", label=_('តួនាទី##one')) }}</div>
+        <div class="col-md-6 d-flex align-items-center pt-md-3">{{ switch(form.is_active, label=_('គណនីសកម្ម')) }}</div>
+    </div>
+    {% endif %}
+
+    <div class="form-section-title">{{ _('ប្តូរពាក្យសម្ងាត់') if editing else _('ពាក្យសម្ងាត់') }}</div>
+    {% if editing %}<p class="text-muted small mb-3">{{ _('ទុកវាលទាំងពីរខាងក្រោមឱ្យទំនេរ ប្រសិនបើមិនចង់ប្តូរពាក្យសម្ងាត់។') }}</p>{% endif %}
+    <div class="row">
+        <div class="col-md-6">{{ field(form.password, hint=pw_hint, label=(_('ពាក្យសម្ងាត់ថ្មី') if editing else _('ពាក្យសម្ងាត់'))) }}</div>
+        <div class="col-md-6">{{ field(form.confirm_password, label=(_('បញ្ជាក់ពាក្យសម្ងាត់ថ្មី') if editing else _('បញ្ជាក់ពាក្យសម្ងាត់'))) }}</div>
+    </div>
 </div>
 
-<div class="mb-3">
-  {{ form.email.label(class="form-label") }} {{ form.email(class="form-control")
-  }} {% if form.email.errors %}
-  <div class="text-danger small">
-    {% for error in form.email.errors %}
-    <div>{{ error }}</div>
-    {% endfor %}
-  </div>
-  {% endif %}
-</div>
-
-<div class="mb-3">
-  {{ form.full_name.label(class="form-label") }} {{
-  form.full_name(class="form-control") }} {% if form.full_name.errors %}
-  <div class="text-danger small">
-    {% for error in form.full_name.errors %}
-    <div>{{ error }}</div>
-    {% endfor %}
-  </div>
-  {% endif %}
-</div>
-
-<div class="form-check mb-3">
-  {{ form.is_active(class="form-check-input") }} {{
-  form.is_active.label(class="form-check-label")}}
-</div>
-
-{# Single role per user #}
-<div class="mb-3">
-  {{ form.role_id.label(class="form-label")}} {{
-  form.role_id(class="form-select") }} {% if form.role_id.errors %}
-  <div class="text-danger small">
-    {% for error in form.role_id.errors %}
-    <div>{{ error }}</div>
-    {% endfor %}
-  </div>
-  {% endif %}
-</div>
-
-{# Password fields (create: required, edit: optional) #}
-<div class="mb-3">
-  {{ form.password.label(class="form-label")}} {{
-  form.password(class="form-control") }} {% if form.password.errors %}
-  <div class="text-danger small">
-    {% for error in form.password.errors %}
-    <div>{{ error }}</div>
-    {% endfor %}
-  </div>
-  {% endif %}
-</div>
-
-<div class="mb-3">
-  {{ form.confirm_password.label(class="form-label")}} {{
-  form.confirm_password(class="form-control") }} {% if
-  form.confirm_password.errors %}
-  <div class="text-danger small">
-    {% for error in form.confirm_password.errors %}
-    <div>{{ error }}</div>
-    {% endfor %}
-  </div>
-  {% endif %}
-</div>
-
-<div class="mt-4">
-  {{ form.submit(class="btn btn-primary") }}
-  <a href="{{ url_for('tbl_users.index') }}" class="btn btn-outline-secondary">
-    បោះបង់
-  </a>
-</div>
+{{ form_actions(form.submit, url_for('tbl_users.index') if current_user.has_role('Admin') else url_for('tbl_users.profile'), _('រក្សាទុកការផ្លាស់ប្តូរ') if editing else _('បង្កើតអ្នកប្រើប្រាស់')) }}

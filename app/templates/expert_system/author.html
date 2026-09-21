@@ -1,38 +1,30 @@
 {% extends "layouts/base.html" %}
+{% from "layouts/_admin_macros.html" import empty_state %}
+{% block title %}{{ _('មូលដ្ឋានចំណេះដឹង') }}{% endblock %}
+{% block page_title %}{{ _('មូលដ្ឋានចំណេះដឹង') }}{% endblock %}
+{% block page_subtitle %}{{ _('វិធាន និងការភ្ជាប់រោគសញ្ញាទៅជំងឺ។') }}{% endblock %}
+
 {% block content %}
-<div class="card shadow-sm border-0">
-    <div class="card-header bg-white py-3">
-        <h5 class="mb-0 fw-bold">Knowledge Base: Rules & Facts</h5>
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5 class="admin-card-title">{{ _('វិធានទាំងអស់') }}</h5>
+        <a href="{{ url_for('expert_system.rules_index') }}" class="btn btn-soft btn-sm">{{ _('គ្រប់គ្រងវិធាន') }}</a>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>Rule ID</th>
-                        <th>If (Symptoms)</th>
-                        <th>Then (Disease)</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for rule in rules %}
-                    <tr>
-                        <td><span class="badge bg-secondary">#{{ rule.id }}</span></td>
-                        <td>
-                            {% for s in rule.symptoms %}
-                            <span class="badge bg-warning text-dark">{{ s.name }}</span>
-                            {% endfor %}
-                        </td>
-                        <td><span class="badge bg-danger">{{ rule.disease.name }}</span></td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-primary">Edit</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="table-responsive">
+        <table class="table table-hover admin-table">
+            <thead><tr><th>{{ _('លេខវិធាន') }}</th><th>{{ _('ប្រសិនបើ (រោគសញ្ញា)') }}</th><th>{{ _('នោះ (ជំងឺ)') }}</th></tr></thead>
+            <tbody>
+                {% for rule in rules %}
+                <tr>
+                    <td><span class="perm-code">#{{ rule.id }}</span></td>
+                    <td><div class="tag-list">{% for s in rule.symptoms %}<span class="badge-soft badge-soft-warning">{{ s.inline("name") }}</span>{% endfor %}</div></td>
+                    <td><span class="badge-soft badge-soft-danger">{{ rule.disease.inline("name") }}</span></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="3">{{ empty_state('diagram-3', _('មិនទាន់មានវិធានទេ។')) }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

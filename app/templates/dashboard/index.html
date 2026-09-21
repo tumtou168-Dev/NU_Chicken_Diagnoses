@@ -1,0 +1,208 @@
+{% extends "layouts/base.html" %}
+{% from "layouts/_admin_macros.html" import stat, avatar, confidence_pill, action_badge, empty_state %}
+
+{% block title %}{{ _('ផ្ទាំងគ្រប់គ្រង') }}{% endblock %}
+{% block page_title %}{{ bi('សួស្តី %(name)s', name=current_user.full_name) }}{% endblock %}
+{% block page_subtitle %}{% if d.is_staff %}{{ bi('នេះជាទិដ្ឋភាពទូទៅនៃសកម្មភាពរោគវិនិច្ឆ័យនៅក្នុងប្រព័ន្ធ។') }}{% else %}{{ bi('នេះជាទិដ្ឋភាពទូទៅនៃសកម្មភាពរោគវិនិច្ឆ័យរបស់អ្នក។') }}{% endif %}{% endblock %}
+
+{% block content %}
+{# ---------- Quick actions ---------- #}
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <a href="{{ url_for('expert_system.diagnose') }}" class="btn btn-primary"><i class="bi bi-activity me-2"></i>{{ bi('ធ្វើរោគវិនិច្ឆ័យថ្មី') }}</a>
+    {% if d.can_view_cases %}<a href="{{ url_for('expert_system.cases_index') }}" class="btn btn-soft"><i class="bi bi-clock-history me-2"></i>{{ bi('មើលប្រវត្តិ') }}</a>{% endif %}
+    {% if d.is_staff %}<a href="{{ url_for('expert_system.rules_index') }}" class="btn btn-soft"><i class="bi bi-diagram-3 me-2"></i>{{ bi('គ្រប់គ្រងវិធាន') }}</a>{% endif %}
+    {% if d.is_admin %}<a href="{{ url_for('tbl_users.index') }}" class="btn btn-soft"><i class="bi bi-people me-2"></i>{{ bi('គ្រប់គ្រងអ្នកប្រើប្រាស់') }}</a>{% endif %}
+</div>
+
+{% if d.can_view_cases %}
+{# ---------- KPI tiles ---------- #}
+<div class="stat-grid stat-grid-4">
+    {{ stat('clipboard2-pulse', d.cases_total, bi('ករណីសរុប'), 'primary') }}
+    <div class="stat-tile">
+        <div class="stat-icon badge-soft-info"><i class="bi bi-calendar-week"></i></div>
+        <div>
+            <div class="stat-value">{{ d.cases_week }}</div>
+            <div class="stat-label">{{ bi('ក្នុង ៧ ថ្ងៃចុងក្រោយ') }}</div>
+            <div class="stat-delta">{{ bi('%(n)s ធៀបនឹង ៧ ថ្ងៃមុន', n=('+' if d.cases_week_delta > 0 else '') ~ d.cases_week_delta) }}</div>
+        </div>
+    </div>
+    {{ stat('bullseye', (d.avg_confidence ~ '%') if d.avg_confidence is not none else '—', bi('ទំនុកចិត្តមធ្យម'), 'success') }}
+    {% if d.is_admin %}
+        {{ stat('people', d.users_active ~ ' / ' ~ d.users_total, bi('អ្នកប្រើប្រាស់សកម្ម'), 'warning') }}
+    {% elif d.is_staff %}
+        {{ stat('virus', d.knowledge.diseases, bi('ជំងឺក្នុងមូលដ្ឋានចំណេះដឹង'), 'warning') }}
+    {% else %}
+        {{ stat('sun', d.cases_today, bi('ករណីថ្ងៃនេះ'), 'warning') }}
+    {% endif %}
+</div>
+
+{# ---------- Charts ---------- #}
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="admin-card h-100" id="trendCard">
+            <div class="admin-card-header">
+                <div>
+                    <h5 class="admin-card-title">{{ bi('ករណីរោគវិនិច្ឆ័យ %(days)s ថ្ងៃចុងក្រោយ', days=d.trend | length) }}</h5>
+                    <div class="small text-muted">{{ bi('សរុប %(n)s ករណី', n=d.trend_total) }}</div>
+                </div>
+                <button type="button" class="btn btn-soft btn-sm" data-viz-toggle="#trendCard" data-label-chart="{{ bit('មើលជាក្រាហ្វិក') }}" data-label-table="{{ bit('មើលជាតារាង') }}"><i class="bi bi-table me-1"></i><span>{{ bit('មើលជាតារាង') }}</span></button>
+            </div>
+            <div class="admin-card-body">
+                <div class="viz-chart">
+                    <div class="viz-columns" role="img" aria-label="{{ _('ចំនួនករណីរោគវិនិច្ឆ័យក្នុងមួយថ្ងៃ ក្នុង %(days)s ថ្ងៃចុងក្រោយ', days=d.trend | length) }}">
+                        <div class="viz-plot">
+                            {% for tick in d.trend_axis.ticks %}
+                            <div class="viz-grid" style="bottom: {{ (tick / d.trend_axis.top * 100) | round(2) }}%"><span class="viz-tick">{{ tick }}</span></div>
+                            {% endfor %}
+                            <div class="viz-cols">
+                                {% for p in d.trend %}
+                                <div class="viz-col-slot" tabindex="0" data-tip data-value="{{ _('%(n)s ករណី', n=p.count) }}" data-label="{{ p.date }}" aria-label="{{ p.date }}: {{ _('%(n)s ករណី', n=p.count) }}">
+                                    <div class="viz-col" style="height: {{ p.pct }}%"></div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="viz-xlabels">
+                            {% for p in d.trend %}<span>{{ p.short if p.label_visible }}</span>{% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="viz-table" hidden>
+                    <table class="table admin-table">
+                        <thead><tr><th>{{ bi('កាលបរិច្ឆេទ') }}</th><th class="text-end">{{ bi('ករណី') }}</th></tr></thead>
+                        <tbody>{% for p in d.trend | reverse %}<tr><td>{{ p.date }}</td><td class="text-end">{{ p.count }}</td></tr>{% endfor %}</tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="admin-card h-100" id="topCard">
+            <div class="admin-card-header">
+                <div>
+                    <h5 class="admin-card-title">{{ bi('ជំងឺដែលរកឃើញច្រើនជាងគេ') }}</h5>
+                    <div class="small text-muted">{{ bi('ចំនួនករណី · ជំងឺកំពូល %(n)s', n=d.top_diseases | length) }}</div>
+                </div>
+                <button type="button" class="btn btn-soft btn-sm" data-viz-toggle="#topCard" data-label-chart="{{ bit('មើលជាក្រាហ្វិក') }}" data-label-table="{{ bit('មើលជាតារាង') }}"><i class="bi bi-table me-1"></i><span>{{ bit('មើលជាតារាង') }}</span></button>
+            </div>
+            <div class="admin-card-body">
+                {% if d.top_diseases %}
+                <div class="viz-chart">
+                    <div class="viz-hbars">
+                        {% for row in d.top_diseases %}
+                        <div class="viz-hrow" tabindex="0" data-tip data-value="{{ _('%(n)s ករណី', n=row.count) }}" data-label="{{ row.name }}" aria-label="{{ row.name }}: {{ _('%(n)s ករណី', n=row.count) }}">
+                            <div class="viz-hlabel" title="{{ row.name }}">{{ row.name }}</div>
+                            <div class="viz-htrack"><div class="viz-hfill" style="width: {{ row.pct }}%"><div class="viz-hbar"></div><span class="viz-hvalue">{{ row.count }}</span></div></div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="viz-table" hidden>
+                    <table class="table admin-table">
+                        <thead><tr><th>{{ bi('ជំងឺ##one') }}</th><th class="text-end">{{ bi('ករណី') }}</th></tr></thead>
+                        <tbody>{% for row in d.top_diseases %}<tr><td>{{ row.name }}</td><td class="text-end">{{ row.count }}</td></tr>{% endfor %}</tbody>
+                    </table>
+                </div>
+                {% else %}
+                {{ empty_state('bar-chart', bi('មិនទាន់មានទិន្នន័យ។ ធ្វើរោគវិនិច្ឆ័យដើម្បីចាប់ផ្តើម។')) }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ---------- Recent cases + side panel ---------- #}
+<div class="row g-4">
+    <div class="{{ 'col-lg-8' if d.is_staff else 'col-12' }}">
+        <div class="admin-card h-100">
+            <div class="admin-card-header">
+                <h5 class="admin-card-title">{{ bi('ករណីថ្មីៗ') }}</h5>
+                <a href="{{ url_for('expert_system.cases_index') }}" class="btn btn-soft btn-sm">{{ bi('មើលទាំងអស់') }}</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover admin-table">
+                    <thead>
+                        <tr>
+                            <th>{{ bi('កាលបរិច្ឆេទ') }}</th>
+                            {% if d.is_staff %}<th>{{ bi('អ្នកប្រើប្រាស់##one') }}</th>{% endif %}
+                            <th>{{ bi('ជំងឺ##one') }}</th>
+                            <th>{{ bi('ទំនុកចិត្ត') }}</th>
+                            <th class="text-end"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for case in d.recent_cases %}
+                        <tr>
+                            <td class="text-nowrap">
+                                <div class="fw-medium">{{ case.created_at.strftime('%Y-%m-%d') }}</div>
+                                <div class="small text-muted">{{ case.created_at.strftime('%H:%M') }}</div>
+                            </td>
+                            {% if d.is_staff %}
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    {{ avatar(case.user.username if case.user else '?', 'sm', avatar_url(case.user) if case.user else None) }}
+                                    <span>{{ case.user.username if case.user else bi('មិនស្គាល់') }}</span>
+                                </div>
+                            </td>
+                            {% endif %}
+                            <td class="fw-medium">{{ case.disease.inline("name") if case.disease else bi('មិនស្គាល់') }}</td>
+                            <td>{{ confidence_pill(case.confidence) }}</td>
+                            <td class="text-end"><a href="{{ url_for('expert_system.cases_detail', case_id=case.id) }}" class="btn btn-soft btn-sm">{{ bi('មើល') }}</a></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="{{ 5 if d.is_staff else 4 }}">{{ empty_state('clipboard-x', bi('មិនទាន់មានករណីរោគវិនិច្ឆ័យទេ។')) }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if d.is_admin %}
+    <div class="col-lg-4">
+        <div class="admin-card h-100">
+            <div class="admin-card-header">
+                <h5 class="admin-card-title">{{ bi('សកម្មភាពថ្មីៗ') }}</h5>
+                <a href="{{ url_for('audit.index') }}" class="btn btn-soft btn-sm">{{ bi('កំណត់ហេតុ') }}</a>
+            </div>
+            <div class="admin-card-body py-2">
+                {% for log in d.recent_logs %}
+                <div class="perm-row align-items-center">
+                    <div class="d-flex align-items-center gap-2 min-w-0">
+                        {{ avatar(log.user.username if log.user else '?', 'sm', avatar_url(log.user) if log.user else None) }}
+                        <div class="min-w-0">
+                            <div class="small fw-medium text-truncate">{{ log.user.username if log.user else bi('ប្រព័ន្ធ/ភ្ញៀវ') }}</div>
+                            <div class="small text-muted">{{ log.target_type }}{% if log.target_id %} #{{ log.target_id }}{% endif %} · {{ log.created_at.strftime('%H:%M') }}</div>
+                        </div>
+                    </div>
+                    {{ action_badge(log.action) }}
+                </div>
+                {% else %}
+                {{ empty_state('journal-text', bi('មិនទាន់មានសកម្មភាពទេ។')) }}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% elif d.is_staff %}
+    <div class="col-lg-4">
+        <div class="admin-card h-100">
+            <div class="admin-card-header"><h5 class="admin-card-title">{{ bi('មូលដ្ឋានចំណេះដឹង') }}</h5></div>
+            <div class="admin-card-body py-2">
+                {% for label, icon, count, endpoint in [(bi('ជំងឺ'), 'virus', d.knowledge.diseases, 'expert_system.diseases_index'), (bi('រោគសញ្ញា'), 'thermometer-half', d.knowledge.symptoms, 'expert_system.symptoms_index'), (bi('វិធាន'), 'diagram-3', d.knowledge.rules, 'expert_system.rules_index')] %}
+                <a href="{{ url_for(endpoint) }}" class="perm-row align-items-center text-decoration-none">
+                    <span class="d-flex align-items-center gap-3 ink"><span class="stat-icon badge-soft-primary" style="width:32px;height:32px;font-size:1rem"><i class="bi bi-{{ icon }}"></i></span>{{ label }}</span>
+                    <span class="fw-semibold ink">{{ count }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="admin-card">{{ empty_state('shield-lock', bi('គណនីរបស់អ្នកមិនមានសិទ្ធិមើលទិន្នន័យករណីទេ។')) }}</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>{% endblock %}

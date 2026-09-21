@@ -1,0 +1,13 @@
+{% from "layouts/_admin_macros.html" import field, form_actions %}
+{{ form.hidden_tag() }}
+<div class="admin-card-body">
+    <div class="row">
+        <div class="col-md-6">{{ field(form.name_km) }}</div>
+        <div class="col-md-6">{{ field(form.name) }}</div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">{{ field(form.description_km, rows=4) }}</div>
+        <div class="col-md-6">{{ field(form.description, rows=4) }}</div>
+    </div>
+</div>
+{{ form_actions(form.submit, url_for('expert_system.symptoms_index')) }}

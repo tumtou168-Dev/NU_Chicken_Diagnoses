@@ -1,50 +1,14 @@
-<form method="post">
-    {{ form.hidden_tag() }}
+{% from "layouts/_admin_macros.html" import field, form_actions %}
+{{ form.hidden_tag() }}
 
-    <!-- Role name  -->
-    <div class="mb-3">
-        {{ form.name.label(class="form-label") }}
-        {{ form.name(class="form-control") }}
-        {% if form.name.errors %}
-        <div class="text-danger small">
-            {% for error in form.name.errors %}
-            <div>{{ error }}</div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
+<div class="admin-card-body">
+    <div class="form-section-title">{{ _('ព័ត៌មានទូទៅ') }}</div>
+    {{ field(form.name) }}
+    {{ field(form.description, rows=3) }}
 
-    <!-- Description -->
-    <div class="mb-3">
-        {{ form.description.label(class="form-label")}}
-        {{ form.description(class="form-control") }}
-        {% if form.description.errors %}
-        <div class="text-danger small">
-            {% for error in form.description.errors %}
-            <div>{{ error }}</div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
+    <div class="form-section-title">{{ _('សិទ្ធិ') }}</div>
+    <div class="checklist">{{ form.permission_ids() }}</div>
+    {% for error in form.permission_ids.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+</div>
 
-    <!-- Permissions -->
-    <div class="mb-3">
-        <label class="form-label">សិទ្ធិ</label>
-        <div class="border p-3" style="max-height: 300px; overflow-y: auto;">
-            {{ form.permission_ids() }}
-        </div>
-        {% if form.permission_ids.errors %}
-        <div class="text-danger small mt-2">
-            {% for error in form.permission_ids.errors %}
-            <div>{{ error }}</div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Button -->
-    <div class="d-flex justify-content-between mt-3">
-        {{ form.submit(class="btn btn-primary") }}
-        <a href="{{ url_for('tbl_roles.index') }}" class="btn btn-secondary">បោះបង់</a>
-    </div>
-</form>
+{{ form_actions(form.submit, url_for('tbl_roles.index')) }}

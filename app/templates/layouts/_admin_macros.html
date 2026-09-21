@@ -1,0 +1,105 @@
+{# Shared building blocks for the admin (users / roles / permissions / audit) pages #}
+
+{# Emphasised value for use inside translated sentences (see _h) #}
+{% macro strong(value) %}<strong class="ink">{{ value }}</strong>{% endmacro %}
+
+{# Form field with label, validation state and error list.
+   kind: "input" (default) or "select" – picks the Bootstrap class. #}
+{% macro field(f, kind="input", hint=None, rows=None, label=None) %}
+<div class="mb-3">
+    {% if label %}{{ f.label(label, class="form-label") }}{% else %}{{ f.label(class="form-label") }}{% endif %}
+    {% set css = ("form-select" if kind == "select" else "form-control") ~ (" is-invalid" if f.errors else "") %}
+    {% if rows %}{{ f(class=css, rows=rows) }}{% else %}{{ f(class=css) }}{% endif %}
+    {% for error in f.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+    {% if hint %}<div class="field-hint">{{ hint }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{# Bootstrap switch for a BooleanField #}
+{% macro switch(f, label=None) %}
+<div class="form-check form-switch mb-3">
+    {{ f(class="form-check-input", role="switch") }}
+    {% if label %}{{ f.label(label, class="form-check-label") }}{% else %}{{ f.label(class="form-check-label") }}{% endif %}
+</div>
+{% endmacro %}
+
+{# Round initial avatar. size: "", "sm" or "lg" #}
+{% macro avatar(name, size="", src=None) %}
+<span class="avatar{% if size %} avatar-{{ size }}{% endif %}">{% if src %}<img src="{{ src }}" alt="">{% else %}{{ (name or "?")[0] | upper }}{% endif %}</span>
+{% endmacro %}
+
+{% macro status_badge(active) %}
+{% if active %}
+<span class="badge-soft badge-soft-success"><span class="dot"></span>{{ _('សកម្ម') }}</span>
+{% else %}
+<span class="badge-soft badge-soft-danger"><span class="dot"></span>{{ _('អសកម្ម') }}</span>
+{% endif %}
+{% endmacro %}
+
+{% macro action_badge(action) %}
+{% if action == 'CREATE' %}<span class="badge-soft badge-soft-success">{{ _('បង្កើត') }}</span>
+{% elif action == 'UPDATE' %}<span class="badge-soft badge-soft-warning">{{ _('កែប្រែ') }}</span>
+{% elif action == 'DELETE' %}<span class="badge-soft badge-soft-danger">{{ _('លុប') }}</span>
+{% elif action == 'LOGIN' %}<span class="badge-soft badge-soft-info">{{ _('ចូល') }}</span>
+{% else %}<span class="badge-soft badge-soft-neutral">{{ action }}</span>
+{% endif %}
+{% endmacro %}
+
+{# Small summary tile. tone: primary | success | danger | warning | neutral #}
+{% macro stat(icon, value, label, tone="primary") %}
+<div class="stat-tile">
+    <div class="stat-icon badge-soft-{{ tone }}"><i class="bi bi-{{ icon }}"></i></div>
+    <div>
+        <div class="stat-value">{{ value }}</div>
+        <div class="stat-label">{{ label }}</div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Table search box, wired up by static/js/admin.js #}
+{% macro table_filter(target, placeholder) %}
+<div class="search-box">
+    <i class="bi bi-search"></i>
+    <input type="search" class="form-control form-control-sm" placeholder="{{ placeholder }}"
+           data-table-filter="{{ target }}" aria-label="{{ placeholder }}">
+</div>
+{% endmacro %}
+
+{% macro empty_state(icon, message) %}
+<div class="empty-state"><i class="bi bi-{{ icon }}"></i>{{ message }}</div>
+{% endmacro %}
+
+{# Standard Save / Cancel footer for form cards #}
+{% macro form_actions(submit_field, cancel_url, submit_label=None) %}
+<div class="admin-card-footer">
+    <a href="{{ cancel_url }}" class="btn btn-soft">{{ _('បោះបង់') }}</a>
+    {% if submit_label %}{{ submit_field(class="btn btn-primary", value=submit_label) }}{% else %}{{ submit_field(class="btn btn-primary") }}{% endif %}
+</div>
+{% endmacro %}
+
+{# Confidence percentage as a coloured pill (>80 green, >50 amber, else red) #}
+{% macro confidence_pill(value) %}
+{% if value is none %}<span class="text-muted">—</span>
+{% else %}
+<span class="badge-soft badge-soft-{{ 'success' if value > 80 else ('warning' if value > 50 else 'danger') }}">{{ value }}%</span>
+{% endif %}
+{% endmacro %}
+
+{# Centred delete confirmation card. Import with context (uses csrf_token). #}
+{% macro confirm_delete(title, name, cancel_url, action=None) %}
+<div class="admin-card confirm-card">
+    <div class="admin-card-body">
+        <div class="confirm-icon"><i class="bi bi-exclamation-triangle"></i></div>
+        <h5 class="fw-semibold mb-2">{{ title }}</h5>
+        <p class="text-muted mb-4">
+            {{ _h('តើអ្នកប្រាកដថាចង់លុប %(name)s ទេ?', name=strong(name)) }}
+            {{ _('សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។') }}
+        </p>
+        <form method="post"{% if action %} action="{{ action }}"{% endif %} class="d-flex justify-content-center gap-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <a href="{{ cancel_url }}" class="btn btn-soft">{{ _('បោះបង់') }}</a>
+            <button type="submit" class="btn btn-danger-solid">{{ _('បញ្ជាក់ការលុប') }}</button>
+        </form>
+    </div>
+</div>
+{% endmacro %}

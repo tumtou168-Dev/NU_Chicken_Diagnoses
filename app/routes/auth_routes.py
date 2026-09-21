@@ -1,6 +1,7 @@
 # app/routes/auth_routes.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
+from app.i18n import gettext as _
 from app.models.user import UserTable
 from app.models.role import RoleTable
 from app.services.user_service import UserService
@@ -18,21 +19,16 @@ def login():
         
         if user and user.check_password(password):
             if not user.is_active:
-                flash("Your account is inactive. Please contact administrator.", "warning")
+                flash(_("គណនីរបស់អ្នកអសកម្ម។ សូមទាក់ទងអ្នកគ្រប់គ្រង។"), "warning")
                 return redirect(url_for("auth.login"))
             
             login_user(user)
             AuditService.log("LOGIN", "User", user.id, "User logged in")
-            flash("Logged in successfully.", "success")
+            flash(_("បានចូលដោយជោគជ័យ។"), "success")
             
-            # Redirect based on role
-            if user.has_role("Admin"):
-                return redirect(url_for("tbl_users.index"))
-            else:
-                # Doctor and User go to diagnosis page
-                return redirect(url_for("expert_system.diagnose"))
+            return redirect(url_for("dashboard.index"))
         
-        flash("Invalid username or password.", "danger")
+        flash(_("ឈ្មោះអ្នកប្រើប្រាស់ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ។"), "danger")
         return redirect(url_for("auth.login"))
     
     return render_template("auth/login.html")
@@ -50,20 +46,20 @@ def register():
         errors: list[str] = []
         
         if not username:
-            errors.append("Username is required.")
+            errors.append(_("សូមបញ្ចូលឈ្មោះអ្នកប្រើប្រាស់។"))
         if not email:
-            errors.append("Email is required.")
+            errors.append(_("សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែល។"))
         if not full_name:
-            errors.append("Full name is required.")
+            errors.append(_("សូមបញ្ចូលឈ្មោះពេញ។"))
         if not password:
-            errors.append("Password is required.")
+            errors.append(_("សូមបញ្ចូលពាក្យសម្ងាត់។"))
         if password and password != confirm_password:
-            errors.append("Passwords do not match.")
+            errors.append(_("ពាក្យសម្ងាត់មិនដូចគ្នាទេ។"))
             
         if username and UserTable.query.filter_by(username=username).first():
-            errors.append("This username is already taken.")
+            errors.append(_("ឈ្មោះអ្នកប្រើប្រាស់នេះមានគេប្រើរួចហើយ។"))
         if email and UserTable.query.filter_by(email=email).first():
-            errors.append("This email is already registered.")
+            errors.append(_("អ៊ីមែលនេះត្រូវបានចុះឈ្មោះរួចហើយ។"))
             
         if errors:
             for msg in errors:
@@ -93,13 +89,9 @@ def register():
         
         login_user(new_user)
         AuditService.log("REGISTER", "User", new_user.id, "New user registered")
-        flash("Account created successfully. You are now logged in.", "success")
+        flash(_("បានបង្កើតគណនីដោយជោគជ័យ។ អ្នកបានចូលរួចហើយ។"), "success")
         
-        # Redirect based on role (new users are typically 'User' role)
-        if new_user.has_role("Admin"):
-            return redirect(url_for("tbl_users.index"))
-        else:
-            return redirect(url_for("expert_system.diagnose"))
+        return redirect(url_for("dashboard.index"))
     
     return render_template("auth/register.html")
 
@@ -121,5 +113,5 @@ def logout():
     # But wait, AuditService.log uses current_user.id.
     AuditService.log("LOGOUT", "User", user_id, "User logged out")
 
-    flash("You have been logged out.", "info")
+    flash(_("អ្នកបានចាកចេញរួចរាល់។"), "info")
     return redirect(url_for("auth.login"))

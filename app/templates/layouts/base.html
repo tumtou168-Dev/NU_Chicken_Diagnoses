@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="km">
+<html lang="{{ current_lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ផ្ទាំងគ្រប់គ្រង{% endblock %} - ប្រព័ន្ធជំនាញមាន់</title>
+    <meta name="color-scheme" content="light dark">
+    <!-- Apply the saved theme before first paint (prevents a flash of the wrong theme) -->
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <title>{% block title %}{{ _('ផ្ទាំងគ្រប់គ្រង') }}{% endblock %} {{ _('- ប្រព័ន្ធជំនាញមាន់') }}</title>
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -18,109 +21,124 @@
     <div class="container-fluid flex-grow-1">
         <div class="row h-100">
             {% block sidebar %}
+            {% set ep = request.endpoint or '' %}
             <!-- Sidebar -->
             <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
                 <div class="brand-section">
-                    <a href="{{ url_for('expert_system.diagnose') }}" class="text-decoration-none text-dark">
-                        <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="VetAssist Logo" class="brand-logo">
-                        <h5 class="brand-font fw-bold mb-0">IDNS</h5>
-                        <small class="text-muted">ការធ្វើរោគវិនិច្ឆ័យមាន់</small>
+                    <a href="{{ url_for('dashboard.index') }}" class="text-decoration-none">
+                        <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="IDNS Logo" class="brand-logo">
+                        <div class="brand-text">
+                            <h5 class="brand-font mb-0">IDNS</h5>
+                            <small class="text-muted">{{ _('ការធ្វើរោគវិនិច្ឆ័យមាន់') }}</small>
+                        </div>
                     </a>
                 </div>
 
                 <div class="position-sticky pt-2">
                     {% if current_user.is_authenticated %}
-                        <div class="nav-section-label">មេ</div>
-                        <ul class="nav flex-column">
+                        <div class="nav-section-label" data-group="main">{{ bi('មេ') }}</div>
+                        <ul class="nav flex-column nav-group" data-group="main">
                             <li class="nav-item">
-                                <a class="nav-link {% if 'expert_system.diagnose' in request.endpoint %}active{% endif %}" href="{{ url_for('expert_system.diagnose') }}">
-                                    <i class="bi bi-activity"></i>
-                                    ធ្វើរោគវិនិច្ឆ័យ
+                                <a class="nav-link {% if ep == 'dashboard.index' %}active{% endif %}" href="{{ url_for('dashboard.index') }}">
+                                    <i class="bi bi-grid-1x2"></i> <span class="nav-text">{{ bi('ផ្ទាំងគ្រប់គ្រង') }}</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if 'expert_system.cases' in request.endpoint %}active{% endif %}" href="{{ url_for('expert_system.cases_index') }}">
-                                    <i class="bi bi-clock-history"></i> ប្រវត្តិ
+                                <a class="nav-link {% if 'expert_system.diagnose' in ep %}active{% endif %}" href="{{ url_for('expert_system.diagnose') }}">
+                                    <i class="bi bi-activity"></i>
+                                    <span class="nav-text">{{ bi('ធ្វើរោគវិនិច្ឆ័យ') }}</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if 'expert_system.cases' in ep %}active{% endif %}" href="{{ url_for('expert_system.cases_index') }}">
+                                    <i class="bi bi-clock-history"></i> <span class="nav-text">{{ bi('ប្រវត្តិ') }}</span>
                                 </a>
                             </li>
                         </ul>
 
                         {% if current_user.has_role('Admin') or current_user.has_role('Doctor') %}
-                        <div class="nav-section-label">មូលដ្ឋានចំណេះដឹង</div>
-                        <ul class="nav flex-column">
+                        <div class="nav-section-label" data-group="knowledge">{{ bi('មូលដ្ឋានចំណេះដឹង') }}</div>
+                        <ul class="nav flex-column nav-group" data-group="knowledge">
                             <li class="nav-item">
-                                <a class="nav-link {% if 'expert_system.rules' in request.endpoint %}active{% endif %}" href="{{ url_for('expert_system.rules_index') }}">
-                                    <i class="bi bi-diagram-3"></i> វិធាន
+                                <a class="nav-link {% if 'expert_system.rules' in ep %}active{% endif %}" href="{{ url_for('expert_system.rules_index') }}">
+                                    <i class="bi bi-diagram-3"></i> <span class="nav-text">{{ bi('វិធាន') }}</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if 'expert_system.symptoms' in request.endpoint %}active{% endif %}" href="{{ url_for('expert_system.symptoms_index') }}">
-                                    <i class="bi bi-thermometer-half"></i> រោគសញ្ញា
+                                <a class="nav-link {% if 'expert_system.symptoms' in ep %}active{% endif %}" href="{{ url_for('expert_system.symptoms_index') }}">
+                                    <i class="bi bi-thermometer-half"></i> <span class="nav-text">{{ bi('រោគសញ្ញា') }}</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if 'expert_system.diseases' in request.endpoint %}active{% endif %}" href="{{ url_for('expert_system.diseases_index') }}">
-                                    <i class="bi bi-virus"></i> ជំងឺ
+                                <a class="nav-link {% if 'expert_system.diseases' in ep %}active{% endif %}" href="{{ url_for('expert_system.diseases_index') }}">
+                                    <i class="bi bi-virus"></i> <span class="nav-text">{{ bi('ជំងឺ') }}</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if 'expert_system.categories' in request.endpoint %}active{% endif %}" href="{{ url_for('expert_system.categories_index') }}">
-                                    <i class="bi bi-tags"></i> ប្រភេទ
+                                <a class="nav-link {% if 'expert_system.categories' in ep %}active{% endif %}" href="{{ url_for('expert_system.categories_index') }}">
+                                    <i class="bi bi-tags"></i> <span class="nav-text">{{ bi('ប្រភេទ') }}</span>
                                 </a>
                             </li>
+                            {% if current_user.has_permission('manage_page_texts') %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if 'expert_system.page_texts' in ep %}active{% endif %}" href="{{ url_for('expert_system.page_texts_index') }}">
+                                    <i class="bi bi-fonts"></i> <span class="nav-text">{{ bi('អត្ថបទទំព័រ') }}</span>
+                                </a>
+                            </li>
+                            {% endif %}
                         </ul>
                         {% endif %}
 
                         {% if current_user.has_role('Admin') %}
-                        <div class="nav-section-label">ប្រព័ន្ធ</div>
-                        <ul class="nav flex-column">
+                        <div class="nav-section-label" data-group="system">{{ bi('ប្រព័ន្ធ') }}</div>
+                        <ul class="nav flex-column nav-group" data-group="system">
                             <li class="nav-item">
-                                <a class="nav-link {% if 'tbl_users' in request.endpoint %}active{% endif %}" href="{{ url_for('tbl_users.index') }}">
-                                    <i class="bi bi-people"></i> អ្នកប្រើប្រាស់
+                                <a class="nav-link {% if 'tbl_users' in ep and ep != 'tbl_users.profile' %}active{% endif %}" href="{{ url_for('tbl_users.index') }}">
+                                    <i class="bi bi-people"></i> <span class="nav-text">{{ bi('អ្នកប្រើប្រាស់') }}</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if 'tbl_roles' in request.endpoint %}active{% endif %}" href="{{ url_for('tbl_roles.index') }}">
-                                    <i class="bi bi-shield-lock"></i> តួនាទី
+                                <a class="nav-link {% if 'tbl_roles' in ep %}active{% endif %}" href="{{ url_for('tbl_roles.index') }}">
+                                    <i class="bi bi-shield-lock"></i> <span class="nav-text">{{ bi('តួនាទី') }}</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if 'tbl_permissions' in request.endpoint %}active{% endif %}" href="{{ url_for('tbl_permissions.index') }}">
-                                    <i class="bi bi-key"></i> សិទ្ធិ
+                                <a class="nav-link {% if 'tbl_permissions' in ep %}active{% endif %}" href="{{ url_for('tbl_permissions.index') }}">
+                                    <i class="bi bi-key"></i> <span class="nav-text">{{ bi('សិទ្ធិ') }}</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if 'audit.index' in request.endpoint %}active{% endif %}" href="{{ url_for('audit.index') }}">
-                                    <i class="bi bi-journal-text"></i> កំណត់ហេតុសវនកម្ម
+                                <a class="nav-link {% if 'audit.index' in ep %}active{% endif %}" href="{{ url_for('audit.index') }}">
+                                    <i class="bi bi-journal-text"></i> <span class="nav-text">{{ bi('កំណត់ហេតុសវនកម្ម') }}</span>
                                 </a>
                             </li>
                         </ul>
                         {% endif %}
 
-                        <div class="nav-section-label">គណនី</div>
-                        <ul class="nav flex-column mb-4">
+                        <div class="nav-section-label" data-group="account">{{ bi('គណនី') }}</div>
+                        <ul class="nav flex-column nav-group mb-4" data-group="account">
                             <li class="nav-item">
-                                <a class="nav-link {% if 'tbl_users.profile' in request.endpoint %}active{% endif %}" href="{{ url_for('tbl_users.profile') }}">
-                                    <i class="bi bi-person-circle"></i> ប្រវត្តិរូប
+                                <a class="nav-link {% if 'tbl_users.profile' in ep %}active{% endif %}" href="{{ url_for('tbl_users.profile') }}">
+                                    <i class="bi bi-person-circle"></i> <span class="nav-text">{{ bi('ប្រវត្តិរូប') }}</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">
-                                    <i class="bi bi-box-arrow-right text-danger"></i> ចាកចេញ
+                                <a class="nav-link nav-logout text-danger" href="{{ url_for('auth.logout') }}">
+                                    <i class="bi bi-box-arrow-right text-danger"></i> <span class="nav-text">{{ bi('ចាកចេញ') }}</span>
                                 </a>
                             </li>
                         </ul>
                     {% else %}
-                        <div class="nav-section-label">ការចូលប្រើ</div>
-                        <ul class="nav flex-column">
+                        <div class="nav-section-label" data-group="main">{{ bi('ការចូលប្រើ') }}</div>
+                        <ul class="nav flex-column nav-group" data-group="main">
                             <li class="nav-item">
-                                <a class="nav-link {% if 'auth.login' in request.endpoint %}active{% endif %}" href="{{ url_for('auth.login') }}">
-                                    <i class="bi bi-box-arrow-in-right"></i> ចូល
+                                <a class="nav-link {% if 'auth.login' in ep %}active{% endif %}" href="{{ url_for('auth.login') }}">
+                                    <i class="bi bi-box-arrow-in-right"></i> <span class="nav-text">{{ bi('ចូល') }}</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if 'auth.register' in request.endpoint %}active{% endif %}" href="{{ url_for('auth.register') }}">
-                                    <i class="bi bi-person-plus"></i> ចុះឈ្មោះ
+                                <a class="nav-link {% if 'auth.register' in ep %}active{% endif %}" href="{{ url_for('auth.register') }}">
+                                    <i class="bi bi-person-plus"></i> <span class="nav-text">{{ bi('ចុះឈ្មោះ') }}</span>
                                 </a>
                             </li>
                         </ul>
@@ -131,27 +149,35 @@
 
             <!-- Main Content -->
             <main class="{% block main_class %}col-md-9 ms-sm-auto col-lg-10{% endblock %} content-wrapper">
+                {% block page_header %}
                 <div class="page-header">
                     <div>
                         <h2 class="h3 fw-bold mb-1">{% block page_title %}{% endblock %}</h2>
                         <p class="text-muted mb-0">{% block page_subtitle %}{% endblock %}</p>
                     </div>
 
+                    <div class="header-actions">
+                    {% include "layouts/_lang_switch.html" %}
+                    {% include "layouts/_theme_toggle.html" %}
                     {% block page_header_content %}
                     {% if current_user.is_authenticated %}
                     <a href="{{ url_for('tbl_users.profile') }}" class="user-profile">
                         <div class="user-avatar">
-                            {{ current_user.username[0] | upper }}
+                            {% if avatar_url(current_user) %}<img src="{{ avatar_url(current_user) }}" alt="">{% else %}{{ current_user.username[0] | upper }}{% endif %}
                         </div>
                         <div class="d-none d-sm-block">
                             <div class="fw-bold small">{{ current_user.full_name }}</div>
-                            <div class="text-muted" style="font-size: 0.7rem;">{{ current_user.roles[0].name if current_user.roles else 'User' }}</div>
+                            <div class="text-muted" style="font-size: 0.7rem;">{{ (current_user.roles[0].name if current_user.roles else 'User') | dt }}</div>
                         </div>
                     </a>
                     {% endif %}
                     {% endblock %}
+                    </div>
                 </div>
+                {% endblock %}
 
+                <div class="{% block content_class %}content-body{% endblock %}">
+                {% block flashes %}
                 {% with messages = get_flashed_messages(with_categories=true) %}
                   {% if messages %}
                     {% for category, message in messages %}
@@ -173,8 +199,10 @@
                     {% endfor %}
                   {% endif %}
                 {% endwith %}
+                {% endblock %}
 
                 {% block content %}{% endblock %}
+                </div>
             </main>
         </div>
     </div>
@@ -199,5 +227,7 @@
     {% endblock %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

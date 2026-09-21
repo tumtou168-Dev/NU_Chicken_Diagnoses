@@ -1,28 +1,11 @@
 {% extends "layouts/base.html" %}
-{% block title %}កែប្រែប្រភេទ{% endblock %}
+{% block title %}{{ _('កែប្រែប្រភេទ') }}{% endblock %}
+{% block page_title %}{{ _('កែប្រែប្រភេទ') }}{% endblock %}
+{% block page_subtitle %}{{ _('កែប្រែព័ត៌មានរបស់ប្រភេទ %(name)s។', name=category.inline("name")) }}{% endblock %}
 
 {% block content %}
-<div class="card p-4">
-    <h4 class="mb-3">កែប្រែប្រភេទ</h4>
-    <form method="post">
-        {{ form.hidden_tag() }}
-        <div class="mb-3">
-            {{ form.name.label(class="form-label") }}
-            {{ form.name(class="form-control") }}
-            {% if form.name.errors %}
-            <div class="text-danger small">
-                {% for error in form.name.errors %}<div>{{ error }}</div>{% endfor %}
-            </div>
-            {% endif %}
-        </div>
-        <div class="mb-3">
-            {{ form.description.label(class="form-label") }}
-            {{ form.description(class="form-control", rows=3) }}
-        </div>
-        <div class="d-flex gap-2">
-            {{ form.submit(class="btn btn-brand") }}
-            <a href="{{ url_for('expert_system.categories_index') }}" class="btn btn-secondary">បោះបង់</a>
-        </div>
-    </form>
+<a href="{{ url_for('expert_system.categories_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅប្រភេទ') }}</a>
+<div class="admin-card form-narrow">
+    <form method="post" novalidate>{% include "expert_system/categories/_form.html" %}</form>
 </div>
 {% endblock %}

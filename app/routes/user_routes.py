@@ -1,6 +1,9 @@
 # app/routes/user_routes.py
+from datetime import datetime
+
 from flask import Blueprint, render_template, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
+from app.i18n import gettext as _
 from app.forms.user_forms import(
     UserCreateForm,
     UserEditForm,
@@ -8,6 +11,7 @@ from app.forms.user_forms import(
 )
 from app.services.user_service import UserService
 from app.services.audit_service import AuditService
+from app.services.expert_system_service import CaseService
 
 # blueprint name define endpoint prefix: tbl_users.*
 user_bp = Blueprint("tbl_users", __name__, url_prefix="/users")
@@ -25,7 +29,24 @@ def index():
 @user_bp.route("/profile")
 @login_required
 def profile():
-    return render_template("users/profile.html", user=current_user)
+    cases = CaseService.get_by_user(current_user.id)
+    scored = [c.confidence for c in cases if c.confidence is not None]
+    permissions = {}
+    for role in current_user.roles:
+        for perm in role.permissions:
+            permissions.setdefault(perm.module, {})[perm.code] = perm.name
+    stats = {
+        "cases": len(cases),
+        "avg_confidence": round(sum(scored) / len(scored), 1) if scored else None,
+        "days": max((datetime.utcnow() - current_user.created_at).days, 0),
+    }
+    return render_template(
+        "users/profile.html",
+        user=current_user,
+        stats=stats,
+        recent_cases=cases[:5],
+        permissions={m: sorted(p.values()) for m, p in sorted(permissions.items())},
+    )
 
 @user_bp.route("/<int:user_id>")
 @login_required
@@ -59,7 +80,7 @@ def create():
         
         user = UserService.create_user(data, password, role_id)
         AuditService.log("CREATE", "User", user.id, f"Created user: {user.username}")
-        flash(f"User '{user.username}' was created successfully.", "success")
+        flash(_("បានបង្កើតអ្នកប្រើប្រាស់ '%(username)s' ដោយជោគជ័យ។", username=user.username), "success")
         return redirect(url_for("tbl_users.index"))
     
     return render_template("users/create.html", form=form)
@@ -76,21 +97,27 @@ def edit(user_id: int):
     if user is None:
         abort(404)
         
+    is_admin = current_user.has_role("Admin")
     form = UserEditForm(original_user=user, obj=user)
+    if not is_admin:
+        # Self-service profile edit: role and active status are admin-only.
+        del form.role_id
+        del form.is_active
     
     if form.validate_on_submit():
         data = {
             "username": form.username.data,
             "email": form.email.data,
             "full_name": form.full_name.data,
-            "is_active": form.is_active.data,
+            "is_active": form.is_active.data if is_admin else user.is_active,
         }
         password = form.password.data or None
-        role_id = form.role_id.data or None
+        role_id = (form.role_id.data or None) if is_admin else None
         
         UserService.update_user(user, data, password, role_id)
+        UserService.set_avatar(user, form.avatar.data, form.remove_avatar.data)
         AuditService.log("UPDATE", "User", user.id, f"Updated user: {user.username}")
-        flash(f"User '{user.username}' was updated successfully.", "success")
+        flash(_("បានកែប្រែអ្នកប្រើប្រាស់ '%(username)s' ដោយជោគជ័យ។", username=user.username), "success")
         
         # Redirect logic: Admin -> list, User -> profile or detail
         if current_user.has_role("Admin"):
@@ -109,7 +136,7 @@ def delete_confirm(user_id: int):
 
     # Prevent deleting self
     if current_user.id == user_id:
-        flash("You cannot delete your own account.", "danger")
+        flash(_("អ្នកមិនអាចលុបគណនីរបស់ខ្លួនឯងបានទេ។"), "danger")
         return redirect(url_for("tbl_users.index"))
 
     user = UserService.get_user_by_id(user_id)
@@ -128,7 +155,7 @@ def delete(user_id: int):
 
     # Prevent deleting self
     if current_user.id == user_id:
-        flash("You cannot delete your own account.", "danger")
+        flash(_("អ្នកមិនអាចលុបគណនីរបស់ខ្លួនឯងបានទេ។"), "danger")
         return redirect(url_for("tbl_users.index"))
 
     user = UserService.get_user_by_id(user_id)
@@ -138,5 +165,5 @@ def delete(user_id: int):
     username = user.username
     UserService.delete_user(user)
     AuditService.log("DELETE", "User", user_id, f"Deleted user: {username}")
-    flash("User was deleted successfully.", "success")
+    flash(_("បានលុបអ្នកប្រើប្រាស់ដោយជោគជ័យ។"), "success")
     return redirect(url_for("tbl_users.index"))

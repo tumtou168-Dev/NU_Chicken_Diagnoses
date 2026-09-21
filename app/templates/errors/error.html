@@ -1,0 +1,17 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="admin-card error-card">
+    <div class="admin-card-body">
+        <div class="error-code">{{ code }}</div>
+        <h2 class="h4 mb-2">{{ title }}</h2>
+        <p class="text-muted mb-4">{{ message }}</p>
+        <div class="d-flex justify-content-center gap-2 flex-wrap">
+            <a href="javascript:history.back()" class="btn btn-soft"><i class="bi bi-arrow-left me-1"></i>{{ _('ថយក្រោយ') }}</a>
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary"><i class="bi bi-grid-1x2 me-1"></i>{{ _('ទៅផ្ទាំងគ្រប់គ្រង') }}</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

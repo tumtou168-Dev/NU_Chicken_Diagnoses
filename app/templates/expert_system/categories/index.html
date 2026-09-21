@@ -1,36 +1,33 @@
 {% extends "layouts/base.html" %}
-{% block title %}ប្រភេទ{% endblock %}
+{% from "layouts/_admin_macros.html" import table_filter, empty_state %}
+{% block title %}{{ _('ប្រភេទ') }}{% endblock %}
+{% block page_title %}{{ _('ប្រភេទ') }}{% endblock %}
+{% block page_subtitle %}{{ _('ដាក់ក្រុមជំងឺតាមការផ្តោតអារម្មណ៍គ្លីនិក។') }}{% endblock %}
 
 {% block content %}
-<div class="card p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h4 class="mb-0">ប្រភេទ</h4>
-            <small class="text-muted">ដាក់ក្រុមជំងឺតាមការផ្តោតអារម្មណ៍គ្លីនិក</small>
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5 class="admin-card-title">{{ _('ប្រភេទទាំងអស់ (%(n)s)', n=categories | length) }}</h5>
+        <div class="admin-toolbar">
+            {{ table_filter('#categoriesTable', _('ស្វែងរកប្រភេទ...')) }}
+            <a href="{{ url_for('expert_system.categories_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ _('បន្ថែមប្រភេទ') }}</a>
         </div>
-        <a href="{{ url_for('expert_system.categories_create') }}" class="btn btn-brand">បន្ថែមប្រភេទ</a>
     </div>
-
     <div class="table-responsive">
-        <table class="table table-hover border-top">
-            <thead class="table-light">
-                <tr>
-                    <th>ឈ្មោះ</th>
-                    <th>ការពិពណ៌នា</th>
-                    <th class="text-end">សកម្មភាព</th>
-                </tr>
-            </thead>
+        <table class="table table-hover admin-table" id="categoriesTable">
+            <thead><tr><th>{{ _('ឈ្មោះ') }}</th><th>{{ _('ការពិពណ៌នា') }}</th><th class="text-end">{{ _('សកម្មភាព') }}</th></tr></thead>
             <tbody>
                 {% for category in categories %}
-                <tr>
-                    <td class="fw-semibold">{{ category.name }}</td>
-                    <td class="text-muted">{{ category.description }}</td>
-                    <td class="text-end">
-                        <a href="{{ url_for('expert_system.categories_edit', category_id=category.id) }}" class="btn btn-sm btn-outline-secondary">កែប្រែ</a>
-                        <a href="{{ url_for('expert_system.categories_delete', category_id=category.id) }}" class="btn btn-sm btn-outline-danger">លុប</a>
+                <tr data-row>
+                    <td class="fw-semibold">{{ category.pair("name") }}</td>
+                    <td class="text-muted">{{ category.pair("description") or "—" }}</td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ url_for('expert_system.categories_edit', category_id=category.id) }}" class="icon-btn" title="{{ _('កែប្រែ') }}"><i class="bi bi-pencil"></i></a>
+                        <a href="{{ url_for('expert_system.categories_delete', category_id=category.id) }}" class="icon-btn danger" title="{{ _('លុប') }}"><i class="bi bi-trash"></i></a>
                     </td>
                 </tr>
                 {% endfor %}
+                <tr data-empty {% if categories %}hidden{% endif %}><td colspan="3">{{ empty_state('tags', _('មិនទាន់មានប្រភេទទេ។')) }}</td></tr>
             </tbody>
         </table>
     </div>

@@ -1,74 +1,79 @@
 # app/forms/permission_forms.py
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SubmitField, SelectField
-from wtforms.validators import DataRequired, Length, ValidationError
+from wtforms.validators import ValidationError
+from app.forms import validation as val
+from app.i18n import lazy, gettext as _
 from app.models.permission import PermissionTable
 from extensions import db
 
+# (stored value, Khmer label). Values stay English because they are stored in the database.
 MODULE_CHOICES = [
-    ("Users", "Users"),
-    ("Roles", "Roles"),
-    ("Permissions", "Permissions"),
-    ("Facts", "Facts"),
-    ("System","System"),
-    ("Audit", "Audit"),
-    ("General", "General"),
+    ("Users", lazy("អ្នកប្រើប្រាស់")),
+    ("Roles", lazy("តួនាទី")),
+    ("Permissions", lazy("សិទ្ធិ")),
+    ("Expert System", lazy("ប្រព័ន្ធជំនាញ")),
+    ("Facts", lazy("ទិន្នន័យ")),
+    ("System", lazy("ប្រព័ន្ធ")),
+    ("Audit", lazy("សវនកម្ម")),
+    ("General", lazy("ទូទៅ")),
 ]
+MODULE_LABELS = dict(MODULE_CHOICES)
 
 class PermissionCreateForm(FlaskForm):
     code = StringField(
-        "Code",
-        validators=[DataRequired(), Length(min=2, max=64)],
-        render_kw={"placeholder": "e.g. user.view"},
+        lazy("កូដ"),
+        validators=[val.required(), val.length(min=2, max=64)],
+        render_kw={"placeholder": lazy("ឧ. user.view")},
     )
     name = StringField(
-        "Name",
-        validators=[DataRequired(), Length(min=2, max=120)],
-        render_kw={"placeholder": "Human-readable name"},
+        lazy("ឈ្មោះ"),
+        validators=[val.required(), val.length(min=2, max=120)],
+        render_kw={"placeholder": lazy("ឈ្មោះដែលអាចអានបាន")},
     )
     module = SelectField(
-        "Module",
+        lazy("ម៉ូឌុល"),
         choices=MODULE_CHOICES,
         default="General",
     )
     description = TextAreaField(
-        "Description",
-        render_kw={"placeholder": "What does this permission allow?"},
+        lazy("ការពិពណ៌នា"),
+        render_kw={"placeholder": lazy("តើសិទ្ធិនេះអនុញ្ញាតឱ្យធ្វើអ្វី?")},
     )
     
-    submit = SubmitField("Save")
+    submit = SubmitField(lazy("រក្សាទុក"))
     
     def validate_code(self, field):
         exists = db.session.scalar(
             db.select(PermissionTable).filter(PermissionTable.code == field.data)
         )
         if exists:
-            raise ValidationError("This permission code is already in use.")
+            raise ValidationError(_("កូដសិទ្ធិនេះត្រូវបានប្រើរួចហើយ។"))
         
     def validate_name(self, field):
         exists = db.session.scalar(
             db.select(PermissionTable).filter(PermissionTable.name == field.data)
         )
         if exists:
-            raise ValidationError("This permission name is already in use.")
+            raise ValidationError(_("ឈ្មោះសិទ្ធិនេះត្រូវបានប្រើរួចហើយ។"))
         
 class PermissionEditForm(FlaskForm):
     code = StringField(
-        "Code",
-        validators=[DataRequired(), Length(min=2, max=64)],
+        lazy("កូដ"),
+        validators=[val.required(), val.length(min=2, max=64)],
     )
     name = StringField(
-        "Name",
-        validators=[DataRequired(), Length(min=2, max=120)],
+        lazy("ឈ្មោះ"),
+        validators=[val.required(), val.length(min=2, max=120)],
     )
     module = SelectField(
-        "Module",
+        lazy("ម៉ូឌុល"),
         choices=MODULE_CHOICES,
         default="General",
     )
-    description = TextAreaField("Description")
+    description = TextAreaField(lazy("ការពិពណ៌នា"))
     
-    submit = SubmitField("Update")
+    submit = SubmitField(lazy("រក្សាទុកការផ្លាស់ប្តូរ"))
     
     def __init__(self, original_permission: PermissionTable, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -83,7 +88,7 @@ class PermissionEditForm(FlaskForm):
         )
         exists = db.session.scalar(q)
         if exists:
-            raise ValidationError("This permission code is already in use.")
+            raise ValidationError(_("កូដសិទ្ធិនេះត្រូវបានប្រើរួចហើយ។"))
     
     def validate_name(self, field):
         q = db.select(PermissionTable).filter(
@@ -92,7 +97,7 @@ class PermissionEditForm(FlaskForm):
         )
         exists = db.session.scalar(q)
         if exists:
-            raise ValidationError("This permission name is already in use")
+            raise ValidationError(_("ឈ្មោះសិទ្ធិនេះត្រូវបានប្រើរួចហើយ។"))
         
 class PermissionConfirmDeleteForm(FlaskForm):
-    submit = SubmitField("Confirm Delete")
+    submit = SubmitField(lazy("បញ្ជាក់ការលុប"))

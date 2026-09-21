@@ -1,0 +1,7 @@
+{# Light/dark switch. Wired up by static/js/theme.js. Pass css='floating' for pages without a top bar. #}
+<button type="button" class="theme-toggle {{ css }}" data-theme-toggle
+        data-label-to-dark="{{ _('ប្តូរទៅរបៀបងងឹត') }}" data-label-to-light="{{ _('ប្តូរទៅរបៀបភ្លឺ') }}"
+        aria-label="{{ _('ប្តូរទៅរបៀបងងឹត') }}" title="{{ _('ប្តូរទៅរបៀបងងឹត') }}" aria-pressed="false">
+    <i class="bi bi-moon-stars icon-dark" aria-hidden="true"></i>
+    <i class="bi bi-sun icon-light" aria-hidden="true"></i>
+</button>

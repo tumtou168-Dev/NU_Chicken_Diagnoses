@@ -1,38 +1,37 @@
 {% extends "layouts/base.html" %}
-{% block title %}ជំងឺ{% endblock %}
+{% from "layouts/_admin_macros.html" import table_filter, empty_state %}
+{% block title %}{{ _('ជំងឺ') }}{% endblock %}
+{% block page_title %}{{ _('ជំងឺ') }}{% endblock %}
+{% block page_subtitle %}{{ _('គ្រប់គ្រងប្រវត្តិរូបជំងឺ និងការព្យាបាល។') }}{% endblock %}
 
 {% block content %}
-<div class="card p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h4 class="mb-0">ជំងឺ</h4>
-            <small class="text-muted">គ្រប់គ្រងប្រវត្តិរូបជំងឺ និងការព្យាបាល</small>
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5 class="admin-card-title">{{ _('ជំងឺទាំងអស់ (%(n)s)', n=diseases | length) }}</h5>
+        <div class="admin-toolbar">
+            {{ table_filter('#diseasesTable', _('ស្វែងរកជំងឺ...')) }}
+            <a href="{{ url_for('expert_system.diseases_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ _('បន្ថែមជំងឺ') }}</a>
         </div>
-        <a href="{{ url_for('expert_system.diseases_create') }}" class="btn btn-brand">បន្ថែមជំងឺ</a>
     </div>
-
     <div class="table-responsive">
-        <table class="table table-hover border-top">
-            <thead class="table-light">
-                <tr>
-                    <th>ឈ្មោះ</th>
-                    <th>ប្រភេទ</th>
-                    <th>ការពិពណ៌នា</th>
-                    <th class="text-end">សកម្មភាព</th>
-                </tr>
-            </thead>
+        <table class="table table-hover admin-table" id="diseasesTable">
+            <thead><tr><th>{{ _('ឈ្មោះ') }}</th><th>{{ _('ប្រភេទ##one') }}</th><th>{{ _('ការពិពណ៌នា') }}</th><th class="text-end">{{ _('សកម្មភាព') }}</th></tr></thead>
             <tbody>
                 {% for disease in diseases %}
-                <tr>
-                    <td class="fw-semibold">{{ disease.name }}</td>
-                    <td>{{ disease.category.name if disease.category else "គ្មានប្រភេទ" }}</td>
-                    <td class="text-muted">{{ disease.description }}</td>
-                    <td class="text-end">
-                        <a href="{{ url_for('expert_system.diseases_edit', disease_id=disease.id) }}" class="btn btn-sm btn-outline-secondary">កែប្រែ</a>
-                        <a href="{{ url_for('expert_system.diseases_delete', disease_id=disease.id) }}" class="btn btn-sm btn-outline-danger">លុប</a>
+                <tr data-row>
+                    <td class="fw-semibold">{{ disease.pair("name") }}</td>
+                    <td>
+                        {% if disease.category %}<span class="badge-soft badge-soft-primary">{{ disease.category.inline("name") }}</span>
+                        {% else %}<span class="text-muted small">{{ _('គ្មានប្រភេទ') }}</span>{% endif %}
+                    </td>
+                    <td class="text-muted"><div class="text-truncate text-truncate-cell" title="{{ disease.loc('description') }}">{{ disease.pair("description") or "—" }}</div></td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ url_for('expert_system.diseases_edit', disease_id=disease.id) }}" class="icon-btn" title="{{ _('កែប្រែ') }}"><i class="bi bi-pencil"></i></a>
+                        <a href="{{ url_for('expert_system.diseases_delete', disease_id=disease.id) }}" class="icon-btn danger" title="{{ _('លុប') }}"><i class="bi bi-trash"></i></a>
                     </td>
                 </tr>
                 {% endfor %}
+                <tr data-empty {% if diseases %}hidden{% endif %}><td colspan="4">{{ empty_state('virus', _('មិនទាន់មានជំងឺទេ។')) }}</td></tr>
             </tbody>
         </table>
     </div>

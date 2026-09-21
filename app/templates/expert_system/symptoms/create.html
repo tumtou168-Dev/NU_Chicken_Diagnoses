@@ -1,96 +1,43 @@
 {% extends "layouts/base.html" %}
-
-{% block title %}បន្ថែមរោគសញ្ញា{% endblock %}
-{% block page_title %}បន្ថែមរោគសញ្ញាថ្មី{% endblock %}
-{% block page_subtitle %}កំណត់រោគសញ្ញាថ្មីសម្រាប់ប្រព័ន្ធជំនាញ។{% endblock %}
+{% block title %}{{ _('បន្ថែមរោគសញ្ញា') }}{% endblock %}
+{% block page_title %}{{ _('បន្ថែមរោគសញ្ញាថ្មី') }}{% endblock %}
+{% block page_subtitle %}{{ _('កំណត់រោគសញ្ញាថ្មីសម្រាប់ប្រព័ន្ធជំនាញ។') }}{% endblock %}
 
 {% block content %}
+<a href="{{ url_for('expert_system.symptoms_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅបណ្ណាល័យ') }}</a>
 <div class="row g-4">
-    <!-- Form Column -->
     <div class="col-lg-7">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold text-muted">ព័ត៌មានលម្អិតរោគសញ្ញា</h5>
-            </div>
-            <div class="card-body p-4">
-                <form method="POST" id="symptom-form">
-                    {{ form.hidden_tag() }}
-
-                    <div class="mb-3">
-                        <label for="name" class="form-label fw-bold">ឈ្មោះរោគសញ្ញា</label>
-                        {{ form.name(class="form-control form-control-lg", placeholder="ឧ. ក្អក", **{"data-preview-target": "#preview-name"}) }}
-                        {% if form.name.errors %}
-                            <div class="text-danger small mt-1">{{ form.name.errors[0] }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="description" class="form-label fw-bold">ការពិពណ៌នា</label>
-                        {{ form.description(class="form-control", placeholder="ការពន្យល់សង្ខេបអំពីរោគសញ្ញា", style="height: 120px", **{"data-preview-target": "#preview-description"}) }}
-                        {% if form.description.errors %}
-                            <div class="text-danger small mt-1">{{ form.description.errors[0] }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary py-2 px-4 fw-bold">
-                            <i class="bi bi-save me-2"></i>រក្សាទុករោគសញ្ញា
-                        </button>
-                        <a href="{{ url_for('expert_system.symptoms_index') }}" class="btn btn-light py-2 px-4">បោះបង់</a>
-                    </div>
-                </form>
-            </div>
+        <div class="admin-card">
+            <form method="post" id="symptom-form" novalidate>{% include "expert_system/symptoms/_form.html" %}</form>
         </div>
     </div>
-
-    <!-- Preview Column -->
     <div class="col-lg-5">
-        <div class="position-sticky" style="top: 2rem;">
-            <div class="card border-0 shadow-sm bg-light">
-                <div class="card-header bg-transparent py-3">
-                    <h6 class="mb-0 fw-bold text-muted text-uppercase small">
-                        <i class="bi bi-eye me-2"></i>មើលជាមុន
-                    </h6>
+        <div class="position-sticky" style="top: 1.5rem;">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h6 class="admin-card-title"><i class="bi bi-eye me-2 text-muted"></i>{{ _('មើលជាមុន') }}</h6>
                 </div>
-                <div class="card-body">
-                    <div class="list-group">
-                        <div class="list-group-item py-3 px-4 border-primary border-2 shadow-sm">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="flex-grow-1">
-                                    <h6 id="preview-name" class="fw-bold mb-1 text-dark">ឈ្មោះរោគសញ្ញា</h6>
-                                    <p id="preview-description" class="text-muted mb-0">ការពិពណ៌នារោគសញ្ញានឹងបង្ហាញនៅទីនេះ។</p>
-                                </div>
-                                <div class="ms-4">
-                                    <div class="btn-group">
-                                        <button class="btn btn-sm btn-outline-secondary" disabled><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger" disabled><i class="bi bi-trash"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="admin-card-body">
+                    <div class="fw-semibold" id="preview-name" data-default="{{ _('ឈ្មោះរោគសញ្ញា') }}">{{ _('ឈ្មោះរោគសញ្ញា') }}</div>
+                    <div class="text-muted" id="preview-description" data-default="{{ _('ការពិពណ៌នារោគសញ្ញានឹងបង្ហាញនៅទីនេះ។') }}">{{ _('ការពិពណ៌នារោគសញ្ញានឹងបង្ហាញនៅទីនេះ។') }}</div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('symptom-form');
-        form.addEventListener('input', function(e) {
-            const targetId = e.target.dataset.previewTarget;
-            if (targetId) {
-                const previewElement = document.querySelector(targetId);
-                if (previewElement) {
-                    previewElement.textContent = e.target.value || e.target.placeholder;
-                    if (!e.target.value) {
-                         if(targetId === '#preview-name') previewElement.textContent = 'ឈ្មោះរោគសញ្ញា';
-                         if(targetId === '#preview-description') previewElement.textContent = 'ការពិពណ៌នារោគសញ្ញានឹងបង្ហាញនៅទីនេះ។';
-                    }
-                }
-            }
-        });
-    });
+document.addEventListener('DOMContentLoaded', function () {
+    const bind = (input, preview) => {
+        if (!input || !preview) return;
+        const sync = () => { preview.textContent = input.value.trim() || preview.dataset.default; };
+        input.addEventListener('input', sync);
+        sync();
+    };
+    bind(document.querySelector('#symptom-form [name="name"]'), document.getElementById('preview-name'));
+    bind(document.querySelector('#symptom-form [name="description"]'), document.getElementById('preview-description'));
+});
 </script>
 {% endblock %}

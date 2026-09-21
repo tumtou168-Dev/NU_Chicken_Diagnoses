@@ -1,7 +1,13 @@
 {% extends "layouts/base.html" %}
-{% block title %}កែប្រែសិទ្ធិ{% endblock %}
+{% block title %}{{ _('កែប្រែសិទ្ធិ') }}{% endblock %}
+{% block page_title %}{{ _('កែប្រែសិទ្ធិ') }}{% endblock %}
+{% block page_subtitle %}{{ _('កែប្រែព័ត៌មានរបស់សិទ្ធិ %(name)s។', name=permission.code) }}{% endblock %}
 
 {% block content %}
-    <h1 class="h3 mb-3">កែប្រែសិទ្ធិ៖ {{ permission.code }}</h1>
-    {% include "permission/_form.html" %}
+<a href="{{ url_for('tbl_permissions.detail', permission_id=permission.id) }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅព័ត៌មានលម្អិត') }}</a>
+<div class="admin-card form-narrow">
+    <form method="post" novalidate>
+        {% include "permission/_form.html" %}
+    </form>
+</div>
 {% endblock %}

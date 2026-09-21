@@ -2,15 +2,18 @@
 from collections import defaultdict
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SubmitField
-from wtforms.validators import DataRequired, Length, ValidationError
+from wtforms.validators import ValidationError
+from app.forms import validation as val
+from app.i18n import lazy, gettext as _
 from app.models import RoleTable, PermissionTable
-from extensions import db 
+from extensions import db
+from app.i18n import data_text
 from app.forms.multi_checkbox_field import MultiCheckboxField
 
 def _permission_choices():
     """Flat (id, label) list, used for field binding only."""
     return [
-        (perm.id, f"{perm.code} - {perm.name}")
+        (perm.id, f"{perm.code} - {data_text(perm.name)}")
         for perm in db.session.scalars(
             db.select(PermissionTable).order_by(PermissionTable.code)
         ).all()
@@ -38,22 +41,22 @@ def _permissions_grouped_by_module():
 
 class RoleCreateForm(FlaskForm):
     name = StringField(
-        "Name",
-        validators=[DataRequired(), Length(min=2, max=80)],
-        render_kw={"placeholder": "Role name"},
+        lazy("ឈ្មោះ"),
+        validators=[val.required(), val.length(min=2, max=80)],
+        render_kw={"placeholder": lazy("ឈ្មោះតួនាទី")},
     )
     description = TextAreaField(
-        "Description",
-        render_kw={"placeholder": "Short description (optional)"},
+        lazy("ការពិពណ៌នា"),
+        render_kw={"placeholder": lazy("ការពិពណ៌នាសង្ខេប (មិនបង្ខំ)")},
     )
     
     permission_ids = MultiCheckboxField(
-        "Permissions",
+        lazy("សិទ្ធិ"),
         coerce=int,
-        render_kw={"placeholder": "Permission granted to this role"},
+        render_kw={"placeholder": lazy("សិទ្ធិដែលផ្តល់ឱ្យតួនាទីនេះ")},
     )
     
-    submit = SubmitField("Save")
+    submit = SubmitField(lazy("រក្សាទុក"))
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -65,21 +68,21 @@ class RoleCreateForm(FlaskForm):
             db.select(RoleTable).filter(RoleTable.name == field.data)
         )
         if exists:
-            raise ValidationError("This role name is already taken.")
+            raise ValidationError(_("ឈ្មោះតួនាទីនេះមានរួចហើយ។"))
         
 
 class RoleEditForm(FlaskForm):
     name = StringField(
-        "Name",
-        validators=[DataRequired(), Length(min=2, max=80)],
+        lazy("ឈ្មោះ"),
+        validators=[val.required(), val.length(min=2, max=80)],
     )
-    description = TextAreaField("Description")
+    description = TextAreaField(lazy("ការពិពណ៌នា"))
     
-    permission_ids = MultiCheckboxField("Permission",
+    permission_ids = MultiCheckboxField(lazy("សិទ្ធិ"),
         coerce=int,
     )
     
-    submit = SubmitField("Update")
+    submit = SubmitField(lazy("រក្សាទុកការផ្លាស់ប្តូរ"))
     
     def __init__(self, original_role: RoleTable,*args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -97,7 +100,7 @@ class RoleEditForm(FlaskForm):
         )
         exists = db.session.scalar(q)
         if exists:
-            raise ValidationError("This role name is already taken.")
+            raise ValidationError(_("ឈ្មោះតួនាទីនេះមានរួចហើយ។"))
 
 class RoleConfirmDeleteForm(FlaskForm):
-    submit = SubmitField("Confirm Delete")
+    submit = SubmitField(lazy("បញ្ជាក់ការលុប"))

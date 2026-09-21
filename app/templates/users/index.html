@@ -1,77 +1,70 @@
 {% extends "layouts/base.html" %}
+{% from "layouts/_admin_macros.html" import avatar, status_badge, stat, table_filter, empty_state %}
 
-{% block title %}ការគ្រប់គ្រងអ្នកប្រើប្រាស់{% endblock %}
-{% block page_title %}ការគ្រប់គ្រងអ្នកប្រើប្រាស់{% endblock %}
+{% block title %}{{ _('ការគ្រប់គ្រងអ្នកប្រើប្រាស់') }}{% endblock %}
+{% block page_title %}{{ _('ការគ្រប់គ្រងអ្នកប្រើប្រាស់') }}{% endblock %}
+{% block page_subtitle %}{{ _('គ្រប់គ្រងគណនី តួនាទី និងស្ថានភាពនៃការចូលប្រើប្រាស់។') }}{% endblock %}
 
 {% block content %}
-<div class="card shadow-sm">
-    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-        <h5 class="mb-0 text-muted">អ្នកប្រើប្រាស់ដែលបានចុះឈ្មោះ</h5>
-        <a href="{{ url_for('tbl_users.create') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg"></i> អ្នកប្រើប្រាស់ថ្មី
-        </a>
+{% set active_count = users | selectattr('is_active') | list | length %}
+<div class="stat-grid">
+    {{ stat('people', users | length, _('អ្នកប្រើប្រាស់សរុប'), 'primary') }}
+    {{ stat('check-circle', active_count, _('សកម្ម'), 'success') }}
+    {{ stat('slash-circle', (users | length) - active_count, _('អសកម្ម'), 'danger') }}
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5 class="admin-card-title">{{ _('អ្នកប្រើប្រាស់ដែលបានចុះឈ្មោះ') }}</h5>
+        <div class="admin-toolbar">
+            {{ table_filter('#usersTable', _('ស្វែងរកអ្នកប្រើប្រាស់...')) }}
+            <a href="{{ url_for('tbl_users.create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>{{ _('អ្នកប្រើប្រាស់ថ្មី') }}
+            </a>
+        </div>
     </div>
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
+        <table class="table table-hover admin-table" id="usersTable">
+            <thead>
                 <tr>
-                    <th class="ps-4">លេខសម្គាល់</th>
-                    <th>អ្នកប្រើប្រាស់</th>
-                    <th>អ៊ីមែល</th>
-                    <th>តួនាទី</th>
-                    <th>ស្ថានភាព</th>
-                    <th class="text-end pe-4">សកម្មភាព</th>
+                    <th>{{ _('អ្នកប្រើប្រាស់##one') }}</th>
+                    <th>{{ _('អ៊ីមែល') }}</th>
+                    <th>{{ _('តួនាទី##one') }}</th>
+                    <th>{{ _('ស្ថានភាព') }}</th>
+                    <th class="text-end">{{ _('សកម្មភាព') }}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for user in users %}
-                <tr>
-                    <td class="ps-4 text-muted">#{{ user.id }}</td>
+                <tr data-row>
                     <td>
-                        <div class="d-flex align-items-center">
-                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                <i class="bi bi-person text-secondary"></i>
-                            </div>
+                        <div class="d-flex align-items-center gap-3">
+                            {{ avatar(user.username, src=avatar_url(user)) }}
                             <div>
-                                <div class="fw-bold">{{ user.username }}</div>
+                                <a class="row-link" href="{{ url_for('tbl_users.detail', user_id=user.id) }}">{{ user.username }}</a>
                                 <div class="small text-muted">{{ user.full_name }}</div>
                             </div>
                         </div>
                     </td>
-                    <td>{{ user.email }}</td>
+                    <td class="text-muted">{{ user.email }}</td>
                     <td>
                         {% for role in user.roles %}
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10">{{ role.name }}</span>
+                            <span class="badge-soft badge-soft-primary">{{ role.name | dt }}</span>
                         {% else %}
-                            <span class="text-muted small fst-italic">គ្មានតួនាទី</span>
+                            <span class="text-muted small">{{ _('គ្មានតួនាទី') }}</span>
                         {% endfor %}
                     </td>
-                    <td>
-                        {% if user.is_active %}
-                            <span class="badge bg-success bg-opacity-10 text-success"><i class="bi bi-check-circle-fill me-1"></i>សកម្ម</span>
-                        {% else %}
-                            <span class="badge bg-danger bg-opacity-10 text-danger"><i class="bi bi-x-circle-fill me-1"></i>អសកម្ម</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-end pe-4">
-                        <div class="btn-group">
-                            <a href="{{ url_for('tbl_users.edit', user_id=user.id) }}" class="btn btn-sm btn-outline-secondary" title="កែប្រែ">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <a href="{{ url_for('tbl_users.delete', user_id=user.id) }}" class="btn btn-sm btn-outline-danger" title="លុប">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6" class="text-center py-5 text-muted">
-                        <i class="bi bi-people display-6 d-block mb-3"></i>
-                        រកមិនឃើញអ្នកប្រើប្រាស់ទេ។
+                    <td>{{ status_badge(user.is_active) }}</td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ url_for('tbl_users.detail', user_id=user.id) }}" class="icon-btn" title="{{ _('មើល') }}"><i class="bi bi-eye"></i></a>
+                        <a href="{{ url_for('tbl_users.edit', user_id=user.id) }}" class="icon-btn" title="{{ _('កែប្រែ') }}"><i class="bi bi-pencil"></i></a>
+                        <a href="{{ url_for('tbl_users.delete_confirm', user_id=user.id) }}" class="icon-btn danger" title="{{ _('លុប') }}"><i class="bi bi-trash"></i></a>
                     </td>
                 </tr>
                 {% endfor %}
+                <tr data-empty {% if users %}hidden{% endif %}>
+                    <td colspan="5">{{ empty_state('people', _('រកមិនឃើញអ្នកប្រើប្រាស់ទេ។')) }}</td>
+                </tr>
             </tbody>
         </table>
     </div>

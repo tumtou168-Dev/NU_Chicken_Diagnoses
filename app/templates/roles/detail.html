@@ -1,69 +1,55 @@
 {% extends "layouts/base.html" %}
-{% block title %}ព័ត៌មានលម្អិតតួនាទី{% endblock %}
+{% block title %}{{ _('ព័ត៌មានលម្អិតតួនាទី') }}{% endblock %}
+{% block page_title %}{{ role.name | dt }}{% endblock %}
+{% block page_subtitle %}{{ _('ព័ត៌មានលម្អិតតួនាទី និងសិទ្ធិដែលបានផ្តល់។') }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h1 class="h3 mb-0">តួនាទី៖ {{ role.name }}</h1>
-        <p class="text-muted mb-0">
-            បង្កើត៖ {{ role.create_at }} ▪ ធ្វើបច្ចុប្បន្នភាព៖ {{ role.updated_at }}
-        </p>
-    </div>
-    <div class="text-end">
-        <a href="{{ url_for('tbl_roles.edit', role_id=role.id) }}" 
-        class="btn btn-danger">កែប្រែ</a>
-        <a href="{{ url_for('tbl_roles.delete_confirm', role_id=role.id) }}"
-        class="btn btn-danger">លុប</a>
-        <a href="{{ url_for('tbl_roles.index') }}" class="btn btn-secondary">ត្រឡប់ក្រោយ</a>
-    </div>
-</div>
+<a href="{{ url_for('tbl_roles.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅតួនាទី') }}</a>
 
-<div class="row">
-    <!-- Basic info -->
-    <div class="col-lg-6 mb-3">
-        <div class="card">
-            <div class="card-header">
-                ព័ត៌មានតួនាទី
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5 class="admin-card-title">{{ _('ព័ត៌មានតួនាទី') }}</h5>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('tbl_roles.edit', role_id=role.id) }}" class="btn btn-soft btn-sm"><i class="bi bi-pencil me-1"></i>{{ _('កែប្រែ') }}</a>
+                    <a href="{{ url_for('tbl_roles.delete_confirm', role_id=role.id) }}" class="btn btn-soft btn-sm text-danger"><i class="bi bi-trash me-1"></i>{{ _('លុប') }}</a>
+                </div>
             </div>
-            <div class="card-body">
-                <p><strong>ឈ្មោះ៖</strong>{{ role.name }}</p>
-                <p><strong>ការពិពណ៌នា៖</strong>{{ role.description or "-" }}</p>
+            <div class="admin-card-body">
+                <dl class="detail-list">
+                    <div class="detail-item"><dt>{{ _('ឈ្មោះ') }}</dt><dd>{{ role.name | dt }}</dd></div>
+                    <div class="detail-item"><dt>{{ _('ការពិពណ៌នា') }}</dt><dd>{{ (role.description | dt) or "—" }}</dd></div>
+                    <div class="detail-item"><dt>{{ _('អ្នកប្រើប្រាស់') }}</dt><dd>{{ role.users | length }}</dd></div>
+                    <div class="detail-item"><dt>{{ _('បានបង្កើត') }}</dt><dd>{{ role.created_at.strftime('%Y-%m-%d %H:%M') }}</dd></div>
+                    <div class="detail-item"><dt>{{ _('ធ្វើបច្ចុប្បន្នភាព') }}</dt><dd>{{ role.updated_at.strftime('%Y-%m-%d %H:%M') }}</dd></div>
+                </dl>
             </div>
         </div>
     </div>
 
-    <!-- Permissions -->
-    <div class="col-lg-6 mb-3">
-        <div class="card">
-            <div class="card-header">
-                សិទ្ធិ ({{ role.permissions|length }})
+    <div class="col-lg-7">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5 class="admin-card-title">{{ _('សិទ្ធិ') }}</h5>
+                <span class="badge-soft badge-soft-primary">{{ role.permissions | length }}</span>
             </div>
-            <div class="card-body">
-                {% if role.permissions %}
-                    <ul class="list-group list-group-flush">
-                        {% for perm in role.permissions %}
-                        <li class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="badge bg-secondary me-2">{{ perm.module }}</span>
-                                    <strong>{{ perm.code }}</strong> - {{ perm.name }}
-                                </div>
-                                <a href="{{ url_for('tbl_permissions.detail', permission_id=perm.id) }}" 
-                                    class="btn btn-sm btn-outline-primary">
-                                    មើល
-                                </a>
-                            </div>
-                            {% if perm.description %}
-                            <div class="small text-muted mt-1">
-                                {{ perm.description }}
-                            </div>
-                            {% endif %}
-                        </li>
-                        {% endfor %}
-                    </ul>
+            <div class="admin-card-body py-2">
+                {% for perm in role.permissions %}
+                <div class="perm-row">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="perm-code">{{ perm.code }}</span>
+                            <span class="badge-soft badge-soft-neutral">{{ perm.module | module_label }}</span>
+                        </div>
+                        <div class="mt-1">{{ perm.name | dt }}</div>
+                        {% if perm.description %}<div class="small text-muted">{{ perm.description | dt }}</div>{% endif %}
+                    </div>
+                    <a href="{{ url_for('tbl_permissions.detail', permission_id=perm.id) }}" class="icon-btn" title="{{ _('មើល') }}"><i class="bi bi-arrow-right"></i></a>
+                </div>
                 {% else %}
-                    <p class="text-muted mb-0">តួនាទីនេះមិនទាន់មានសិទ្ធិនៅឡើយទេ។</p>
-                {% endif %}
+                <div class="empty-state"><i class="bi bi-key"></i>{{ _('តួនាទីនេះមិនទាន់មានសិទ្ធិនៅឡើយទេ។') }}</div>
+                {% endfor %}
             </div>
         </div>
     </div>

@@ -1,12 +1,14 @@
 # app/routes/expert_system.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
+from app.i18n import gettext as _
 from utils.decorators import require_permission
 from app.forms.expert_system_forms import (
     CategoryForm,
     SymptomForm,
     DiseaseForm,
     RuleForm,
+    PageTextForm,
 )
 from app.services.diagnosis_service import DiagnosisService
 from app.services.expert_system_service import (
@@ -17,6 +19,7 @@ from app.services.expert_system_service import (
     CaseService,
 )
 from app.services.audit_service import AuditService
+from app.services.page_text_service import PageTextService
 
 expert_system_bp = Blueprint("expert_system", __name__, url_prefix="/expert-system")
 
@@ -48,7 +51,7 @@ def diagnose():
                 )
                 AuditService.log("DIAGNOSE", "Case", case.id, f"User ran diagnosis, result: {case.disease.name}")
         else:
-            flash("Please select at least one symptom.", "warning")
+            flash(_("សូមជ្រើសរើសរោគសញ្ញាយ៉ាងហោចណាស់មួយ។"), "warning")
 
     return render_template(
         "expert_system/diagnose.html",
@@ -103,10 +106,11 @@ def categories_create():
     form = CategoryForm()
     if form.validate_on_submit():
         category = CategoryService.create(
-            {"name": form.name.data, "description": form.description.data}
+            {"name": form.name.data, "name_km": form.name_km.data,
+             "description": form.description.data, "description_km": form.description_km.data}
         )
         AuditService.log("CREATE", "Category", category.id, f"Created category: {category.name}")
-        flash(f"Category '{category.name}' created successfully.", "success")
+        flash(_("បានបង្កើតប្រភេទ '%(name)s' ដោយជោគជ័យ។", name=category.name), "success")
         return redirect(url_for("expert_system.categories_index"))
     return render_template("expert_system/categories/create.html", form=form)
 
@@ -122,10 +126,11 @@ def categories_edit(category_id: int):
     if form.validate_on_submit():
         CategoryService.update(
             category,
-            {"name": form.name.data, "description": form.description.data},
+            {"name": form.name.data, "name_km": form.name_km.data,
+             "description": form.description.data, "description_km": form.description_km.data},
         )
         AuditService.log("UPDATE", "Category", category.id, f"Updated category: {category.name}")
-        flash("Category updated successfully.", "success")
+        flash(_("បានកែប្រែប្រភេទដោយជោគជ័យ។"), "success")
         return redirect(url_for("expert_system.categories_index"))
     return render_template(
         "expert_system/categories/edit.html",
@@ -145,7 +150,7 @@ def categories_delete(category_id: int):
         category_name = category.name
         CategoryService.delete(category)
         AuditService.log("DELETE", "Category", category_id, f"Deleted category: {category_name}")
-        flash("Category deleted successfully.", "success")
+        flash(_("បានលុបប្រភេទដោយជោគជ័យ។"), "success")
         return redirect(url_for("expert_system.categories_index"))
     return render_template(
         "expert_system/categories/delete_confirm.html",
@@ -168,10 +173,11 @@ def symptoms_create():
     form = SymptomForm()
     if form.validate_on_submit():
         symptom = SymptomService.create(
-            {"name": form.name.data, "description": form.description.data}
+            {"name": form.name.data, "name_km": form.name_km.data,
+             "description": form.description.data, "description_km": form.description_km.data}
         )
         AuditService.log("CREATE", "Symptom", symptom.id, f"Created symptom: {symptom.name}")
-        flash(f"Symptom '{symptom.name}' created successfully.", "success")
+        flash(_("បានបង្កើតរោគសញ្ញា '%(name)s' ដោយជោគជ័យ។", name=symptom.name), "success")
         return redirect(url_for("expert_system.symptoms_index"))
     return render_template("expert_system/symptoms/create.html", form=form)
 
@@ -187,10 +193,11 @@ def symptoms_edit(symptom_id: int):
     if form.validate_on_submit():
         SymptomService.update(
             symptom,
-            {"name": form.name.data, "description": form.description.data},
+            {"name": form.name.data, "name_km": form.name_km.data,
+             "description": form.description.data, "description_km": form.description_km.data},
         )
         AuditService.log("UPDATE", "Symptom", symptom.id, f"Updated symptom: {symptom.name}")
-        flash("Symptom updated successfully.", "success")
+        flash(_("បានកែប្រែរោគសញ្ញាដោយជោគជ័យ។"), "success")
         return redirect(url_for("expert_system.symptoms_index"))
     return render_template(
         "expert_system/symptoms/edit.html",
@@ -210,7 +217,7 @@ def symptoms_delete(symptom_id: int):
         symptom_name = symptom.name
         SymptomService.delete(symptom)
         AuditService.log("DELETE", "Symptom", symptom_id, f"Deleted symptom: {symptom_name}")
-        flash("Symptom deleted successfully.", "success")
+        flash(_("បានលុបរោគសញ្ញាដោយជោគជ័យ។"), "success")
         return redirect(url_for("expert_system.symptoms_index"))
     return render_template(
         "expert_system/symptoms/delete_confirm.html",
@@ -235,13 +242,16 @@ def diseases_create():
         disease = DiseaseService.create(
             {
                 "name": form.name.data,
+                "name_km": form.name_km.data,
                 "description": form.description.data,
+                "description_km": form.description_km.data,
                 "treatment": form.treatment.data,
+                "treatment_km": form.treatment_km.data,
                 "category_id": form.category_id.data,
             }
         )
         AuditService.log("CREATE", "Disease", disease.id, f"Created disease: {disease.name}")
-        flash(f"Disease '{disease.name}' created successfully.", "success")
+        flash(_("បានបង្កើតជំងឺ '%(name)s' ដោយជោគជ័យ។", name=disease.name), "success")
         return redirect(url_for("expert_system.diseases_index"))
     return render_template("expert_system/diseases/create.html", form=form)
 
@@ -259,13 +269,16 @@ def diseases_edit(disease_id: int):
             disease,
             {
                 "name": form.name.data,
+                "name_km": form.name_km.data,
                 "description": form.description.data,
+                "description_km": form.description_km.data,
                 "treatment": form.treatment.data,
+                "treatment_km": form.treatment_km.data,
                 "category_id": form.category_id.data,
             },
         )
         AuditService.log("UPDATE", "Disease", disease.id, f"Updated disease: {disease.name}")
-        flash("Disease updated successfully.", "success")
+        flash(_("បានកែប្រែជំងឺដោយជោគជ័យ។"), "success")
         return redirect(url_for("expert_system.diseases_index"))
     return render_template(
         "expert_system/diseases/edit.html",
@@ -285,7 +298,7 @@ def diseases_delete(disease_id: int):
         disease_name = disease.name
         DiseaseService.delete(disease)
         AuditService.log("DELETE", "Disease", disease_id, f"Deleted disease: {disease_name}")
-        flash("Disease deleted successfully.", "success")
+        flash(_("បានលុបជំងឺដោយជោគជ័យ។"), "success")
         return redirect(url_for("expert_system.diseases_index"))
     return render_template(
         "expert_system/diseases/delete_confirm.html",
@@ -310,7 +323,9 @@ def rules_create():
         rule = RuleService.create(
             {
                 "title": form.title.data,
+                "title_km": form.title_km.data,
                 "description": form.description.data,
+                "description_km": form.description_km.data,
                 "priority": form.priority.data,
                 "confidence": form.confidence.data,
                 "disease_id": form.disease_id.data,
@@ -318,7 +333,7 @@ def rules_create():
             symptom_ids=form.symptom_ids.data or [],
         )
         AuditService.log("CREATE", "Rule", rule.id, f"Created rule: {rule.title}")
-        flash(f"Rule '{rule.title}' created successfully.", "success")
+        flash(_("បានបង្កើតវិធាន '%(title)s' ដោយជោគជ័យ។", title=rule.title), "success")
         return redirect(url_for("expert_system.rules_index"))
     
     # If validation fails, print errors to console for debugging
@@ -341,7 +356,9 @@ def rules_edit(rule_id: int):
             rule,
             {
                 "title": form.title.data,
+                "title_km": form.title_km.data,
                 "description": form.description.data,
+                "description_km": form.description_km.data,
                 "priority": form.priority.data,
                 "confidence": form.confidence.data,
                 "disease_id": form.disease_id.data,
@@ -349,7 +366,7 @@ def rules_edit(rule_id: int):
             symptom_ids=form.symptom_ids.data or [],
         )
         AuditService.log("UPDATE", "Rule", rule.id, f"Updated rule: {rule.title}")
-        flash("Rule updated successfully.", "success")
+        flash(_("បានកែប្រែវិធានដោយជោគជ័យ។"), "success")
         return redirect(url_for("expert_system.rules_index"))
         
     # If validation fails, print errors to console for debugging
@@ -374,9 +391,45 @@ def rules_delete(rule_id: int):
         rule_title = rule.title
         RuleService.delete(rule)
         AuditService.log("DELETE", "Rule", rule_id, f"Deleted rule: {rule_title}")
-        flash("Rule deleted successfully.", "success")
+        flash(_("បានលុបវិធានដោយជោគជ័យ។"), "success")
         return redirect(url_for("expert_system.rules_index"))
     return render_template(
         "expert_system/rules/delete_confirm.html",
         rule=rule,
     )
+
+
+@expert_system_bp.route("/page-texts")
+@login_required
+@require_permission("manage_page_texts")
+def page_texts_index():
+    return render_template("expert_system/page_texts/index.html", items=PageTextService.get_all())
+
+
+@expert_system_bp.route("/page-texts/<int:text_id>/edit", methods=["GET", "POST"])
+@login_required
+@require_permission("manage_page_texts")
+def page_texts_edit(text_id: int):
+    item = PageTextService.get_by_id(text_id)
+    if item is None:
+        abort(404)
+    form = PageTextForm(obj=item)
+    if form.validate_on_submit():
+        PageTextService.update(item, form.text_km.data, form.text_en.data)
+        AuditService.log("UPDATE", "PageText", item.id, f"Updated page text: {item.key}")
+        flash(_("បានកែប្រែអត្ថបទដោយជោគជ័យ។"), "success")
+        return redirect(url_for("expert_system.page_texts_index"))
+    return render_template("expert_system/page_texts/edit.html", form=form, item=item)
+
+
+@expert_system_bp.route("/page-texts/<int:text_id>/reset", methods=["POST"])
+@login_required
+@require_permission("manage_page_texts")
+def page_texts_reset(text_id: int):
+    item = PageTextService.get_by_id(text_id)
+    if item is None:
+        abort(404)
+    PageTextService.reset(item)
+    AuditService.log("UPDATE", "PageText", item.id, f"Reset page text to default: {item.key}")
+    flash(_("បានស្តារអត្ថបទទៅលំនាំដើមវិញ។"), "success")
+    return redirect(url_for("expert_system.page_texts_edit", text_id=item.id))

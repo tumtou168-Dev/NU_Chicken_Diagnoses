@@ -1,6 +1,49 @@
 {% extends "layouts/base.html" %}
-{% block title %}កែប្រែអ្នកប្រើប្រាស់ {{ user.username }}{% endblock %}
+{% from "layouts/_admin_macros.html" import avatar %}
+{% set own_profile = current_user.id == user.id and not current_user.has_role('Admin') %}
+{% block title %}{{ _('កែប្រែប្រវត្តិរូប') if own_profile else _('កែប្រែអ្នកប្រើប្រាស់ %(name)s', name=user.username) }}{% endblock %}
+{% block page_title %}{{ _('កែប្រែប្រវត្តិរូប') if own_profile else _('កែប្រែអ្នកប្រើប្រាស់') }}{% endblock %}
+{% block page_subtitle %}{{ _('ធ្វើបច្ចុប្បន្នភាពព័ត៌មានផ្ទាល់ខ្លួន និងពាក្យសម្ងាត់របស់អ្នក។') if own_profile else _('កែប្រែព័ត៌មានរបស់ @%(name)s។', name=user.username) }}{% endblock %}
+
 {% block content %}
-<h1 class="h3 mb-3">កែប្រែអ្នកប្រើប្រាស់៖ {{ user.username }}</h1>
-<form method="post">{% include "users/_form.html" %}</form>
+<a href="{{ url_for('tbl_users.profile') if own_profile else url_for('tbl_users.detail', user_id=user.id) }}" class="back-link">
+    <i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅប្រវត្តិរូប') if own_profile else _('ត្រឡប់ក្រោយ') }}
+</a>
+<div class="admin-card form-narrow">
+    <div class="admin-card-header">
+        <div class="entity-header">
+            {{ avatar(user.username, 'lg', avatar_url(user)) }}
+            <div>
+                <h5 class="entity-name">{{ user.full_name }}</h5>
+                <p class="entity-sub">@{{ user.username }}
+                    {% for role in user.roles %}<span class="badge-soft badge-soft-primary ms-2">{{ role.name | dt }}</span>{% endfor %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% include "users/_form.html" %}
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('avatar');
+    const preview = document.getElementById('avatarPreview');
+    const remove = document.getElementById('remove_avatar');
+    if (!input || !preview) return;
+    const original = preview.innerHTML;
+    input.addEventListener('change', function () {
+        const file = input.files && input.files[0];
+        if (!file) { preview.innerHTML = original; return; }
+        const img = document.createElement('img');
+        img.alt = '';
+        img.src = URL.createObjectURL(file);
+        preview.replaceChildren(img);
+        if (remove) remove.checked = false;
+    });
+});
+</script>
 {% endblock %}

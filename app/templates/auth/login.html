@@ -1,72 +1,50 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}ចូលប្រើប្រាស់{% endblock %}
-
-{% block sidebar %}
-<!-- Sidebar removed for login page -->
-{% endblock %}
-
-{% block main_class %}col-12{% endblock %}
-
-{% block mobile_nav_toggle %}
-<!-- Mobile nav toggle removed for login page -->
-{% endblock %}
-
-{% block page_header_content %}
-<!-- Hide profile in header for login page -->
-{% endblock %}
-
-{% block footer %}
-<!-- Hide footer for login page -->
-{% endblock %}
+{% block title %}{{ _('ចូលប្រើប្រាស់') }}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block main_class %}col-12 p-0{% endblock %}
+{% block mobile_nav_toggle %}{% endblock %}
+{% block page_header %}{% endblock %}
+{% block flashes %}{% endblock %}
+{% block content_class %}{% endblock %}
+{% block footer %}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center align-items-center" style="min-height: 75vh;">
-        <div class="col-md-5 col-lg-4">
-            <div class="text-center mb-4">
-                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
-                    <i class="bi bi-person-circle fs-2"></i>
-                </div>
-                <h2 class="fw-bold">សូមស្វាគមន៍</h2>
-                <p class="text-muted">សូមបញ្ចូលព័ត៌មានរបស់អ្នកដើម្បីចូលប្រើប្រាស់។</p>
-            </div>
-
-            <div class="card shadow-lg border-0">
-                <div class="card-body p-4 p-md-5">
-                    <form method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                        <div class="mb-3">
-                            <label for="username" class="form-label small text-muted fw-bold text-uppercase">ឈ្មោះអ្នកប្រើប្រាស់</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
-                                <input type="text" class="form-control bg-light border-start-0 ps-0" id="username" name="username" placeholder="បញ្ចូលឈ្មោះអ្នកប្រើប្រាស់" required autofocus>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label for="password" class="form-label small text-muted fw-bold text-uppercase">ពាក្យសម្ងាត់</label>
-                            </div>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
-                                <input type="password" class="form-control bg-light border-start-0 ps-0" id="password" name="password" placeholder="••••••••" required>
-                            </div>
-                        </div>
-
-                        <div class="d-grid mb-3">
-                            <button type="submit" class="btn btn-primary py-2 fw-bold">ចូល</button>
-                        </div>
-                    </form>
-                </div>
-                <div class="card-footer bg-white border-0 text-center py-3">
-                    <p class="mb-0 text-muted small">
-                        មិនទាន់មានគណនី? <a href="{{ url_for('auth.register') }}" class="text-primary text-decoration-none fw-bold">បង្កើតគណនី</a>
-                    </p>
-                </div>
-            </div>
+{% with css='floating' %}{% include "layouts/_lang_switch.html" %}{% include "layouts/_theme_toggle.html" %}{% endwith %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="IDNS">
+            <h1>{{ _('សូមស្វាគមន៍') }}</h1>
+            <p>{{ _('សូមបញ្ចូលព័ត៌មានរបស់អ្នកដើម្បីចូលប្រើប្រាស់។') }}</p>
         </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+        {% endfor %}
+        {% endwith %}
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label for="username" class="form-label">{{ _('ឈ្មោះអ្នកប្រើប្រាស់') }}</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="{{ _('បញ្ចូលឈ្មោះអ្នកប្រើប្រាស់') }}" required autofocus>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label for="password" class="form-label">{{ _('ពាក្យសម្ងាត់') }}</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+                </div>
+            </div>
+            <div class="d-grid"><button type="submit" class="btn btn-primary py-2">{{ _('ចូល') }}</button></div>
+        </form>
+
+        <div class="auth-foot">{{ _('មិនទាន់មានគណនី?') }} <a href="{{ url_for('auth.register') }}">{{ _('បង្កើតគណនី') }}</a></div>
     </div>
 </div>
 {% endblock %}

@@ -17,7 +17,9 @@ class CategoryService:
     def create(data: dict) -> Category:
         category = Category(
             name=data["name"],
+            name_km=data.get("name_km") or None,
             description=data.get("description") or "",
+            description_km=data.get("description_km") or None,
         )
         db.session.add(category)
         db.session.commit()
@@ -26,7 +28,9 @@ class CategoryService:
     @staticmethod
     def update(category: Category, data: dict) -> Category:
         category.name = data["name"]
+        category.name_km = data.get("name_km") or None
         category.description = data.get("description") or ""
+        category.description_km = data.get("description_km") or None
         db.session.commit()
         return category
 
@@ -49,7 +53,9 @@ class SymptomService:
     def create(data: dict) -> Symptom:
         symptom = Symptom(
             name=data["name"],
+            name_km=data.get("name_km") or None,
             description=data.get("description") or "",
+            description_km=data.get("description_km") or None,
         )
         db.session.add(symptom)
         db.session.commit()
@@ -58,7 +64,9 @@ class SymptomService:
     @staticmethod
     def update(symptom: Symptom, data: dict) -> Symptom:
         symptom.name = data["name"]
+        symptom.name_km = data.get("name_km") or None
         symptom.description = data.get("description") or ""
+        symptom.description_km = data.get("description_km") or None
         db.session.commit()
         return symptom
 
@@ -81,8 +89,11 @@ class DiseaseService:
     def create(data: dict) -> Disease:
         disease = Disease(
             name=data["name"],
+            name_km=data.get("name_km") or None,
             description=data["description"],
+            description_km=data.get("description_km") or None,
             treatment=data["treatment"],
+            treatment_km=data.get("treatment_km") or None,
             category_id=data.get("category_id") or None,
         )
         db.session.add(disease)
@@ -92,8 +103,11 @@ class DiseaseService:
     @staticmethod
     def update(disease: Disease, data: dict) -> Disease:
         disease.name = data["name"]
+        disease.name_km = data.get("name_km") or None
         disease.description = data["description"]
+        disease.description_km = data.get("description_km") or None
         disease.treatment = data["treatment"]
+        disease.treatment_km = data.get("treatment_km") or None
         disease.category_id = data.get("category_id") or None
         db.session.commit()
         return disease
@@ -117,7 +131,9 @@ class RuleService:
     def create(data: dict, symptom_ids: List[int]) -> Rule:
         rule = Rule(
             title=data["title"],
+            title_km=data.get("title_km") or None,
             description=data["description"],
+            description_km=data.get("description_km") or None,
             priority=data["priority"],
             confidence=data["confidence"],
             disease_id=data["disease_id"],
@@ -133,7 +149,9 @@ class RuleService:
     @staticmethod
     def update(rule: Rule, data: dict, symptom_ids: List[int]) -> Rule:
         rule.title = data["title"]
+        rule.title_km = data.get("title_km") or None
         rule.description = data["description"]
+        rule.description_km = data.get("description_km") or None
         rule.priority = data["priority"]
         rule.confidence = data["confidence"]
         rule.disease_id = data["disease_id"]

@@ -1,98 +1,66 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}ព័ត៌មានលម្អិតនៃការធ្វើរោគវិនិច្ឆ័យ{% endblock %}
-{% block page_title %}របាយការណ៍រោគវិនិច្ឆ័យ{% endblock %}
-{% block page_subtitle %}ទិដ្ឋភាពលម្អិតនៃករណី #{{ case.id }}{% endblock %}
+{% block title %}{{ _('ព័ត៌មានលម្អិតនៃការធ្វើរោគវិនិច្ឆ័យ') }}{% endblock %}
+{% block page_title %}{{ _('របាយការណ៍រោគវិនិច្ឆ័យ') }}{% endblock %}
+{% block page_subtitle %}{{ _('ទិដ្ឋភាពលម្អិតនៃករណី #%(id)s', id=case.id) }}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-10">
-        <div class="mb-3">
-            <a href="{{ url_for('expert_system.cases_index') }}" class="text-decoration-none text-muted">
-                <i class="bi bi-arrow-left me-1"></i> ត្រឡប់ទៅប្រវត្តិ
-            </a>
+{% set tone = 'success' if case.confidence > 80 else ('warning' if case.confidence > 50 else 'danger') %}
+{% set bar = {'success': 'bg-success', 'warning': 'bg-warning', 'danger': 'bg-danger'}[tone] %}
+<a href="{{ url_for('expert_system.cases_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅប្រវត្តិ') }}</a>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <div>
+            <div class="info-label">{{ _('ការធ្វើរោគវិនិច្ឆ័យសម្រាប់') }}</div>
+            <h3 class="h4 mb-1">{{ case.disease.pair("name") }}</h3>
+            <span class="badge-soft badge-soft-primary">{{ case.disease.category.inline("name") }}</span>
         </div>
+        <div class="text-end">
+            <div class="info-label">{{ _('កាលបរិច្ឆេទ') }}</div>
+            <div class="fw-medium">{{ case.created_at.strftime('%Y-%m-%d') }}</div>
+            <div class="small text-muted">{{ case.created_at.strftime('%H:%M') }}</div>
+        </div>
+    </div>
 
-        <div class="card border-0 shadow-sm overflow-hidden">
-            <!-- Header Section -->
-            <div class="card-header bg-white border-bottom p-4">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h5 class="text-uppercase text-muted small fw-bold mb-1">ការធ្វើរោគវិនិច្ឆ័យសម្រាប់</h5>
-                        <h3 class="fw-bold text-dark mb-0">{{ case.disease.name }}</h3>
-                        <span class="badge bg-primary bg-opacity-10 text-primary mt-2">{{ case.disease.category.name }}</span>
-                    </div>
-                    <div class="text-end">
-                        <div class="text-uppercase text-muted small fw-bold mb-1">កាលបរិច្ឆេទ</div>
-                        <div class="fw-semibold">{{ case.created_at.strftime('%B %d, %Y') }}</div>
-                        <div class="small text-muted">{{ case.created_at.strftime('%I:%M %p') }}</div>
-                    </div>
-                </div>
+    <div class="px-4 py-3 border-bottom" style="background: var(--surface-muted);">
+        <div class="d-flex justify-content-between align-items-end mb-2">
+            <span class="info-label mb-0">{{ _('កម្រិតទំនុកចិត្ត') }}</span>
+            <span class="confidence-value text-{{ tone }}">{{ case.confidence }}%</span>
+        </div>
+        <div class="progress" style="height: 8px;">
+            <div class="progress-bar {{ bar }}" role="progressbar" style="width: {{ case.confidence }}%" aria-valuenow="{{ case.confidence }}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+    </div>
+
+    <div class="row g-0">
+        <div class="col-md-7 p-4 border-end">
+            <div class="mb-4">
+                <div class="info-label"><i class="bi bi-info-circle me-1"></i>{{ _('ការពិពណ៌នា') }}</div>
+                <p class="mb-0">{{ case.disease.pair("description") }}</p>
             </div>
-
-            <div class="card-body p-0">
-                <!-- Confidence Meter -->
-                <div class="bg-light p-4 border-bottom">
-                    <div class="d-flex justify-content-between align-items-end mb-2">
-                        <span class="fw-bold text-muted text-uppercase small">កម្រិតទំនុកចិត្ត</span>
-                        <span class="fw-bold fs-4 {% if case.confidence > 80 %}text-success{% elif case.confidence > 50 %}text-warning{% else %}text-danger{% endif %}">
-                            {{ case.confidence }}%
-                        </span>
-                    </div>
-                    <div class="progress" style="height: 8px;">
-                        <div class="progress-bar {% if case.confidence > 80 %}bg-success{% elif case.confidence > 50 %}bg-warning{% else %}bg-danger{% endif %}"
-                             role="progressbar"
-                             style="width: {{ case.confidence }}%"
-                             aria-valuenow="{{ case.confidence }}"
-                             aria-valuemin="0"
-                             aria-valuemax="100"></div>
-                    </div>
+            <div>
+                <div class="info-label"><i class="bi bi-bandaid me-1"></i>{{ _('ការព្យាបាលដែលបានណែនាំ') }}</div>
+                <div class="p-3 rounded-3 treatment-box">
+                    <p class="mb-0">{{ case.disease.pair("treatment") }}</p>
                 </div>
-
-                <div class="row g-0">
-                    <!-- Left Column: Disease Info -->
-                    <div class="col-md-7 p-4 border-end">
-                        <div class="mb-4">
-                            <h6 class="fw-bold text-uppercase text-muted small mb-3">
-                                <i class="bi bi-info-circle me-2"></i>ការពិពណ៌នា
-                            </h6>
-                            <p class="text-secondary">{{ case.disease.description }}</p>
-                        </div>
-
-                        <div>
-                            <h6 class="fw-bold text-uppercase text-muted small mb-3">
-                                <i class="bi bi-bandaid me-2"></i>ការព្យាបាលដែលបានណែនាំ
-                            </h6>
-                            <div class="p-3 bg-success bg-opacity-10 rounded border border-success border-opacity-10">
-                                <p class="mb-0 text-dark">{{ case.disease.treatment }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column: Symptoms Observed -->
-                    <div class="col-md-5 p-4 bg-light">
-                        <h6 class="fw-bold text-uppercase text-muted small mb-3">
-                            <i class="bi bi-clipboard-check me-2"></i>រោគសញ្ញាដែលបានសង្កេត
-                        </h6>
-                        <div class="d-flex flex-column gap-2">
-                            {% for symptom in case.symptoms %}
-                            <div class="d-flex align-items-center bg-white p-2 rounded border shadow-sm">
-                                <i class="bi bi-check-circle-fill text-primary me-2 ms-1"></i>
-                                <span class="fw-medium">{{ symptom.name }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="card-footer bg-white p-3 text-center border-top">
-                <small class="text-muted">
-                    របាយការណ៍បង្កើតដោយប្រព័ន្ធជំនាញ IDNS • លេខសម្គាល់ករណី៖ #{{ case.id }}
-                </small>
             </div>
         </div>
+        <div class="col-md-5 p-4" style="background: var(--surface-muted);">
+            <div class="info-label mb-3"><i class="bi bi-clipboard-check me-1"></i>{{ _('រោគសញ្ញាដែលបានសង្កេត') }}</div>
+            <div class="d-flex flex-column gap-2">
+                {% for symptom in case.symptoms %}
+                <div class="d-flex align-items-center gap-2 bg-surface px-3 py-2 rounded-3 border">
+                    <i class="bi bi-check-circle-fill text-primary"></i>
+                    <span class="fw-medium">{{ symptom.pair("name") }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-card-footer justify-content-center">
+        <small class="text-muted">{{ _('របាយការណ៍បង្កើតដោយប្រព័ន្ធជំនាញ IDNS • លេខសម្គាល់ករណី៖ #%(id)s', id=case.id) }}</small>
     </div>
 </div>
 {% endblock %}

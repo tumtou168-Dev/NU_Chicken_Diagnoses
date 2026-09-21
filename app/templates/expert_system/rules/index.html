@@ -1,44 +1,35 @@
 {% extends "layouts/base.html" %}
-{% block title %}វិធាន{% endblock %}
+{% from "layouts/_admin_macros.html" import table_filter, empty_state %}
+{% block title %}{{ _('វិធាន') }}{% endblock %}
+{% block page_title %}{{ _('វិធាន') }}{% endblock %}
+{% block page_subtitle %}{{ _('ផ្គូផ្គងរោគសញ្ញាទៅនឹងជំងឺ។') }}{% endblock %}
 
 {% block content %}
-<div class="card p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h4 class="mb-0">វិធាន</h4>
-            <small class="text-muted">ផ្គូផ្គងរោគសញ្ញាទៅនឹងជំងឺ</small>
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5 class="admin-card-title">{{ _('វិធានទាំងអស់ (%(n)s)', n=rules | length) }}</h5>
+        <div class="admin-toolbar">
+            {{ table_filter('#rulesTable', _('ស្វែងរកវិធាន...')) }}
+            <a href="{{ url_for('expert_system.rules_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ _('បន្ថែមវិធាន') }}</a>
         </div>
-        <a href="{{ url_for('expert_system.rules_create') }}" class="btn btn-brand">បន្ថែមវិធាន</a>
     </div>
-
     <div class="table-responsive">
-        <table class="table table-hover border-top">
-            <thead class="table-light">
-                <tr>
-                    <th>ចំណងជើង</th>
-                    <th>រោគសញ្ញា</th>
-                    <th>ជំងឺ</th>
-                    <th>ទំនុកចិត្ត</th>
-                    <th class="text-end">សកម្មភាព</th>
-                </tr>
-            </thead>
+        <table class="table table-hover admin-table" id="rulesTable">
+            <thead><tr><th>{{ _('ចំណងជើង') }}</th><th>{{ _('រោគសញ្ញា') }}</th><th>{{ _('ជំងឺ##one') }}</th><th>{{ _('ទំនុកចិត្ត') }}</th><th class="text-end">{{ _('សកម្មភាព') }}</th></tr></thead>
             <tbody>
                 {% for rule in rules %}
-                <tr>
-                    <td class="fw-semibold">{{ rule.title }}</td>
-                    <td>
-                        {% for s in rule.symptoms %}
-                        <span class="badge bg-warning text-dark">{{ s.name }}</span>
-                        {% endfor %}
-                    </td>
-                    <td><span class="badge bg-danger">{{ rule.disease.name }}</span></td>
+                <tr data-row>
+                    <td class="fw-semibold">{{ rule.pair("title") }}</td>
+                    <td><div class="tag-list">{% for s in rule.symptoms %}<span class="badge-soft badge-soft-warning">{{ s.inline("name") }}</span>{% endfor %}</div></td>
+                    <td><span class="badge-soft badge-soft-danger">{{ rule.disease.inline("name") }}</span></td>
                     <td>{{ rule.confidence }}%</td>
-                    <td class="text-end">
-                        <a href="{{ url_for('expert_system.rules_edit', rule_id=rule.id) }}" class="btn btn-sm btn-outline-secondary">កែប្រែ</a>
-                        <a href="{{ url_for('expert_system.rules_delete', rule_id=rule.id) }}" class="btn btn-sm btn-outline-danger">លុប</a>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ url_for('expert_system.rules_edit', rule_id=rule.id) }}" class="icon-btn" title="{{ _('កែប្រែ') }}"><i class="bi bi-pencil"></i></a>
+                        <a href="{{ url_for('expert_system.rules_delete', rule_id=rule.id) }}" class="icon-btn danger" title="{{ _('លុប') }}"><i class="bi bi-trash"></i></a>
                     </td>
                 </tr>
                 {% endfor %}
+                <tr data-empty {% if rules %}hidden{% endif %}><td colspan="5">{{ empty_state('diagram-3', _('មិនទាន់មានវិធានទេ។')) }}</td></tr>
             </tbody>
         </table>
     </div>

@@ -2,14 +2,17 @@
 from datetime import datetime
 from extensions import db
 from app.models.associations import tbl_cases_symptoms, tbl_rules_symptoms
+from app.models.bilingual import BilingualMixin
 
 
-class Category(db.Model):
+class Category(BilingualMixin, db.Model):
     __tablename__ = "tbl_categories"
 
     id = db.Column(db.Integer, db.Sequence('seq_categories_id'), primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
+    name_km = db.Column(db.String(120))
     description = db.Column(db.String(255))
+    description_km = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     diseases = db.relationship("Disease", back_populates="category")
@@ -18,12 +21,14 @@ class Category(db.Model):
         return f"<Category {self.name}>"
 
 
-class Symptom(db.Model):
+class Symptom(BilingualMixin, db.Model):
     __tablename__ = "tbl_symptoms"
 
     id = db.Column(db.Integer, db.Sequence('seq_symptoms_id'), primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
+    name_km = db.Column(db.String(120))
     description = db.Column(db.String(255))
+    description_km = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     cases = db.relationship(
@@ -41,13 +46,16 @@ class Symptom(db.Model):
         return f"<Symptom {self.name}>"
 
 
-class Disease(db.Model):
+class Disease(BilingualMixin, db.Model):
     __tablename__ = "tbl_diseases"
 
     id = db.Column(db.Integer, db.Sequence('seq_diseases_id'), primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
+    name_km = db.Column(db.String(120))
     description = db.Column(db.String(255), nullable=False)
+    description_km = db.Column(db.String(255))
     treatment = db.Column(db.String(255), nullable=False)
+    treatment_km = db.Column(db.String(255))
     category_id = db.Column(db.Integer, db.ForeignKey("tbl_categories.id"))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
@@ -59,12 +67,14 @@ class Disease(db.Model):
         return f"<Disease {self.name}>"
 
 
-class Rule(db.Model):
+class Rule(BilingualMixin, db.Model):
     __tablename__ = "tbl_rules"
 
     id = db.Column(db.Integer, db.Sequence('seq_rules_id'), primary_key=True)
     title = db.Column(db.String(120), nullable=False)
+    title_km = db.Column(db.String(120))
     description = db.Column(db.String(255), nullable=False)
+    description_km = db.Column(db.String(255))
     priority = db.Column(db.Integer, nullable=False, default=1)
     confidence = db.Column(db.Float, nullable=False, default=80.0)
     disease_id = db.Column(db.Integer, db.ForeignKey("tbl_diseases.id"), nullable=False)

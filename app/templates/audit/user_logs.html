@@ -1,79 +1,54 @@
 {% extends "layouts/base.html" %}
+{% from "layouts/_admin_macros.html" import avatar, action_badge, empty_state %}
 
-{% block title %}កំណត់ហេតុសកម្មភាពអ្នកប្រើប្រាស់{% endblock %}
-{% block page_title %}កំណត់ហេតុសកម្មភាព{% endblock %}
-{% block page_subtitle %}ប្រវត្តិសកម្មភាពសម្រាប់អ្នកប្រើប្រាស់៖ {{ user.username }}{% endblock %}
+{% block title %}{{ _('កំណត់ហេតុសកម្មភាពអ្នកប្រើប្រាស់') }}{% endblock %}
+{% block page_title %}{{ _('កំណត់ហេតុសកម្មភាព') }}{% endblock %}
+{% block page_subtitle %}{{ _('ប្រវត្តិសកម្មភាពសម្រាប់អ្នកប្រើប្រាស់៖ %(name)s', name=user.username) }}{% endblock %}
 
 {% block content %}
-<div class="mb-3">
-    <a href="{{ url_for('audit.index') }}" class="text-decoration-none text-muted">
-        <i class="bi bi-arrow-left me-1"></i> ត្រឡប់ទៅកំណត់ហេតុសវនកម្ម
-    </a>
-</div>
+<a href="{{ url_for('audit.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅកំណត់ហេតុសវនកម្ម') }}</a>
 
-<div class="card shadow-sm">
-    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center">
-            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; font-size: 1.2rem; font-weight: bold;">
-                {{ user.username[0]|upper }}
-            </div>
+<div class="admin-card">
+    <div class="admin-card-header">
+        <div class="entity-header">
+            {{ avatar(user.username, 'lg', avatar_url(user)) }}
             <div>
-                <h5 class="mb-0 text-dark">{{ user.full_name }}</h5>
-                <small class="text-muted">@{{ user.username }}</small>
+                <h5 class="entity-name">{{ user.full_name }}</h5>
+                <p class="entity-sub">@{{ user.username }}</p>
             </div>
         </div>
+        <span class="badge-soft badge-soft-neutral">{{ _('%(n)s សកម្មភាព', n=logs | length) }}</span>
     </div>
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
+        <table class="table table-hover admin-table">
+            <thead>
                 <tr>
-                    <th class="ps-4">កាលបរិច្ឆេទ</th>
-                    <th>សកម្មភាព</th>
-                    <th>គោលដៅ</th>
-                    <th>ព័ត៌មានលម្អិត</th>
-                    <th>IP Address</th>
+                    <th>{{ _('កាលបរិច្ឆេទ') }}</th>
+                    <th>{{ _('សកម្មភាព') }}</th>
+                    <th>{{ _('គោលដៅ') }}</th>
+                    <th>{{ _('ព័ត៌មានលម្អិត') }}</th>
+                    <th>{{ _('អាសយដ្ឋាន IP') }}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for log in logs %}
                 <tr>
-                    <td class="ps-4 text-nowrap">
-                        <div class="fw-semibold">{{ log.created_at.strftime('%Y-%m-%d') }}</div>
+                    <td class="text-nowrap">
+                        <div class="fw-medium">{{ log.created_at.strftime('%Y-%m-%d') }}</div>
                         <div class="small text-muted">{{ log.created_at.strftime('%H:%M:%S') }}</div>
                     </td>
+                    <td>{{ action_badge(log.action) }}</td>
                     <td>
-                        {% if log.action == 'CREATE' %}
-                            <span class="badge bg-success bg-opacity-10 text-success">បង្កើត</span>
-                        {% elif log.action == 'UPDATE' %}
-                            <span class="badge bg-warning bg-opacity-10 text-warning text-dark">កែប្រែ</span>
-                        {% elif log.action == 'DELETE' %}
-                            <span class="badge bg-danger bg-opacity-10 text-danger">លុប</span>
-                        {% elif log.action == 'LOGIN' %}
-                            <span class="badge bg-info bg-opacity-10 text-info text-dark">ចូល</span>
-                        {% else %}
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ log.action }}</span>
-                        {% endif %}
+                        {{ log.target_type }}
+                        {% if log.target_id %}<span class="text-muted small">#{{ log.target_id }}</span>{% endif %}
                     </td>
                     <td>
-                        <span class="fw-medium">{{ log.target_type }}</span>
-                        {% if log.target_id %}
-                            <span class="text-muted small">#{{ log.target_id }}</span>
-                        {% endif %}
+                        <div class="text-truncate text-truncate-cell" title="{{ log.details }}">{{ log.details or '—' }}</div>
                     </td>
-                    <td>
-                        <div class="text-truncate" style="max-width: 400px;" title="{{ log.details }}">
-                            {{ log.details or '-' }}
-                        </div>
-                    </td>
-                    <td class="text-muted small">{{ log.ip_address }}</td>
+                    <td class="text-muted small text-nowrap">{{ log.ip_address }}</td>
                 </tr>
                 {% else %}
-                <tr>
-                    <td colspan="5" class="text-center py-5 text-muted">
-                        <i class="bi bi-journal-x display-6 d-block mb-3"></i>
-                        មិនមានសកម្មភាពត្រូវបានកត់ត្រាសម្រាប់អ្នកប្រើប្រាស់នេះទេ។
-                    </td>
-                </tr>
+                <tr><td colspan="5">{{ empty_state('journal-x', _('មិនមានសកម្មភាពត្រូវបានកត់ត្រាសម្រាប់អ្នកប្រើប្រាស់នេះទេ។')) }}</td></tr>
                 {% endfor %}
             </tbody>
         </table>

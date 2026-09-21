@@ -1,6 +1,7 @@
 #app/routes/role_routes.py
 from flask import Blueprint, render_template, redirect, url_for, flash, abort
 from flask_login import login_required
+from app.i18n import gettext as _
 from app.forms.role_forms import (RoleCreateForm, RoleEditForm, RoleConfirmDeleteForm)
 from app.services.role_service import RoleService
 from app.services.audit_service import AuditService
@@ -34,7 +35,7 @@ def create():
         
         role = RoleService.create_role(data, permission_ids)
         AuditService.log("CREATE", "Role", role.id, f"Created role: {role.name}")
-        flash(f"Role '{role.name}' was created successfully.", "success")
+        flash(_("បានបង្កើតតួនាទី '%(name)s' ដោយជោគជ័យ។", name=role.name), "success")
         return redirect(url_for("tbl_roles.index"))
     
     return render_template("roles/create.html", form=form)
@@ -57,7 +58,7 @@ def edit(role_id: int):
         
         RoleService.update_role(role, data, permission_ids)
         AuditService.log("UPDATE", "Role", role.id, f"Updated role: {role.name}")
-        flash(f"Role '{role.name}' was updated successfully.", "success")
+        flash(_("បានកែប្រែតួនាទី '%(name)s' ដោយជោគជ័យ។", name=role.name), "success")
         return redirect(url_for("tbl_roles.detail", role_id=role.id))
     
     return render_template("roles/edit.html", form=form, role=role)
@@ -82,5 +83,5 @@ def delete(role_id: int):
     role_name = role.name
     RoleService.delete_role(role)
     AuditService.log("DELETE", "Role", role_id, f"Deleted role: {role_name}")
-    flash("Role was deleted successfully.", "success")
+    flash(_("បានលុបតួនាទីដោយជោគជ័យ។"), "success")
     return redirect(url_for("tbl_roles.index"))

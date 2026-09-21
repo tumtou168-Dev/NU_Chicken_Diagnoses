@@ -1,35 +1,22 @@
 {% extends "layouts/base.html" %}
-{% block title %}លុបអ្នកប្រើប្រាស់{% endblock %}
+{% from "layouts/_admin_macros.html" import strong %}
+{% block title %}{{ _('លុបអ្នកប្រើប្រាស់') }}{% endblock %}
+{% block page_title %}{{ _('លុបអ្នកប្រើប្រាស់') }}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card border-danger">
-            <div class="card-header bg-danger text-white">
-                <h5 class="mb-0">បញ្ជាក់ការលុប</h5>
-            </div>
-            <div class="card-body">
-                <p>
-                    តើអ្នកប្រាកដថាចង់លុបអ្នកប្រើប្រាស់
-                    <strong>{{ user.username }}</strong>({{ user.full_name}})?
-                </p>
-
-                {# Use tbl_users.delete here #}
-                <form method="post" action="{{ url_for('tbl_users.delete', user_id=user.id) }}">
-                    {{ form.hidden_tag()}}
-
-                    <button class="btn btn-danger">
-                        លុប
-                    </button>
-                    
-                    {# You can send them back to detail or index #}
-                    <a href="{{ url_for('tbl_users.detail', user_id=user.id) }}" 
-                    class="btn btn-secondary">
-                    បោះបង់
-                    </a>
-                </form>
-            </div>
-        </div>
+<div class="admin-card confirm-card">
+    <div class="admin-card-body">
+        <div class="confirm-icon"><i class="bi bi-exclamation-triangle"></i></div>
+        <h5 class="fw-semibold mb-2">{{ _('បញ្ជាក់ការលុប') }}</h5>
+        <p class="text-muted mb-4">
+            {{ _h('តើអ្នកប្រាកដថាចង់លុបអ្នកប្រើប្រាស់ %(name)s (%(full)s) ទេ?', name=strong(user.username), full=user.full_name) }}
+            {{ _('សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។') }}
+        </p>
+        <form method="post" action="{{ url_for('tbl_users.delete', user_id=user.id) }}" class="d-flex justify-content-center gap-2">
+            {{ form.hidden_tag() }}
+            <a href="{{ url_for('tbl_users.detail', user_id=user.id) }}" class="btn btn-soft">{{ _('បោះបង់') }}</a>
+            <button type="submit" class="btn btn-danger-solid">{{ _('លុប') }}</button>
+        </form>
     </div>
 </div>
 {% endblock %}

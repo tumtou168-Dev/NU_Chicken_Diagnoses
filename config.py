@@ -10,3 +10,6 @@ class Config:
         or "postgresql://postgres:123456789@localhost:5432/chicken_diagnoses")
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # Reject oversized request bodies early (profile pictures are capped at 2 MB separately).
+    MAX_CONTENT_LENGTH = 4 * 1024 * 1024

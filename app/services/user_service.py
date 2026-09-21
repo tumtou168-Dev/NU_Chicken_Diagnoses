@@ -3,6 +3,7 @@ from typing import List, Optional
 from app.models.user import UserTable
 from app.models.role import RoleTable
 from extensions import db
+from app.services.avatar_service import AvatarService
 
 class UserService:
     @staticmethod
@@ -60,6 +61,21 @@ class UserService:
         return user
     
     @staticmethod
+    def set_avatar(user: UserTable, file=None, remove: bool = False) -> None:
+        """Replace (file) or clear (remove) a user's profile picture, deleting the old file."""
+        old = user.avatar
+        if file is not None and getattr(file, "filename", ""):
+            user.avatar = AvatarService.save(file)
+        elif remove:
+            user.avatar = None
+        else:
+            return
+        db.session.commit()
+        AvatarService.delete(old)
+
+    @staticmethod
     def delete_user(user: UserTable) -> None:
+        avatar = user.avatar
         db.session.delete(user)
         db.session.commit()
+        AvatarService.delete(avatar)

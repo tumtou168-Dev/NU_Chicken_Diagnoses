@@ -1,0 +1,14 @@
+.git
+.gitignore
+.idea
+.venv
+.env
+.env.*
+!.env.example
+__pycache__
+*.pyc
+instance
+app/static/uploads
+docker-compose*.yml
+Dockerfile
+.dockerignore

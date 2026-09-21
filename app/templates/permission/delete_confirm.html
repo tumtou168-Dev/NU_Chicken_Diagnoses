@@ -1,32 +1,22 @@
 {% extends "layouts/base.html" %}
-{% block title %}លុបសិទ្ធិ{% endblock %}
+{% from "layouts/_admin_macros.html" import strong %}
+{% block title %}{{ _('លុបសិទ្ធិ') }}{% endblock %}
+{% block page_title %}{{ _('លុបសិទ្ធិ') }}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card border-danger">
-            <div class="card-header bg-danger text-white">
-                <h5 class="mb-0">បញ្ជាក់ការលុប</h5>
-            </div>
-            <div class="card-body">
-                <p>
-                    តើអ្នកប្រាកដថាចង់លុបសិទ្ធិ
-                    <strong>{{ permission.code }}</strong> ({{ permission.name }}) ទេ?
-                </p>
-
-                <form method="post">
-                    {{ form.hidden_tag() }}
-
-                    <button type="submit" class="btn btn-danger">
-                        លុប
-                    </button>
-                    <a href="{{ url_for('tbl_permissions.detail', permission_id=permission.id) }}" 
-                        class="btn btn-secondary">
-                        បោះបង់
-                    </a>
-                </form>
-            </div>
-        </div>
+<div class="admin-card confirm-card">
+    <div class="admin-card-body">
+        <div class="confirm-icon"><i class="bi bi-exclamation-triangle"></i></div>
+        <h5 class="fw-semibold mb-2">{{ _('បញ្ជាក់ការលុប') }}</h5>
+        <p class="text-muted mb-4">
+            {{ _h('តើអ្នកប្រាកដថាចង់លុបសិទ្ធិ %(code)s (%(name)s) ទេ?', code=strong(permission.code), name=permission.name | dt) }}
+            {{ _('សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។') }}
+        </p>
+        <form method="post" class="d-flex justify-content-center gap-2">
+            {{ form.hidden_tag() }}
+            <a href="{{ url_for('tbl_permissions.detail', permission_id=permission.id) }}" class="btn btn-soft">{{ _('បោះបង់') }}</a>
+            <button type="submit" class="btn btn-danger-solid">{{ _('លុប') }}</button>
+        </form>
     </div>
 </div>
 {% endblock %}

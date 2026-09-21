@@ -1,46 +1,11 @@
 {% extends "layouts/base.html" %}
-{% block title %}បង្កើតជំងឺ{% endblock %}
+{% block title %}{{ _('បង្កើតជំងឺ') }}{% endblock %}
+{% block page_title %}{{ _('បង្កើតជំងឺ') }}{% endblock %}
+{% block page_subtitle %}{{ _('បន្ថែមជំងឺថ្មី រួមជាមួយការព្យាបាលដែលបានណែនាំ។') }}{% endblock %}
 
 {% block content %}
-<div class="card p-4">
-    <h4 class="mb-3">បង្កើតជំងឺ</h4>
-    <form method="post">
-        {{ form.hidden_tag() }}
-        <div class="mb-3">
-            {{ form.name.label(class="form-label") }}
-            {{ form.name(class="form-control") }}
-            {% if form.name.errors %}
-            <div class="text-danger small">
-                {% for error in form.name.errors %}<div>{{ error }}</div>{% endfor %}
-            </div>
-            {% endif %}
-        </div>
-        <div class="mb-3">
-            {{ form.category_id.label(class="form-label") }}
-            {{ form.category_id(class="form-select") }}
-        </div>
-        <div class="mb-3">
-            {{ form.description.label(class="form-label") }}
-            {{ form.description(class="form-control", rows=3) }}
-            {% if form.description.errors %}
-            <div class="text-danger small">
-                {% for error in form.description.errors %}<div>{{ error }}</div>{% endfor %}
-            </div>
-            {% endif %}
-        </div>
-        <div class="mb-3">
-            {{ form.treatment.label(class="form-label") }}
-            {{ form.treatment(class="form-control", rows=3) }}
-            {% if form.treatment.errors %}
-            <div class="text-danger small">
-                {% for error in form.treatment.errors %}<div>{{ error }}</div>{% endfor %}
-            </div>
-            {% endif %}
-        </div>
-        <div class="d-flex gap-2">
-            {{ form.submit(class="btn btn-brand") }}
-            <a href="{{ url_for('expert_system.diseases_index') }}" class="btn btn-secondary">បោះបង់</a>
-        </div>
-    </form>
+<a href="{{ url_for('expert_system.diseases_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅជំងឺ') }}</a>
+<div class="admin-card form-narrow">
+    <form method="post" novalidate>{% include "expert_system/diseases/_form.html" %}</form>
 </div>
 {% endblock %}

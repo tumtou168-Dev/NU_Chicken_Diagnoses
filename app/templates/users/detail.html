@@ -1,49 +1,46 @@
 {% extends "layouts/base.html" %}
-{% block title %}ព័ត៌មានលម្អិតអ្នកប្រើប្រាស់{% endblock %}
+{% from "layouts/_admin_macros.html" import avatar, status_badge %}
+{% block title %}{{ _('ព័ត៌មានលម្អិតអ្នកប្រើប្រាស់') }}{% endblock %}
+{% block page_title %}{{ _('ព័ត៌មានលម្អិតអ្នកប្រើប្រាស់') }}{% endblock %}
+{% block page_subtitle %}{{ _('មើលព័ត៌មានគណនី និងតួនាទីដែលបានចាត់តាំង។') }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">អ្នកប្រើប្រាស់៖ {{ user.username }}</h1>
-    <div>
-        {# Use table_users.edit #}
-        <a href="{{ url_for('tbl_users.edit', user_id=user.id) }} "
-            class="btn btn-sm btn-outline-secondary">
-            កែប្រែ
-        </a>
-        {# Use table_users.delete_confirm #}
-        <a href="{{ url_for('tbl_users.delete_confirm', user_id=user.id) }} "
-            class="btn btn-sm btn-outline-danger">
-            លុប
-        </a>
-        {# Use table_users.index #}
-        <a href="{{ url_for('tbl_users.index') }} "
-            class="btn btn-sm btn-outline-primary">
-            ត្រឡប់ទៅបញ្ជី
-        </a>
-    </div>
-</div>
+<a href="{{ url_for('tbl_users.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅបញ្ជីអ្នកប្រើប្រាស់') }}</a>
 
-<div class="card mb-3">
-    <div class="card-body">
-        <p><strong>ឈ្មោះអ្នកប្រើប្រាស់៖</strong>{{ user.username }}</p>
-        <p><strong>ឈ្មោះពេញ៖</strong>{{ user.full_name }}</p>
-        <p><strong>អ៊ីមែល៖</strong>{{ user.email }}</p>
-        <p>
-            <strong>ស្ថានភាព៖</strong>
-            {% if user.is_active %}
-                <span class="badge text-bg-success">សកម្ម</span>
-            {% else %}
-                <span class="badge text-bg-secondary">អសកម្ម</span>
+<div class="admin-card form-narrow">
+    <div class="admin-card-header">
+        <div class="entity-header">
+            {{ avatar(user.username, 'lg', avatar_url(user)) }}
+            <div>
+                <h5 class="entity-name">{{ user.full_name }}</h5>
+                <p class="entity-sub">@{{ user.username }}</p>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('tbl_users.edit', user_id=user.id) }}" class="btn btn-soft btn-sm"><i class="bi bi-pencil me-1"></i>{{ _('កែប្រែ') }}</a>
+            {% if current_user.id != user.id %}
+            <a href="{{ url_for('tbl_users.delete_confirm', user_id=user.id) }}" class="btn btn-soft btn-sm text-danger"><i class="bi bi-trash me-1"></i>{{ _('លុប') }}</a>
             {% endif %}
-        </p>
-        <p>
-            <strong>តួនាទី៖</strong>
-            {% if user.role %}
-                {{ user.role | map(attribute="name") | join(",")}}
-            {% else %}
-                <span class="text-muted">គ្មានតួនាទី</span>
-            {% endif %}
-        </p>
+        </div>
+    </div>
+    <div class="admin-card-body">
+        <dl class="detail-list">
+            <div class="detail-item"><dt>{{ _('ឈ្មោះអ្នកប្រើប្រាស់') }}</dt><dd>{{ user.username }}</dd></div>
+            <div class="detail-item"><dt>{{ _('ឈ្មោះពេញ') }}</dt><dd>{{ user.full_name }}</dd></div>
+            <div class="detail-item"><dt>{{ _('អ៊ីមែល') }}</dt><dd>{{ user.email }}</dd></div>
+            <div class="detail-item"><dt>{{ _('ស្ថានភាព') }}</dt><dd>{{ status_badge(user.is_active) }}</dd></div>
+            <div class="detail-item">
+                <dt>{{ _('តួនាទី##one') }}</dt>
+                <dd>
+                    {% for role in user.roles %}
+                        <span class="badge-soft badge-soft-primary">{{ role.name | dt }}</span>
+                    {% else %}
+                        <span class="text-muted">{{ _('គ្មានតួនាទី') }}</span>
+                    {% endfor %}
+                </dd>
+            </div>
+            <div class="detail-item"><dt>{{ _('បានបង្កើត') }}</dt><dd>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</dd></div>
+        </dl>
     </div>
 </div>
 {% endblock %}

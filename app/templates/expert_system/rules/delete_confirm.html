@@ -1,16 +1,5 @@
 {% extends "layouts/base.html" %}
-{% block title %}លុបវិធាន{% endblock %}
-
-{% block content %}
-<div class="card p-4">
-    <h4 class="mb-2 text-danger">លុបវិធាន</h4>
-    <p class="text-muted">តើអ្នកប្រាកដថាចង់លុប <strong>{{ rule.title }}</strong> ទេ?</p>
-    <form method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-danger">បញ្ជាក់ការលុប</button>
-            <a href="{{ url_for('expert_system.rules_index') }}" class="btn btn-secondary">បោះបង់</a>
-        </div>
-    </form>
-</div>
-{% endblock %}
+{% from "layouts/_admin_macros.html" import confirm_delete with context %}
+{% block title %}{{ _('លុបវិធាន') }}{% endblock %}
+{% block page_title %}{{ _('លុបវិធាន') }}{% endblock %}
+{% block content %}{{ confirm_delete(_('បញ្ជាក់ការលុប'), rule.inline("title"), url_for('expert_system.rules_index')) }}{% endblock %}

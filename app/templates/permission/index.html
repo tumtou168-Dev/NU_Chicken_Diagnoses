@@ -1,43 +1,52 @@
 {% extends "layouts/base.html" %}
-{% block title %}សិទ្ធិ{% endblock %}
+{% from "layouts/_admin_macros.html" import table_filter, empty_state %}
+{% block title %}{{ _('សិទ្ធិ') }}{% endblock %}
+{% block page_title %}{{ _('សិទ្ធិ') }}{% endblock %}
+{% block page_subtitle %}{{ _('កំណត់សិទ្ធិលម្អិតដែលអាចផ្តល់ឱ្យតួនាទីនីមួយៗ។') }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3">សិទ្ធិ</h1>
-    <a href="{{ url_for('tbl_permissions.create') }}" class="btn btn-primary">បង្កើតសិទ្ធិ</a>
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5 class="admin-card-title">{{ _('សិទ្ធិទាំងអស់ (%(n)s)', n=permissions | length) }}</h5>
+        <div class="admin-toolbar">
+            {{ table_filter('#permissionsTable', _('ស្វែងរកសិទ្ធិ...')) }}
+            <a href="{{ url_for('tbl_permissions.create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>{{ _('បង្កើតសិទ្ធិ') }}
+            </a>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover admin-table" id="permissionsTable">
+            <thead>
+                <tr>
+                    <th>{{ _('កូដ') }}</th>
+                    <th>{{ _('ឈ្មោះ') }}</th>
+                    <th>{{ _('ម៉ូឌុល') }}</th>
+                    <th class="text-end">{{ _('សកម្មភាព') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for perm in permissions %}
+                <tr data-row>
+                    <td>
+                        <a class="row-link" href="{{ url_for('tbl_permissions.detail', permission_id=perm.id) }}">
+                            <span class="perm-code">{{ perm.code }}</span>
+                        </a>
+                    </td>
+                    <td>{{ perm.name | dt }}</td>
+                    <td><span class="badge-soft badge-soft-neutral">{{ perm.module | module_label }}</span></td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ url_for('tbl_permissions.detail', permission_id=perm.id) }}" class="icon-btn" title="{{ _('មើល') }}"><i class="bi bi-eye"></i></a>
+                        <a href="{{ url_for('tbl_permissions.edit', permission_id=perm.id) }}" class="icon-btn" title="{{ _('កែប្រែ') }}"><i class="bi bi-pencil"></i></a>
+                        <a href="{{ url_for('tbl_permissions.delete_confirm', permission_id=perm.id) }}" class="icon-btn danger" title="{{ _('លុប') }}"><i class="bi bi-trash"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr data-empty {% if permissions %}hidden{% endif %}>
+                    <td colspan="4">{{ empty_state('key', _('មិនទាន់មានសិទ្ធិត្រូវបានកំណត់ទេ។')) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
-
-{% if permissions %}
-<table class="table table-striped align-middle">
-    <thead>
-        <tr>
-            <th>កូដ</th>
-            <th>ឈ្មោះ</th>
-            <th>ម៉ូឌុល</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for perm in permissions %}
-        <tr>
-            <td>
-                <a href="{{ url_for('tbl_permissions.detail', permission_id=perm.id) }}">
-                    {{ perm.code }}
-                </a>
-            </td>
-            <td>{{ perm.name }}</td>
-            <td>{{ perm.module }}</td>
-            <td class="text-end">
-                <a href="{{ url_for('tbl_permissions.edit', permission_id=perm.id) }}"
-                class="btn btn-sm btn-warning">✏️</a>
-                <a href="{{ url_for('tbl_permissions.delete_confirm', permission_id=perm.id) }}"
-                class="btn btn-sm btn-danger">🗑️</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-    <p class="text-muted">មិនទាន់មានសិទ្ធិត្រូវបានកំណត់ទេ។</p>
-{% endif %}
 {% endblock %}

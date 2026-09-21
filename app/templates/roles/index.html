@@ -1,51 +1,60 @@
 {% extends "layouts/base.html" %}
-{% block  title %}តួនាទី{% endblock %}
+{% from "layouts/_admin_macros.html" import table_filter, empty_state %}
+{% block title %}{{ _('តួនាទី') }}{% endblock %}
+{% block page_title %}{{ _('តួនាទី') }}{% endblock %}
+{% block page_subtitle %}{{ _('កំណត់តួនាទី និងសិទ្ធិដែលភ្ជាប់ជាមួយតួនាទីនីមួយៗ។') }}{% endblock %}
+
 {% block content %}
-
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">តួនាទី</h1>
-    <a href="{{ url_for('tbl_roles.create') }}" class="btn btn-primary">
-        បង្កើតតួនាទី
-    </a>
-</div>
-
-{% if roles %}
-<table class="table table-striped align-middle">
-    <thead>
-        <tr>
-            <th>ឈ្មោះ</th>
-            <th>ការពិពណ៌នា</th>
-            <th>សិទ្ធិ</th>
-            <th class="text-end"></th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for role in roles %}
-    <tr>
-        <td>
-            <a href="{{ url_for('tbl_roles.detail', role_id=role.id) }}">
-                {{ role.name }}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h5 class="admin-card-title">{{ _('តួនាទីទាំងអស់ (%(n)s)', n=roles | length) }}</h5>
+        <div class="admin-toolbar">
+            {{ table_filter('#rolesTable', _('ស្វែងរកតួនាទី...')) }}
+            <a href="{{ url_for('tbl_roles.create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>{{ _('បង្កើតតួនាទី') }}
             </a>
-        </td>
-        <td>{{ role.description or "-" }}</td>
-        <td>
-            {% if role.permissions %}
-                <span class="badge bg-secondary">
-                    {{ role.permissions|length }} សិទ្ធិ
-                </span>
-                {% else %}
-                    <span class="text-muted small">គ្មានសិទ្ធិ</span>
-                {% endif %}
-        </td>
-        <td class="text-end">
-            <a href="{{ url_for('tbl_roles.edit', role_id=role.id) }}" class="btn btn-sm btn-warning">✏</a>
-            <a href="{{ url_for('tbl_roles.delete_confirm', role_id=role.id) }}" class="btn btn-sm btn-danger">🗑</a>
-        </td>
-    </tr>
-    {% endfor %}
-</tbody>
-</table>
-{% else %}
-<p class="text-muted">មិនទាន់មានតួនាទីត្រូវបានកំណត់ទេ។</p>
-{% endif %}
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover admin-table" id="rolesTable">
+            <thead>
+                <tr>
+                    <th>{{ _('ឈ្មោះ') }}</th>
+                    <th>{{ _('ការពិពណ៌នា') }}</th>
+                    <th>{{ _('សិទ្ធិ') }}</th>
+                    <th>{{ _('អ្នកប្រើប្រាស់') }}</th>
+                    <th class="text-end">{{ _('សកម្មភាព') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for role in roles %}
+                <tr data-row>
+                    <td>
+                        <a class="row-link" href="{{ url_for('tbl_roles.detail', role_id=role.id) }}">
+                            <i class="bi bi-shield-lock text-primary me-2"></i>{{ role.name | dt }}
+                        </a>
+                    </td>
+                    <td class="text-muted">{{ (role.description | dt) or "—" }}</td>
+                    <td>
+                        {% if role.permissions %}
+                            <span class="badge-soft badge-soft-primary">{{ _('%(n)s សិទ្ធិ', n=role.permissions | length) }}</span>
+                        {% else %}
+                            <span class="text-muted small">{{ _('គ្មានសិទ្ធិ') }}</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge-soft badge-soft-neutral">{{ role.users | length }}</span></td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ url_for('tbl_roles.detail', role_id=role.id) }}" class="icon-btn" title="{{ _('មើល') }}"><i class="bi bi-eye"></i></a>
+                        <a href="{{ url_for('tbl_roles.edit', role_id=role.id) }}" class="icon-btn" title="{{ _('កែប្រែ') }}"><i class="bi bi-pencil"></i></a>
+                        <a href="{{ url_for('tbl_roles.delete_confirm', role_id=role.id) }}" class="icon-btn danger" title="{{ _('លុប') }}"><i class="bi bi-trash"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr data-empty {% if roles %}hidden{% endif %}>
+                    <td colspan="5">{{ empty_state('shield-lock', _('មិនទាន់មានតួនាទីត្រូវបានកំណត់ទេ។')) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

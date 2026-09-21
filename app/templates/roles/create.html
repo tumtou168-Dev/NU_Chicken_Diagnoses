@@ -1,21 +1,13 @@
 {% extends "layouts/base.html" %}
-{% block title %}បង្កើតតួនាទី{% endblock %}
+{% block title %}{{ _('បង្កើតតួនាទី') }}{% endblock %}
+{% block page_title %}{{ _('បង្កើតតួនាទី') }}{% endblock %}
+{% block page_subtitle %}{{ _('កំណត់ឈ្មោះតួនាទី និងជ្រើសរើសសិទ្ធិដែលត្រូវផ្តល់។') }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-8 col-xl-7">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h1 class="h3 mb-0">បង្កើតតួនាទី</h1>
-            <a href="{{ url_for('tbl_roles.index') }}" class="btn btn-outline-secondary btn-sm">
-                ← ត្រឡប់ទៅតួនាទី
-            </a>
-        </div>
-
-        <div class="card">
-            <div class="card-body">
-                {% include "roles/_form.html" %}
-            </div>
-        </div>
-    </div>
+<a href="{{ url_for('tbl_roles.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅតួនាទី') }}</a>
+<div class="admin-card form-narrow">
+    <form method="post" novalidate>
+        {% include "roles/_form.html" %}
+    </form>
 </div>
 {% endblock %}

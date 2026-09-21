@@ -1,10 +1,10 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ _('បង្កើតអ្នកប្រើប្រាស់') }}{% endblock %}
-{% block page_title %}{{ _('បង្កើតអ្នកប្រើប្រាស់') }}{% endblock %}
-{% block page_subtitle %}{{ _('បន្ថែមគណនីថ្មី និងកំណត់តួនាទី។') }}{% endblock %}
+{% block page_title %}{{ bi('បង្កើតអ្នកប្រើប្រាស់') }}{% endblock %}
+{% block page_subtitle %}{{ bi('បន្ថែមគណនីថ្មី និងកំណត់តួនាទី។') }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('tbl_users.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅបញ្ជីអ្នកប្រើប្រាស់') }}</a>
+<a href="{{ url_for('tbl_users.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅបញ្ជីអ្នកប្រើប្រាស់') }}</a>
 <div class="admin-card form-narrow">
     <form method="post" novalidate>
         {% include "users/_form.html" %}

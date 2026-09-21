@@ -5,7 +5,7 @@ from flask import g, has_request_context
 from markupsafe import Markup, escape
 
 from extensions import db
-from app.i18n import get_locale
+from app.i18n import ordered
 from app.models import PermissionTable, RoleTable
 from app.models.page_text import PageText
 
@@ -150,17 +150,39 @@ class PageTextService:
         return g._page_texts
 
     @classmethod
-    def text(cls, key: str, **params) -> Markup:
-        """Text for `key` in the current language. Falls back to Khmer, then the built-in default, then the key.
-        The stored text and every param are HTML-escaped (pass Markup for params that carry markup)."""
+    def _pair(cls, key: str):
+        """(first, second) for `key`, current language first. Falls back to the built-in default, then the key."""
         km, en = cls._cache().get(key) or (None, None)
         if km is None and key in DEFAULTS:
             km, en = DEFAULTS[key][2], DEFAULTS[key][3]
-        value = (en if get_locale() == "en" and en else km) or key
+        first, second = ordered(km or "", en or "")
+        return (first or key), second
+
+    @staticmethod
+    def _fill(value: str, params: dict) -> Markup:
+        """Escape the stored text, then substitute the (escaped) params."""
         safe = Markup(escape(value))
-        if params:
-            try:
-                return safe % params
-            except (KeyError, ValueError, TypeError):
-                return safe  # an admin typo in a placeholder must not break the page
-        return safe
+        if not params:
+            return safe
+        try:
+            return safe % params
+        except (KeyError, ValueError, TypeError):
+            return safe  # an admin typo in a placeholder must not break the page
+
+    @classmethod
+    def text(cls, key: str, **params) -> Markup:
+        """Text for `key` in BOTH languages on one line ("first · second"), current language first.
+        The stored text and every param are HTML-escaped (pass Markup for params that carry markup)."""
+        first, second = cls._pair(key)
+        first = cls._fill(first, params)
+        return first if not second else Markup("%s · %s") % (first, cls._fill(second, params))
+
+    @classmethod
+    def block(cls, key: str, **params) -> Markup:
+        """Same, as two lines (current language large, the other smaller underneath) for headings and buttons."""
+        first, second = cls._pair(key)
+        first = cls._fill(first, params)
+        if not second:
+            return first
+        return Markup('<span class="dual"><span class="dual-1">%s</span><span class="dual-2">%s</span></span>') % (
+            first, cls._fill(second, params))

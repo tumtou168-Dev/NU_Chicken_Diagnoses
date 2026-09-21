@@ -1,20 +1,20 @@
 {% extends "layouts/base.html" %}
 {% from "layouts/_admin_macros.html" import table_filter, empty_state %}
 {% block title %}{{ _('អត្ថបទទំព័រ') }}{% endblock %}
-{% block page_title %}{{ _('អត្ថបទទំព័រ') }}{% endblock %}
-{% block page_subtitle %}{{ _('កែប្រែចំណងជើង និងអត្ថបទដែលបង្ហាញលើទំព័រ ជាភាសាខ្មែរ និងអង់គ្លេស។') }}{% endblock %}
+{% block page_title %}{{ bi('អត្ថបទទំព័រ') }}{% endblock %}
+{% block page_subtitle %}{{ bi('កែប្រែចំណងជើង និងអត្ថបទដែលបង្ហាញលើទំព័រ ជាភាសាខ្មែរ និងអង់គ្លេស។') }}{% endblock %}
 
 {% block content %}
 <div class="admin-card">
     <div class="admin-card-header">
-        <h5 class="admin-card-title">{{ _('អត្ថបទទាំងអស់ (%(n)s)', n=items | length) }}</h5>
+        <h5 class="admin-card-title">{{ bi('អត្ថបទទាំងអស់ (%(n)s)', n=items | length) }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#pageTextsTable', _('ស្វែងរកអត្ថបទ...')) }}
         </div>
     </div>
     <div class="table-responsive">
         <table class="table table-hover admin-table" id="pageTextsTable">
-            <thead><tr><th>{{ _('កន្លែងប្រើ') }}</th><th>{{ _('ខ្មែរ') }}</th><th>English</th><th class="text-end">{{ _('សកម្មភាព') }}</th></tr></thead>
+            <thead><tr><th>{{ bi('កន្លែងប្រើ') }}</th><th>{{ bi('ខ្មែរ') }}</th><th>English</th><th class="text-end">{{ bi('សកម្មភាព') }}</th></tr></thead>
             <tbody>
                 {% for item in items %}
                 <tr data-row>

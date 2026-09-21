@@ -2,8 +2,8 @@
 {% from "layouts/_admin_macros.html" import avatar, status_badge, stat, confidence_pill, empty_state %}
 
 {% block title %}{{ _('ប្រវត្តិរូបរបស់ខ្ញុំ') }}{% endblock %}
-{% block page_title %}{{ _('ប្រវត្តិរូបរបស់ខ្ញុំ') }}{% endblock %}
-{% block page_subtitle %}{{ _('គ្រប់គ្រងព័ត៌មានគណនីរបស់អ្នក។') }}{% endblock %}
+{% block page_title %}{{ bi('ប្រវត្តិរូបរបស់ខ្ញុំ') }}{% endblock %}
+{% block page_subtitle %}{{ bi('គ្រប់គ្រងព័ត៌មានគណនីរបស់អ្នក។') }}{% endblock %}
 
 {% block content %}
 <div class="pf">
@@ -26,7 +26,7 @@
                 </div>
             </div>
             <div class="pf-actions">
-                <a href="{{ url_for('tbl_users.edit', user_id=user.id) }}" class="btn btn-primary"><i class="bi bi-pencil me-2"></i>{{ _('កែប្រែប្រវត្តិរូប') }}</a>
+                <a href="{{ url_for('tbl_users.edit', user_id=user.id) }}" class="btn btn-primary"><i class="bi bi-pencil me-2"></i>{{ bi('កែប្រែប្រវត្តិរូប') }}</a>
             </div>
         </div>
     </section>
@@ -40,7 +40,7 @@
     <div class="row g-4">
         <div class="col-lg-7">
             <div class="admin-card mb-4">
-                <div class="admin-card-header"><h5 class="admin-card-title"><i class="bi bi-person-vcard me-2 text-muted"></i>{{ _('ព័ត៌មានគណនី') }}</h5></div>
+                <div class="admin-card-header"><h5 class="admin-card-title"><i class="bi bi-person-vcard me-2 text-muted"></i>{{ bi('ព័ត៌មានគណនី') }}</h5></div>
                 <div class="admin-card-body pt-2 pb-2">
                     <ul class="pf-facts">
                         <li><span class="pf-fact-icon"><i class="bi bi-person"></i></span><div><div class="pf-fact-label">{{ _('ឈ្មោះពេញ') }}</div><div class="pf-fact-value">{{ user.full_name }}</div></div></li>
@@ -53,7 +53,7 @@
 
             <div class="admin-card">
                 <div class="admin-card-header">
-                    <h5 class="admin-card-title"><i class="bi bi-clock-history me-2 text-muted"></i>{{ _('រោគវិនិច្ឆ័យថ្មីៗរបស់ខ្ញុំ') }}</h5>
+                    <h5 class="admin-card-title"><i class="bi bi-clock-history me-2 text-muted"></i>{{ bi('រោគវិនិច្ឆ័យថ្មីៗរបស់ខ្ញុំ') }}</h5>
                     {% if stats.cases %}<a href="{{ url_for('expert_system.cases_index') }}" class="btn btn-soft btn-sm">{{ _('មើលទាំងអស់') }}</a>{% endif %}
                 </div>
                 {% if recent_cases %}
@@ -80,7 +80,7 @@
         <div class="col-lg-5">
             <div class="admin-card">
                 <div class="admin-card-header">
-                    <h5 class="admin-card-title"><i class="bi bi-key me-2 text-muted"></i>{{ _('សិទ្ធិរបស់ខ្ញុំ') }}</h5>
+                    <h5 class="admin-card-title"><i class="bi bi-key me-2 text-muted"></i>{{ bi('សិទ្ធិរបស់ខ្ញុំ') }}</h5>
                     <span class="badge-soft badge-soft-neutral">{{ permissions.values() | map('length') | sum }}</span>
                 </div>
                 <div class="admin-card-body">

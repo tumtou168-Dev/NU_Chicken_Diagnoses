@@ -1,30 +1,38 @@
 {% extends "layouts/base.html" %}
-{% from "layouts/_admin_macros.html" import avatar, confidence_pill, table_filter, empty_state %}
+{% from "layouts/_admin_macros.html" import avatar, confidence_pill, table_filter, empty_state, stat %}
 
 {% block title %}{{ _('ប្រវត្តិករណី') }}{% endblock %}
-{% block page_title %}{{ _('ប្រវត្តិករណី') }}{% endblock %}
-{% block page_subtitle %}{{ _('ពិនិត្យមើលរបាយការណ៍រោគវិនិច្ឆ័យកន្លងមក និងលទ្ធផល។') }}{% endblock %}
+{% block page_title %}{{ bi('ប្រវត្តិករណី') }}{% endblock %}
+{% block page_subtitle %}{{ bi('ពិនិត្យមើលរបាយការណ៍រោគវិនិច្ឆ័យកន្លងមក និងលទ្ធផល។') }}{% endblock %}
 
 {% block content %}
 {% set show_user = current_user.has_role('Admin') or current_user.has_role('Doctor') %}
+{% set high = cases | selectattr('confidence', 'gt', 80) | list | length %}
+{% set low = cases | selectattr('confidence', 'le', 50) | list | length %}
+<div class="stat-grid stat-grid-3">
+    {{ stat('clipboard2-pulse', cases | length, _('ករណីសរុប'), 'primary') }}
+    {{ stat('check-circle', high, _('ទំនុកចិត្តខ្ពស់ (លើ ៨០%)'), 'success') }}
+    {{ stat('exclamation-triangle', low, _('ត្រូវពិនិត្យបន្ថែម (ក្រោម ៥០%)'), 'warning') }}
+</div>
+
 <div class="admin-card">
     <div class="admin-card-header">
-        <h5 class="admin-card-title">{{ _('ការធ្វើរោគវិនិច្ឆ័យថ្មីៗ') }}</h5>
+        <h5 class="admin-card-title">{{ bi('ការធ្វើរោគវិនិច្ឆ័យថ្មីៗ') }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#casesTable', _('ស្វែងរកករណី...')) }}
-            <a href="{{ url_for('expert_system.diagnose') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ _('ធ្វើរោគវិនិច្ឆ័យថ្មី') }}</a>
+            <a href="{{ url_for('expert_system.diagnose') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ bi('ធ្វើរោគវិនិច្ឆ័យថ្មី') }}</a>
         </div>
     </div>
     <div class="table-responsive">
         <table class="table table-hover admin-table" id="casesTable">
             <thead>
                 <tr>
-                    <th>{{ _('កាលបរិច្ឆេទ') }}</th>
-                    {% if show_user %}<th>{{ _('អ្នកប្រើប្រាស់##one') }}</th>{% endif %}
-                    <th>{{ _('ជំងឺដែលបានកំណត់អត្តសញ្ញាណ') }}</th>
-                    <th>{{ _('ទំនុកចិត្ត') }}</th>
-                    <th>{{ _('រោគសញ្ញា') }}</th>
-                    <th class="text-end">{{ _('សកម្មភាព') }}</th>
+                    <th>{{ bi('កាលបរិច្ឆេទ') }}</th>
+                    {% if show_user %}<th>{{ bi('អ្នកប្រើប្រាស់##one') }}</th>{% endif %}
+                    <th>{{ bi('ជំងឺដែលបានកំណត់អត្តសញ្ញាណ') }}</th>
+                    <th>{{ bi('ទំនុកចិត្ត') }}</th>
+                    <th>{{ bi('រោគសញ្ញា') }}</th>
+                    <th class="text-end">{{ bi('សកម្មភាព') }}</th>
                 </tr>
             </thead>
             <tbody>

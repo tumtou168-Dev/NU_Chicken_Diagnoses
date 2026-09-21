@@ -1,10 +1,10 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ _('បង្កើតប្រភេទ') }}{% endblock %}
-{% block page_title %}{{ _('បង្កើតប្រភេទ') }}{% endblock %}
-{% block page_subtitle %}{{ _('បន្ថែមប្រភេទថ្មីសម្រាប់ដាក់ក្រុមជំងឺ។') }}{% endblock %}
+{% block page_title %}{{ bi('បង្កើតប្រភេទ') }}{% endblock %}
+{% block page_subtitle %}{{ bi('បន្ថែមប្រភេទថ្មីសម្រាប់ដាក់ក្រុមជំងឺ។') }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('expert_system.categories_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅប្រភេទ') }}</a>
+<a href="{{ url_for('expert_system.categories_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅប្រភេទ') }}</a>
 <div class="admin-card form-narrow">
     <form method="post" novalidate>{% include "expert_system/categories/_form.html" %}</form>
 </div>

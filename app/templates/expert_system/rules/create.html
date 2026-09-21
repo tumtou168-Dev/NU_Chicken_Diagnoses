@@ -1,10 +1,10 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ _('បង្កើតវិធាន') }}{% endblock %}
-{% block page_title %}{{ _('បង្កើតវិធាន') }}{% endblock %}
-{% block page_subtitle %}{{ _('កំណត់លក្ខខណ្ឌរោគសញ្ញាដែលនាំទៅរកជំងឺមួយ។') }}{% endblock %}
+{% block page_title %}{{ bi('បង្កើតវិធាន') }}{% endblock %}
+{% block page_subtitle %}{{ bi('កំណត់លក្ខខណ្ឌរោគសញ្ញាដែលនាំទៅរកជំងឺមួយ។') }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('expert_system.rules_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅវិធាន') }}</a>
+<a href="{{ url_for('expert_system.rules_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅវិធាន') }}</a>
 <div class="admin-card form-narrow">
     <form method="post" novalidate>{% include "expert_system/rules/_form.html" %}</form>
 </div>

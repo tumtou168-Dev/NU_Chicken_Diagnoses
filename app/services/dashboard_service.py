@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 from sqlalchemy import desc, func
 
 from extensions import db
-from app.i18n import get_locale
+from app.i18n import ordered, pair_text
 from app.models.audit_log import AuditLog
 from app.models.expert_system import Case, Disease, Rule, Symptom
 from app.models.user import UserTable
@@ -88,11 +88,13 @@ class DashboardService:
             .all()
         )
         top_max = max((n for _, _, n in top_rows), default=0)
-        top_diseases = [
-            {"name": (name if get_locale() == "en" else name_km or name), "count": n,
-             "pct": round(n / top_max * 100, 2) if top_max else 0}
-            for name, name_km, n in top_rows
-        ]
+        top_diseases = []
+        for name, name_km, n in top_rows:
+            first, second = ordered(name_km or "", name or "")
+            top_diseases.append({
+                "name": pair_text(first, second), "first": first, "second": second, "count": n,
+                "pct": round(n / top_max * 100, 2) if top_max else 0,
+            })
 
         return {
             "cases_total": Case.query.filter(*scope).count(),

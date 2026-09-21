@@ -1,17 +1,22 @@
 {% extends "layouts/base.html" %}
-{% from "layouts/_admin_macros.html" import table_filter, empty_state %}
+{% from "layouts/_admin_macros.html" import table_filter, empty_state, stat %}
 {% block title %}{{ _('តួនាទី') }}{% endblock %}
-{% block page_title %}{{ _('តួនាទី') }}{% endblock %}
-{% block page_subtitle %}{{ _('កំណត់តួនាទី និងសិទ្ធិដែលភ្ជាប់ជាមួយតួនាទីនីមួយៗ។') }}{% endblock %}
+{% block page_title %}{{ bi('តួនាទី') }}{% endblock %}
+{% block page_subtitle %}{{ bi('កំណត់តួនាទី និងសិទ្ធិដែលភ្ជាប់ជាមួយតួនាទីនីមួយៗ។') }}{% endblock %}
 
 {% block content %}
+<div class="stat-grid stat-grid-3">
+    {{ stat('shield-lock', roles | length, _('តួនាទីសរុប'), 'primary') }}
+    {{ stat('people', roles | map(attribute='users') | map('length') | sum, _('ការកំណត់តួនាទីដល់អ្នកប្រើ'), 'success') }}
+</div>
+
 <div class="admin-card">
     <div class="admin-card-header">
-        <h5 class="admin-card-title">{{ _('តួនាទីទាំងអស់ (%(n)s)', n=roles | length) }}</h5>
+        <h5 class="admin-card-title">{{ bi('តួនាទីទាំងអស់ (%(n)s)', n=roles | length) }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#rolesTable', _('ស្វែងរកតួនាទី...')) }}
             <a href="{{ url_for('tbl_roles.create') }}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>{{ _('បង្កើតតួនាទី') }}
+                <i class="bi bi-plus-lg me-1"></i>{{ bi('បង្កើតតួនាទី') }}
             </a>
         </div>
     </div>
@@ -19,11 +24,11 @@
         <table class="table table-hover admin-table" id="rolesTable">
             <thead>
                 <tr>
-                    <th>{{ _('ឈ្មោះ') }}</th>
-                    <th>{{ _('ការពិពណ៌នា') }}</th>
-                    <th>{{ _('សិទ្ធិ') }}</th>
-                    <th>{{ _('អ្នកប្រើប្រាស់') }}</th>
-                    <th class="text-end">{{ _('សកម្មភាព') }}</th>
+                    <th>{{ bi('ឈ្មោះ') }}</th>
+                    <th>{{ bi('ការពិពណ៌នា') }}</th>
+                    <th>{{ bi('សិទ្ធិ') }}</th>
+                    <th>{{ bi('អ្នកប្រើប្រាស់') }}</th>
+                    <th class="text-end">{{ bi('សកម្មភាព') }}</th>
                 </tr>
             </thead>
             <tbody>

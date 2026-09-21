@@ -2,147 +2,201 @@
 {% from "layouts/_admin_macros.html" import strong %}
 
 {% block title %}{{ t('diagnose.title') }}{% endblock %}
-{% block page_title %}{{ t('diagnose.heading') }}{% endblock %}
-{% block page_subtitle %}{{ t('diagnose.subheading') }}{% endblock %}
+{% block page_title %}{{ tb('diagnose.heading') }}{% endblock %}
+{% block page_subtitle %}{{ tb('diagnose.subheading') }}{% endblock %}
+
+{# Symptom evidence: what matched the selection and what the rule also expected #}
+{% macro evidence(result, selected_ids) %}
+<div class="tag-list">
+    {% for sym in result.rule.symptoms %}
+    {% if sym.id in selected_ids %}
+    <span class="sym-chip on" title="{{ _('ត្រូវនឹងអ្វីដែលអ្នកបានសង្កេត') }}"><i class="bi bi-check-circle-fill"></i>{{ sym.inline("name") }}</span>
+    {% else %}
+    <span class="sym-chip off" title="{{ _('រោគសញ្ញាដែលរំពឹងទុក ប៉ុន្តែមិនបានជ្រើសរើស') }}"><i class="bi bi-dash-circle"></i>{{ sym.inline("name") }}</span>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endmacro %}
 
 {% block content %}
-<div class="diagnose-flow">
-    <div class="admin-card diagnose-card">
-        <div class="admin-card-header">
-            <div class="d-flex align-items-center gap-3">
-                <div class="stat-icon badge-soft-primary"><i class="bi bi-clipboard-check"></i></div>
-                <div>
-                    <h5 class="admin-card-title">{{ t('diagnose.observations.title') }}</h5>
-                    <div class="small text-muted">{{ t('diagnose.observations.subtitle') }}</div>
+{% set has_results = results is not none %}
+<div class="dx">
+
+    {# ---------- progress steps ---------- #}
+    <ol class="dx-steps" id="dxSteps" data-has-results="{{ 1 if has_results else 0 }}">
+        <li class="{{ 'is-done' if has_results else 'is-active' }}"><span class="dx-step-n"><span class="n">1</span><i class="bi bi-check-lg"></i></span><span class="dx-step-t">{{ _('ជ្រើសរោគសញ្ញា') }}</span></li>
+        <li class="{{ 'is-done' if has_results else '' }}"><span class="dx-step-n"><span class="n">2</span><i class="bi bi-check-lg"></i></span><span class="dx-step-t">{{ _('វិភាគ') }}</span></li>
+        <li class="{{ 'is-active' if has_results else '' }}"><span class="dx-step-n"><span class="n">3</span><i class="bi bi-check-lg"></i></span><span class="dx-step-t">{{ _('មើលលទ្ធផល') }}</span></li>
+    </ol>
+
+    <form method="POST" action="{{ url_for('expert_system.diagnose') }}" id="diagnoseForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="dx-grid">
+
+            {# ---------- symptom picker ---------- #}
+            <section class="dx-picker admin-card">
+                <div class="admin-card-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon badge-soft-primary"><i class="bi bi-clipboard-check"></i></div>
+                        <div>
+                            <h5 class="admin-card-title">{{ tb('diagnose.observations.title') }}</h5>
+                            <div class="small text-muted">{{ tb('diagnose.observations.subtitle') }}</div>
+                        </div>
+                    </div>
                 </div>
+                <div class="admin-card-body">
+                    {% if not has_results %}
+                    <p class="dx-hint"><i class="bi bi-info-circle"></i><span>{{ t('diagnose.empty.body') }}</span></p>
+                    {% endif %}
+
+                    <div class="symptom-toolbar mb-3">
+                        <div class="symptom-search">
+                            <i class="bi bi-search"></i>
+                            <input type="search" id="symptomSearch" class="form-control" placeholder="{{ t('diagnose.search.placeholder') }}" aria-label="{{ t('diagnose.search.label') }}" autocomplete="off">
+                        </div>
+                        <span class="symptom-total" id="symptomTotal">{{ symptoms | length }}</span>
+                    </div>
+
+                    <div class="symptom-grid" id="symptomGrid">
+                        {% for symptom in symptoms %}
+                        <div class="symptom-item">
+                            <input type="checkbox" class="symptom-input" id="symptom-{{ symptom.id }}" name="symptoms" value="{{ symptom.id }}" data-name="{{ symptom.loc('name') }}" {% if symptom.id in selected_ids %}checked{% endif %} autocomplete="off">
+                            <label class="symptom-card" for="symptom-{{ symptom.id }}">
+                                <span class="symptom-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                                <span class="symptom-text">
+                                    <span class="symptom-name">{{ symptom.pair("name") }}</span>
+                                    {% if symptom.description or symptom.description_km %}<span class="symptom-desc">{{ symptom.pair("description") }}</span>{% endif %}
+                                </span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="symptom-empty" id="symptomEmpty" hidden>
+                        <i class="bi bi-search"></i>
+                        <span>{{ t('diagnose.search.empty') }}</span>
+                    </div>
+                </div>
+            </section>
+
+            {# ---------- selection summary (sticky) ---------- #}
+            <aside class="dx-summary admin-card">
+                <div class="admin-card-header">
+                    <h5 class="admin-card-title"><i class="bi bi-list-check me-2 text-muted"></i>{{ _('ការជ្រើសរើសរបស់អ្នក') }}</h5>
+                    <span class="selected-pill" id="selectedPill" data-template="{{ t('diagnose.selected', n='{n}') }}" hidden></span>
+                </div>
+                <div class="admin-card-body">
+                    <div class="dx-empty" id="dxEmpty">
+                        <i class="bi bi-hand-index-thumb"></i>
+                        <p>{{ _('មិនទាន់បានជ្រើសរើសរោគសញ្ញាទេ។ សូមជ្រើសយ៉ាងហោចណាស់មួយ។') }}</p>
+                    </div>
+                    <div class="dx-chips" id="dxChips" hidden></div>
+                    <p class="dx-tip"><i class="bi bi-lightbulb"></i>{{ _('ជ្រើសរោគសញ្ញាកាន់តែច្រើន លទ្ធផលកាន់តែត្រឹមត្រូវ។') }}</p>
+                </div>
+                <div class="dx-summary-actions">
+                    <button type="submit" class="btn btn-primary w-100" id="analyseBtn"><i class="bi bi-magic me-2"></i>{{ tb('diagnose.submit') }}</button>
+                    <button type="button" class="btn btn-link btn-sm text-decoration-none" id="clearBtn" hidden><i class="bi bi-x-circle me-1"></i>{{ t('diagnose.clear') }}</button>
+                </div>
+            </aside>
+        </div>
+    </form>
+
+    {# ---------- results ---------- #}
+    {% if has_results %}
+    <section id="results" class="dx-results">
+        <div class="dx-results-head">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h4 class="h5 mb-0">{{ tb('diagnose.results.title') }}</h4>
+                {% if results %}<span class="badge-soft badge-soft-primary">{{ t('diagnose.results.found', n=results | length) }}</span>{% endif %}
             </div>
-            <span class="selected-pill" id="selectedPill" data-template="{{ t('diagnose.selected', n='{n}') }}" hidden></span>
+            <div class="d-flex gap-2 flex-wrap no-print">
+                {% if case_id %}<a href="{{ url_for('expert_system.cases_detail', case_id=case_id) }}" class="btn btn-soft btn-sm"><i class="bi bi-file-earmark-text me-1"></i>{{ _('មើលរបាយការណ៍ដែលបានរក្សាទុក') }}</a>{% endif %}
+                <a href="{{ url_for('expert_system.diagnose') }}" class="btn btn-soft btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ _('ធ្វើរោគវិនិច្ឆ័យថ្មី') }}</a>
+            </div>
         </div>
 
-        <form method="POST" action="{{ url_for('expert_system.diagnose') }}" id="diagnoseForm">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <div class="admin-card-body pb-3">
-                {% if results is none %}
-                <div class="diagnose-intro mb-4">
-                    <div class="diagnose-intro-icon"><i class="bi bi-clipboard-pulse"></i></div>
-                    <div class="min-w-0">
-                        <h2 class="h6 ink mb-1">{{ t('diagnose.empty.title') }}</h2>
-                        <p class="mb-2 text-muted small">{{ t('diagnose.empty.body') }}</p>
-                        <div class="d-flex flex-wrap gap-2 small">
-                            <span class="intro-chip"><i class="bi bi-lightning-charge-fill"></i>{{ t('diagnose.empty.point1') }}</span>
-                            <span class="intro-chip"><i class="bi bi-patch-check-fill"></i>{{ t('diagnose.empty.point2') }}</span>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-
-                <div class="symptom-toolbar mb-3">
-                    <div class="symptom-search">
-                        <i class="bi bi-search"></i>
-                        <input type="search" id="symptomSearch" class="form-control" placeholder="{{ t('diagnose.search.placeholder') }}" aria-label="{{ t('diagnose.search.label') }}" autocomplete="off">
-                    </div>
-                    <span class="symptom-total" id="symptomTotal">{{ symptoms | length }}</span>
-                </div>
-
-                <div class="symptom-grid" id="symptomGrid">
-                    {% for symptom in symptoms %}
-                    <div class="symptom-item">
-                        <input type="checkbox" class="symptom-input" id="symptom-{{ symptom.id }}" name="symptoms" value="{{ symptom.id }}" {% if symptom.id in selected_ids %}checked{% endif %} autocomplete="off">
-                        <label class="symptom-card" for="symptom-{{ symptom.id }}">
-                            <span class="symptom-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
-                            <span class="symptom-text">
-                                <span class="symptom-name">{{ symptom.pair("name") }}</span>
-                                {% if symptom.description or symptom.description_km %}<span class="symptom-desc">{{ symptom.pair("description") }}</span>{% endif %}
-                            </span>
-                        </label>
-                    </div>
-                    {% endfor %}
-                </div>
-
-                <div class="symptom-empty" id="symptomEmpty" hidden>
-                    <i class="bi bi-search"></i>
-                    <span>{{ t('diagnose.search.empty') }}</span>
-                </div>
-            </div>
-
-            <div class="diagnose-actions">
-                <button type="button" class="btn btn-link btn-sm text-decoration-none px-0" id="clearBtn" hidden>
-                    <i class="bi bi-x-circle me-1"></i>{{ t('diagnose.clear') }}
-                </button>
-                <button type="submit" class="btn btn-primary btn-lg px-4 ms-auto" id="analyseBtn"><i class="bi bi-magic me-2"></i>{{ t('diagnose.submit') }}</button>
-            </div>
-        </form>
-    </div>
-
-    {% if results is not none %}
-    <section id="results" class="mt-4">
         {% if results %}
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <h4 class="h5 mb-0">{{ t('diagnose.results.title') }}</h4>
-                <span class="badge-soft badge-soft-primary">{{ t('diagnose.results.found', n=results | length) }}</span>
-            </div>
+        {% set top = results[0] %}
+        {% set tone = 'success' if top.confidence > 80 else ('warning' if top.confidence > 50 else 'danger') %}
+        {% set level = _('ទំនុកចិត្តខ្ពស់') if top.confidence > 80 else (_('ទំនុកចិត្តមធ្យម##level') if top.confidence > 50 else _('ទំនុកចិត្តទាប')) %}
 
-            <div class="d-flex flex-column gap-3">
-                {% for result in results %}
-                {% set tone = 'success' if result.confidence > 80 else ('warning' if result.confidence > 50 else 'danger') %}
-                <div class="admin-card">
-                    <div class="admin-card-body">
-                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                            <div class="d-flex align-items-center gap-3">
-                                <span class="result-rank">{{ loop.index }}</span>
-                                <div>
-                                    <h3 class="h5 mb-1">{{ result.disease.pair("name") }}</h3>
-                                    <span class="badge-soft badge-soft-neutral">{{ result.disease.category.inline("name") }}</span>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="confidence-value text-{{ tone }}">{{ result.confidence }}%</div>
-                                <div class="info-label mt-1 mb-0">{{ t('diagnose.result.confidence') }}</div>
-                            </div>
-                        </div>
+        <article class="dx-top admin-card tone-{{ tone }}">
+            <div class="dx-top-main">
+                <div class="dx-best"><i class="bi bi-award-fill"></i>{{ _('ការផ្គូផ្គងល្អបំផុត') }}</div>
+                <h3 class="dx-name">{{ top.disease.pair("name") }}</h3>
+                <span class="badge-soft badge-soft-neutral">{{ top.disease.category.inline("name") }}</span>
+                <p class="dx-desc">{{ top.disease.pair("description") }}</p>
 
-                        <div class="progress mb-4" style="height: 6px;">
-                            <div class="progress-bar bg-{{ tone }}" role="progressbar" style="width: {{ result.confidence }}%" aria-valuenow="{{ result.confidence }}" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="info-block">
-                                    <div class="info-icon badge-soft-primary"><i class="bi bi-info-circle"></i></div>
-                                    <div>
-                                        <div class="info-label">{{ t('diagnose.result.description') }}</div>
-                                        <p class="mb-0">{{ result.disease.pair("description") }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="info-block">
-                                    <div class="info-icon badge-soft-success"><i class="bi bi-bandaid"></i></div>
-                                    <div>
-                                        <div class="info-label">{{ t('diagnose.result.treatment') }}</div>
-                                        <p class="mb-0">{{ result.disease.pair("treatment") }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div class="dx-panels">
+                    <div class="dx-panel dx-panel-treat">
+                        <div class="info-label"><i class="bi bi-bandaid me-1"></i>{{ tb('diagnose.result.treatment') }}</div>
+                        <p class="mb-0">{{ top.disease.pair("treatment") }}</p>
                     </div>
-                    <div class="admin-card-footer justify-content-start">
-                        <small class="text-muted">
-                            <i class="bi bi-diagram-2 me-1"></i>{{ t('diagnose.result.rule', rule=strong(result.rule.inline('title')), n=result.matched_count) }}
-                        </small>
+                    <div class="dx-panel">
+                        <div class="info-label"><i class="bi bi-clipboard2-data me-1"></i>{{ _('ភស្តុតាងរោគសញ្ញា') }}</div>
+                        {{ evidence(top, selected_ids) }}
+                        <div class="dx-rule"><i class="bi bi-diagram-2 me-1"></i>{{ t('diagnose.result.rule', rule=strong(top.rule.inline('title')), n=top.matched_count) }}</div>
                     </div>
                 </div>
-                {% endfor %}
             </div>
+
+            <div class="dx-gauge">
+                <div class="dx-donut-wrap">
+                    <svg viewBox="0 0 100 100" class="dx-donut" role="img" aria-label="{{ top.confidence }}%">
+                        <circle cx="50" cy="50" r="42" class="dx-donut-track"></circle>
+                        <circle cx="50" cy="50" r="42" class="dx-donut-bar" stroke-dasharray="{{ (top.confidence * 2.6389) | round(1) }} 263.89" transform="rotate(-90 50 50)"></circle>
+                    </svg>
+                    <div class="dx-donut-value">{{ top.confidence | round(1) }}<small>%</small></div>
+                </div>
+                <div class="info-label mb-1">{{ tb('diagnose.result.confidence') }}</div>
+                <span class="badge-soft badge-soft-{{ tone }}">{{ level }}</span>
+            </div>
+        </article>
+
+        {% if results | length > 1 %}
+        <h5 class="dx-sub">{{ _('ជំងឺផ្សេងទៀតដែលអាចកើតមាន') }}</h5>
+        <div class="dx-others">
+            {% for result in results[1:] %}
+            {% set otone = 'success' if result.confidence > 80 else ('warning' if result.confidence > 50 else 'danger') %}
+            <details class="dx-other admin-card tone-{{ otone }}">
+                <summary>
+                    <span class="result-rank">{{ loop.index + 1 }}</span>
+                    <span class="dx-other-name">
+                        <span class="fw-semibold">{{ result.disease.pair("name") }}</span>
+                        <span class="small text-muted">{{ result.disease.category.inline("name") }}</span>
+                    </span>
+                    <span class="dx-other-bar"><span class="dx-bar"><span style="width: {{ result.confidence }}%"></span></span></span>
+                    <span class="dx-other-pct">{{ result.confidence | round(1) }}%</span>
+                    <i class="bi bi-chevron-down dx-chevron"></i>
+                </summary>
+                <div class="dx-other-body">
+                    <div class="row g-3">
+                        <div class="col-md-6"><div class="info-label">{{ tb('diagnose.result.description') }}</div><p class="mb-0">{{ result.disease.pair("description") }}</p></div>
+                        <div class="col-md-6"><div class="info-label">{{ tb('diagnose.result.treatment') }}</div><p class="mb-0">{{ result.disease.pair("treatment") }}</p></div>
+                    </div>
+                    <div class="mt-3"><div class="info-label">{{ _('ភស្តុតាងរោគសញ្ញា') }}</div>{{ evidence(result, selected_ids) }}</div>
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="disclaimer">
+            <i class="bi bi-shield-exclamation"></i>
+            <div>
+                <strong>{{ _('សូមកត់សម្គាល់') }}</strong>
+                <span>{{ _('លទ្ធផលនេះគ្រាន់តែជាការជួយសម្រេចចិត្តប៉ុណ្ណោះ មិនមែនជាការវិនិច្ឆ័យចុងក្រោយទេ។ សូមពិគ្រោះជាមួយពេទ្យសត្វមុនព្យាបាលសត្វ។') }}</span>
+            </div>
+        </div>
+
         {% else %}
-            <div class="admin-card">
-                <div class="empty-state py-5">
-                    <i class="bi bi-search"></i>
-                    <h3 class="h5 ink">{{ t('diagnose.nomatch.title') }}</h3>
-                    <p class="mb-0 mx-auto" style="max-width: 420px;">{{ t('diagnose.nomatch.body') }}</p>
-                </div>
+        <div class="admin-card">
+            <div class="empty-state py-5">
+                <i class="bi bi-search"></i>
+                <h3 class="h5 ink">{{ tb('diagnose.nomatch.title') }}</h3>
+                <p class="mb-0 mx-auto" style="max-width: 420px;">{{ t('diagnose.nomatch.body') }}</p>
             </div>
+        </div>
         {% endif %}
     </section>
     {% endif %}
@@ -160,13 +214,36 @@ document.addEventListener('DOMContentLoaded', function () {
     const clearBtn = document.getElementById('clearBtn');
     const total = document.getElementById('symptomTotal');
     const empty = document.getElementById('symptomEmpty');
+    const chips = document.getElementById('dxChips');
+    const chipsEmpty = document.getElementById('dxEmpty');
+    const steps = Array.from(document.querySelectorAll('#dxSteps li'));
+    const showingResults = document.getElementById('dxSteps').dataset.hasResults === '1';
 
     function refresh() {
-        const n = boxes.filter(function (b) { return b.checked; }).length;
-        pill.textContent = pill.dataset.template.replace('{n}', n);
+        const checked = boxes.filter(function (b) { return b.checked; });
+        const n = checked.length;
+        pill.textContent = pill.dataset.template.replace(/\{n\}/g, n);
         pill.hidden = n === 0;
         clearBtn.hidden = n === 0;
         btn.disabled = n === 0;
+        chipsEmpty.hidden = n > 0;
+        chips.hidden = n === 0;
+        if (!showingResults) {   // step 1 completes as soon as something is selected
+            steps[0].className = n > 0 ? 'is-done' : 'is-active';
+            steps[1].className = n > 0 ? 'is-active' : '';
+        }
+        chips.textContent = '';
+        checked.forEach(function (b) {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'dx-chip';
+            chip.textContent = b.dataset.name;
+            const x = document.createElement('i');
+            x.className = 'bi bi-x-lg';
+            chip.appendChild(x);
+            chip.addEventListener('click', function () { b.checked = false; refresh(); });
+            chips.appendChild(chip);
+        });
     }
     boxes.forEach(function (b) { b.addEventListener('change', refresh); });
     refresh();

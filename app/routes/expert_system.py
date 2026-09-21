@@ -38,6 +38,7 @@ def diagnose():
     symptoms = DiagnosisService.get_all_symptoms()
     diagnosis_results = None
     selected_ids = []
+    case_id = None
 
     if request.method == "POST":
         selected_ids = [int(id) for id in request.form.getlist("symptoms")]
@@ -49,6 +50,7 @@ def diagnose():
                     selected_ids,
                     diagnosis_results[0],
                 )
+                case_id = case.id
                 AuditService.log("DIAGNOSE", "Case", case.id, f"User ran diagnosis, result: {case.disease.name}")
         else:
             flash(_("សូមជ្រើសរើសរោគសញ្ញាយ៉ាងហោចណាស់មួយ។"), "warning")
@@ -58,6 +60,7 @@ def diagnose():
         symptoms=symptoms,
         results=diagnosis_results,
         selected_ids=set(selected_ids),
+        case_id=case_id,
     )
 
 

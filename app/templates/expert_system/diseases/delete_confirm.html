@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
 {% from "layouts/_admin_macros.html" import confirm_delete with context %}
 {% block title %}{{ _('លុបជំងឺ') }}{% endblock %}
-{% block page_title %}{{ _('លុបជំងឺ') }}{% endblock %}
+{% block page_title %}{{ bi('លុបជំងឺ') }}{% endblock %}
 {% block content %}{{ confirm_delete(_('បញ្ជាក់ការលុប'), disease.inline("name"), url_for('expert_system.diseases_index')) }}{% endblock %}

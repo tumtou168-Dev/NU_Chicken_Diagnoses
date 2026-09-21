@@ -2,8 +2,8 @@
 {% from "layouts/_admin_macros.html" import avatar, status_badge, stat, table_filter, empty_state %}
 
 {% block title %}{{ _('ការគ្រប់គ្រងអ្នកប្រើប្រាស់') }}{% endblock %}
-{% block page_title %}{{ _('ការគ្រប់គ្រងអ្នកប្រើប្រាស់') }}{% endblock %}
-{% block page_subtitle %}{{ _('គ្រប់គ្រងគណនី តួនាទី និងស្ថានភាពនៃការចូលប្រើប្រាស់។') }}{% endblock %}
+{% block page_title %}{{ bi('ការគ្រប់គ្រងអ្នកប្រើប្រាស់') }}{% endblock %}
+{% block page_subtitle %}{{ bi('គ្រប់គ្រងគណនី តួនាទី និងស្ថានភាពនៃការចូលប្រើប្រាស់។') }}{% endblock %}
 
 {% block content %}
 {% set active_count = users | selectattr('is_active') | list | length %}
@@ -15,11 +15,11 @@
 
 <div class="admin-card">
     <div class="admin-card-header">
-        <h5 class="admin-card-title">{{ _('អ្នកប្រើប្រាស់ដែលបានចុះឈ្មោះ') }}</h5>
+        <h5 class="admin-card-title">{{ bi('អ្នកប្រើប្រាស់ដែលបានចុះឈ្មោះ') }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#usersTable', _('ស្វែងរកអ្នកប្រើប្រាស់...')) }}
             <a href="{{ url_for('tbl_users.create') }}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>{{ _('អ្នកប្រើប្រាស់ថ្មី') }}
+                <i class="bi bi-plus-lg me-1"></i>{{ bi('អ្នកប្រើប្រាស់ថ្មី') }}
             </a>
         </div>
     </div>
@@ -27,11 +27,11 @@
         <table class="table table-hover admin-table" id="usersTable">
             <thead>
                 <tr>
-                    <th>{{ _('អ្នកប្រើប្រាស់##one') }}</th>
-                    <th>{{ _('អ៊ីមែល') }}</th>
-                    <th>{{ _('តួនាទី##one') }}</th>
-                    <th>{{ _('ស្ថានភាព') }}</th>
-                    <th class="text-end">{{ _('សកម្មភាព') }}</th>
+                    <th>{{ bi('អ្នកប្រើប្រាស់##one') }}</th>
+                    <th>{{ bi('អ៊ីមែល') }}</th>
+                    <th>{{ bi('តួនាទី##one') }}</th>
+                    <th>{{ bi('ស្ថានភាព') }}</th>
+                    <th class="text-end">{{ bi('សកម្មភាព') }}</th>
                 </tr>
             </thead>
             <tbody>

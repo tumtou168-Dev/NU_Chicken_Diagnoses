@@ -1,13 +1,16 @@
 {% extends "layouts/base.html" %}
 
 {% block title %}{{ _('ព័ត៌មានលម្អិតនៃការធ្វើរោគវិនិច្ឆ័យ') }}{% endblock %}
-{% block page_title %}{{ _('របាយការណ៍រោគវិនិច្ឆ័យ') }}{% endblock %}
-{% block page_subtitle %}{{ _('ទិដ្ឋភាពលម្អិតនៃករណី #%(id)s', id=case.id) }}{% endblock %}
+{% block page_title %}{{ bi('របាយការណ៍រោគវិនិច្ឆ័យ') }}{% endblock %}
+{% block page_subtitle %}{{ bi('ទិដ្ឋភាពលម្អិតនៃករណី #%(id)s', id=case.id) }}{% endblock %}
 
 {% block content %}
 {% set tone = 'success' if case.confidence > 80 else ('warning' if case.confidence > 50 else 'danger') %}
 {% set bar = {'success': 'bg-success', 'warning': 'bg-warning', 'danger': 'bg-danger'}[tone] %}
-<a href="{{ url_for('expert_system.cases_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅប្រវត្តិ') }}</a>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 no-print">
+    <a href="{{ url_for('expert_system.cases_index') }}" class="back-link mb-0"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅប្រវត្តិ') }}</a>
+    <button type="button" class="btn btn-soft btn-sm" onclick="window.print()"><i class="bi bi-printer me-1"></i>{{ bi('បោះពុម្ពរបាយការណ៍') }}</button>
+</div>
 
 <div class="admin-card">
     <div class="admin-card-header">

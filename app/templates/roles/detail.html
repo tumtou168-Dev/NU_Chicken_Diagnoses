@@ -1,19 +1,19 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ _('ព័ត៌មានលម្អិតតួនាទី') }}{% endblock %}
 {% block page_title %}{{ role.name | dt }}{% endblock %}
-{% block page_subtitle %}{{ _('ព័ត៌មានលម្អិតតួនាទី និងសិទ្ធិដែលបានផ្តល់។') }}{% endblock %}
+{% block page_subtitle %}{{ bi('ព័ត៌មានលម្អិតតួនាទី និងសិទ្ធិដែលបានផ្តល់។') }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('tbl_roles.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅតួនាទី') }}</a>
+<a href="{{ url_for('tbl_roles.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅតួនាទី') }}</a>
 
 <div class="row g-4">
     <div class="col-lg-5">
         <div class="admin-card">
             <div class="admin-card-header">
-                <h5 class="admin-card-title">{{ _('ព័ត៌មានតួនាទី') }}</h5>
+                <h5 class="admin-card-title">{{ bi('ព័ត៌មានតួនាទី') }}</h5>
                 <div class="d-flex gap-2">
-                    <a href="{{ url_for('tbl_roles.edit', role_id=role.id) }}" class="btn btn-soft btn-sm"><i class="bi bi-pencil me-1"></i>{{ _('កែប្រែ') }}</a>
-                    <a href="{{ url_for('tbl_roles.delete_confirm', role_id=role.id) }}" class="btn btn-soft btn-sm text-danger"><i class="bi bi-trash me-1"></i>{{ _('លុប') }}</a>
+                    <a href="{{ url_for('tbl_roles.edit', role_id=role.id) }}" class="btn btn-soft btn-sm"><i class="bi bi-pencil me-1"></i>{{ bi('កែប្រែ') }}</a>
+                    <a href="{{ url_for('tbl_roles.delete_confirm', role_id=role.id) }}" class="btn btn-soft btn-sm text-danger"><i class="bi bi-trash me-1"></i>{{ bi('លុប') }}</a>
                 </div>
             </div>
             <div class="admin-card-body">
@@ -31,7 +31,7 @@
     <div class="col-lg-7">
         <div class="admin-card">
             <div class="admin-card-header">
-                <h5 class="admin-card-title">{{ _('សិទ្ធិ') }}</h5>
+                <h5 class="admin-card-title">{{ bi('សិទ្ធិ') }}</h5>
                 <span class="badge-soft badge-soft-primary">{{ role.permissions | length }}</span>
             </div>
             <div class="admin-card-body py-2">

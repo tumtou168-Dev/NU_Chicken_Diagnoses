@@ -1,17 +1,17 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ _('ព័ត៌មានលម្អិតសិទ្ធិ') }}{% endblock %}
-{% block page_title %}{{ _('ព័ត៌មានលម្អិតសិទ្ធិ') }}{% endblock %}
+{% block page_title %}{{ bi('ព័ត៌មានលម្អិតសិទ្ធិ') }}{% endblock %}
 {% block page_subtitle %}{{ permission.name | dt }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('tbl_permissions.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅសិទ្ធិ') }}</a>
+<a href="{{ url_for('tbl_permissions.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅសិទ្ធិ') }}</a>
 
 <div class="admin-card form-narrow">
     <div class="admin-card-header">
         <span class="perm-code fs-6">{{ permission.code }}</span>
         <div class="d-flex gap-2">
-            <a href="{{ url_for('tbl_permissions.edit', permission_id=permission.id) }}" class="btn btn-soft btn-sm"><i class="bi bi-pencil me-1"></i>{{ _('កែប្រែ') }}</a>
-            <a href="{{ url_for('tbl_permissions.delete_confirm', permission_id=permission.id) }}" class="btn btn-soft btn-sm text-danger"><i class="bi bi-trash me-1"></i>{{ _('លុប') }}</a>
+            <a href="{{ url_for('tbl_permissions.edit', permission_id=permission.id) }}" class="btn btn-soft btn-sm"><i class="bi bi-pencil me-1"></i>{{ bi('កែប្រែ') }}</a>
+            <a href="{{ url_for('tbl_permissions.delete_confirm', permission_id=permission.id) }}" class="btn btn-soft btn-sm text-danger"><i class="bi bi-trash me-1"></i>{{ bi('លុប') }}</a>
         </div>
     </div>
     <div class="admin-card-body">

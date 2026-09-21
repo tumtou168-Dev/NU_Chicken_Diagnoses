@@ -2,10 +2,11 @@
 """Minimal Khmer/English translation layer (no external dependency).
 
 Khmer is the source language: the Khmer text itself is the lookup key, and
-app/translations/en.py maps it to English. A key missing from the catalogue falls
-back to the Khmer text, so a string can never render blank.
+app/translations/en.py maps it to English. By default only the language chosen with the toggle is shown; with
+config SHOW_BOTH_LANGUAGES every string is shown in BOTH languages ("Khmer · English"), chosen language first. A key missing from the catalogue shows the Khmer text alone,
+so a string can never render blank.
 """
-from flask import has_request_context, request
+from flask import current_app, has_request_context, request
 from markupsafe import Markup, escape
 
 from app.translations.en import EN
@@ -26,58 +27,101 @@ def get_locale() -> str:
     return DEFAULT_LANGUAGE
 
 
-def _lookup(text: str) -> str:
-    """English text when available, otherwise the Khmer source (with any context marker removed)."""
-    if get_locale() == "en":
-        found = EN.get(text)
-        if found is not None:
-            return found
-    return text.partition(CONTEXT_MARK)[0]
+SEP = " · "
 
 
-def gettext_pair(text: str, **params) -> Markup:
-    """Label markup for the current language only (Khmer mode is all Khmer, English mode all English).
-
-    Kept as the template helper `bi()`. Accepts %(name)s params (HTML-escaped)."""
-    return Markup(escape(gettext(text, **params)))
-
-
-def gettext_inline(text: str, **params) -> str:
-    """Plain-text version of gettext_pair for attributes and JS-swapped labels (template helper `bit()`)."""
-    return gettext(text, **params)
+def split_pair(text: str):
+    """(khmer, english_or_None) for a translation key, with any context marker removed."""
+    km = text.partition(CONTEXT_MARK)[0]
+    en = EN.get(text)
+    en = en.partition(CONTEXT_MARK)[0] if en else None
+    return km, (en if en and en != km else None)
 
 
-def data_text(value):
-    """Display text for a built-in role/permission name or description: Khmer in Khmer mode, as stored otherwise."""
-    if value and get_locale() == "km":
-        return DATA_KM.get(value, value)
-    return value
+def both_languages() -> bool:
+    """True when the app is configured to show Khmer and English together (config SHOW_BOTH_LANGUAGES)."""
+    try:
+        return bool(current_app.config.get("SHOW_BOTH_LANGUAGES", False))
+    except RuntimeError:  # no app context
+        return False
 
 
-def audit_target(value):
-    """Audit-log target type ("Category") in the current language."""
-    return audit_km.TARGETS.get(value, value) if value and get_locale() == "km" else value
+def ordered(km, en):
+    """(first, second) for the current language.
 
-
-def audit_action(value):
-    return audit_km.ACTIONS.get(value, value) if value and get_locale() == "km" else value
-
-
-def audit_detail(value):
-    """Audit-log detail message in the current language (entries are stored in English)."""
-    return audit_km.detail_km(value) if get_locale() == "km" else value
+    Single-language mode: second is always None - only the current language is shown, falling back to the other
+    one when it has no text. Both-languages mode: second is the other language."""
+    if not en:
+        return km, None
+    if not km:
+        return en, None
+    first, second = (en, km) if get_locale() == "en" else (km, en)
+    return (first, second) if both_languages() else (first, None)
 
 
 def gettext(text: str, **params) -> str:
-    """Translate `text` for the current request. Use %(name)s placeholders with keyword params."""
-    text = _lookup(text)
-    return text % params if params else text
+    """Both languages on one line, current language first. Use %(name)s placeholders with keyword params."""
+    first, second = ordered(*split_pair(text))
+    if params:
+        first = first % params
+        second = second % params if second else None
+    return first if second is None else f"{first}{SEP}{second}"
 
 
 def gettext_html(text: str, **params) -> Markup:
     """Like gettext, but returns Markup and HTML-escapes every inserted value (Markup values pass through)."""
-    text = _lookup(text)
-    return Markup(text) % params if params else Markup(text)
+    first, second = ordered(*split_pair(text))
+    first = Markup(first) % params if params else Markup(first)
+    if second is None:
+        return first
+    second = Markup(second) % params if params else Markup(second)
+    return Markup("%s%s%s") % (first, SEP, second)
+
+
+def gettext_pair(text: str, **params) -> Markup:
+    """Two-line label markup (current language large, the other one small underneath) for headings, buttons and
+    the sidebar. Template helper `bi()`. Params are HTML-escaped."""
+    first, second = ordered(*split_pair(text))
+    if params:
+        first = first % params
+        second = second % params if second else None
+    if second is None:
+        return Markup("<span>%s</span>") % first
+    return Markup('<span class="dual"><span class="dual-1">%s</span><span class="dual-2">%s</span></span>') % (first, second)
+
+
+def gettext_inline(text: str, **params) -> str:
+    """Plain one-line version for HTML attributes and JS-swapped labels (template helper `bit()`)."""
+    return gettext(text, **params)
+
+
+def pair_text(first, second):
+    """Join two texts as "first · second" (either may be empty)."""
+    return f"{first}{SEP}{second}" if first and second and first != second else (first or second or "")
+
+
+def data_text(value):
+    """Built-in role/permission name or description in both languages, current language first."""
+    if not value:
+        return value
+    km = DATA_KM.get(value)
+    return value if not km else pair_text(*ordered(km, value))
+
+
+def audit_target(value):
+    km = audit_km.TARGETS.get(value) if value else None
+    return value if not km else pair_text(*ordered(km, value))
+
+
+def audit_action(value):
+    km = audit_km.ACTIONS.get(value) if value else None
+    return value if not km else pair_text(*ordered(km, value.capitalize()))
+
+
+def audit_detail(value):
+    """Audit-log message (stored in English) with its Khmer translation."""
+    km = audit_km.detail_km(value) if value else None
+    return value if not km or km == value else pair_text(*ordered(km, value))
 
 
 class LazyString:

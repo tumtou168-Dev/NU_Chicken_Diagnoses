@@ -1,21 +1,28 @@
 {% extends "layouts/base.html" %}
-{% from "layouts/_admin_macros.html" import table_filter, empty_state %}
+{% from "layouts/_admin_macros.html" import table_filter, empty_state, stat %}
 {% block title %}{{ _('ការគ្រប់គ្រងរោគសញ្ញា') }}{% endblock %}
-{% block page_title %}{{ _('បណ្ណាល័យរោគសញ្ញា') }}{% endblock %}
-{% block page_subtitle %}{{ _('គ្រប់គ្រងរោគសញ្ញាដែលប្រើសម្រាប់ការធ្វើរោគវិនិច្ឆ័យ។') }}{% endblock %}
+{% block page_title %}{{ bi('បណ្ណាល័យរោគសញ្ញា') }}{% endblock %}
+{% block page_subtitle %}{{ bi('គ្រប់គ្រងរោគសញ្ញាដែលប្រើសម្រាប់ការធ្វើរោគវិនិច្ឆ័យ។') }}{% endblock %}
 
 {% block content %}
+{% set used = symptoms | selectattr('rules') | list | length %}
+<div class="stat-grid stat-grid-3">
+    {{ stat('thermometer-half', symptoms | length, _('រោគសញ្ញាសរុប'), 'primary') }}
+    {{ stat('diagram-3', used, _('ប្រើក្នុងវិធាន'), 'success') }}
+    {{ stat('dash-circle', (symptoms | length) - used, _('មិនទាន់ប្រើក្នុងវិធាន'), 'warning') }}
+</div>
+
 <div class="admin-card">
     <div class="admin-card-header">
-        <h5 class="admin-card-title">{{ _('រោគសញ្ញាទាំងអស់ (%(n)s)', n=symptoms | length) }}</h5>
+        <h5 class="admin-card-title">{{ bi('រោគសញ្ញាទាំងអស់ (%(n)s)', n=symptoms | length) }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#symptomsTable', _('ស្វែងរករោគសញ្ញា...')) }}
-            <a href="{{ url_for('expert_system.symptoms_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ _('រោគសញ្ញាថ្មី') }}</a>
+            <a href="{{ url_for('expert_system.symptoms_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ bi('រោគសញ្ញាថ្មី') }}</a>
         </div>
     </div>
     <div class="table-responsive">
         <table class="table table-hover admin-table" id="symptomsTable">
-            <thead><tr><th>{{ _('ឈ្មោះ') }}</th><th>{{ _('ការពិពណ៌នា') }}</th><th class="text-end">{{ _('សកម្មភាព') }}</th></tr></thead>
+            <thead><tr><th>{{ bi('ឈ្មោះ') }}</th><th>{{ bi('ការពិពណ៌នា') }}</th><th class="text-end">{{ bi('សកម្មភាព') }}</th></tr></thead>
             <tbody>
                 {% for symptom in symptoms %}
                 <tr data-row>

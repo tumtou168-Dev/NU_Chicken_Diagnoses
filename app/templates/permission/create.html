@@ -1,10 +1,10 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ _('បង្កើតសិទ្ធិ') }}{% endblock %}
-{% block page_title %}{{ _('បង្កើតសិទ្ធិ') }}{% endblock %}
-{% block page_subtitle %}{{ _('កំណត់កូដ ឈ្មោះ និងម៉ូឌុលនៃសិទ្ធិថ្មី។') }}{% endblock %}
+{% block page_title %}{{ bi('បង្កើតសិទ្ធិ') }}{% endblock %}
+{% block page_subtitle %}{{ bi('កំណត់កូដ ឈ្មោះ និងម៉ូឌុលនៃសិទ្ធិថ្មី។') }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('tbl_permissions.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅសិទ្ធិ') }}</a>
+<a href="{{ url_for('tbl_permissions.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅសិទ្ធិ') }}</a>
 <div class="admin-card form-narrow">
     <form method="post" novalidate>
         {% include "permission/_form.html" %}

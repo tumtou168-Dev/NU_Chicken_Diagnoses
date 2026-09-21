@@ -1,10 +1,10 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ _('កែប្រែតួនាទី') }}{% endblock %}
-{% block page_title %}{{ _('កែប្រែតួនាទី') }}{% endblock %}
-{% block page_subtitle %}{{ _('កែប្រែព័ត៌មាន និងសិទ្ធិរបស់តួនាទី %(name)s។', name=role.name | dt) }}{% endblock %}
+{% block page_title %}{{ bi('កែប្រែតួនាទី') }}{% endblock %}
+{% block page_subtitle %}{{ bi('កែប្រែព័ត៌មាន និងសិទ្ធិរបស់តួនាទី %(name)s។', name=role.name | dt) }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('tbl_roles.detail', role_id=role.id) }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅព័ត៌មានលម្អិត') }}</a>
+<a href="{{ url_for('tbl_roles.detail', role_id=role.id) }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅព័ត៌មានលម្អិត') }}</a>
 <div class="admin-card form-narrow">
     <form method="post" novalidate>
         {% include "roles/_form.html" %}

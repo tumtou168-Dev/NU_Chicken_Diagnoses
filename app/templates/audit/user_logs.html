@@ -2,11 +2,11 @@
 {% from "layouts/_admin_macros.html" import avatar, action_badge, empty_state %}
 
 {% block title %}{{ _('កំណត់ហេតុសកម្មភាពអ្នកប្រើប្រាស់') }}{% endblock %}
-{% block page_title %}{{ _('កំណត់ហេតុសកម្មភាព') }}{% endblock %}
-{% block page_subtitle %}{{ _('ប្រវត្តិសកម្មភាពសម្រាប់អ្នកប្រើប្រាស់៖ %(name)s', name=user.username) }}{% endblock %}
+{% block page_title %}{{ bi('កំណត់ហេតុសកម្មភាព') }}{% endblock %}
+{% block page_subtitle %}{{ bi('ប្រវត្តិសកម្មភាពសម្រាប់អ្នកប្រើប្រាស់៖ %(name)s', name=user.username) }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('audit.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅកំណត់ហេតុសវនកម្ម') }}</a>
+<a href="{{ url_for('audit.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅកំណត់ហេតុសវនកម្ម') }}</a>
 
 <div class="admin-card">
     <div class="admin-card-header">
@@ -23,11 +23,11 @@
         <table class="table table-hover admin-table">
             <thead>
                 <tr>
-                    <th>{{ _('កាលបរិច្ឆេទ') }}</th>
-                    <th>{{ _('សកម្មភាព') }}</th>
-                    <th>{{ _('គោលដៅ') }}</th>
-                    <th>{{ _('ព័ត៌មានលម្អិត') }}</th>
-                    <th>{{ _('អាសយដ្ឋាន IP') }}</th>
+                    <th>{{ bi('កាលបរិច្ឆេទ') }}</th>
+                    <th>{{ bi('សកម្មភាព') }}</th>
+                    <th>{{ bi('គោលដៅ') }}</th>
+                    <th>{{ bi('ព័ត៌មានលម្អិត') }}</th>
+                    <th>{{ bi('អាសយដ្ឋាន IP') }}</th>
                 </tr>
             </thead>
             <tbody>

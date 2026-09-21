@@ -2,8 +2,8 @@
 {% from "layouts/_admin_macros.html" import avatar, action_badge, empty_state %}
 
 {% block title %}{{ _('កំណត់ហេតុសវនកម្ម') }}{% endblock %}
-{% block page_title %}{{ _('កំណត់ហេតុសវនកម្ម') }}{% endblock %}
-{% block page_subtitle %}{{ _('តាមដានសកម្មភាពប្រព័ន្ធ និងការផ្លាស់ប្តូរ។') }}{% endblock %}
+{% block page_title %}{{ bi('កំណត់ហេតុសវនកម្ម') }}{% endblock %}
+{% block page_subtitle %}{{ bi('តាមដានសកម្មភាពប្រព័ន្ធ និងការផ្លាស់ប្តូរ។') }}{% endblock %}
 
 {% block content %}
 <div class="admin-card">
@@ -24,7 +24,7 @@
                 {% endif %}
             </form>
             <a href="{{ url_for('audit.export', q=search_query) }}" class="btn btn-soft btn-sm">
-                <i class="bi bi-download me-1"></i>{{ _('នាំចេញជា CSV') }}
+                <i class="bi bi-download me-1"></i>{{ bi('នាំចេញជា CSV') }}
             </a>
         </div>
     </div>
@@ -32,12 +32,12 @@
         <table class="table table-hover admin-table">
             <thead>
                 <tr>
-                    <th>{{ _('កាលបរិច្ឆេទ') }}</th>
-                    <th>{{ _('អ្នកប្រើប្រាស់##one') }}</th>
-                    <th>{{ _('សកម្មភាព') }}</th>
-                    <th>{{ _('គោលដៅ') }}</th>
-                    <th>{{ _('ព័ត៌មានលម្អិត') }}</th>
-                    <th>{{ _('អាសយដ្ឋាន IP') }}</th>
+                    <th>{{ bi('កាលបរិច្ឆេទ') }}</th>
+                    <th>{{ bi('អ្នកប្រើប្រាស់##one') }}</th>
+                    <th>{{ bi('សកម្មភាព') }}</th>
+                    <th>{{ bi('គោលដៅ') }}</th>
+                    <th>{{ bi('ព័ត៌មានលម្អិត') }}</th>
+                    <th>{{ bi('អាសយដ្ឋាន IP') }}</th>
                 </tr>
             </thead>
             <tbody>

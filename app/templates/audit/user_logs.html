@@ -39,11 +39,11 @@
                     </td>
                     <td>{{ action_badge(log.action) }}</td>
                     <td>
-                        {{ log.target_type }}
+                        {{ log.target_type | audit_target }}
                         {% if log.target_id %}<span class="text-muted small">#{{ log.target_id }}</span>{% endif %}
                     </td>
                     <td>
-                        <div class="text-truncate text-truncate-cell" title="{{ log.details }}">{{ log.details or '—' }}</div>
+                        <div class="text-truncate text-truncate-cell" title="{{ log.details | audit_detail }}">{{ (log.details | audit_detail) or '—' }}</div>
                     </td>
                     <td class="text-muted small text-nowrap">{{ log.ip_address }}</td>
                 </tr>

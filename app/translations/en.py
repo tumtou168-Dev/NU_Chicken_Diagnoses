@@ -1,6 +1,11 @@
 # Khmer source text -> English. Generated from the numbered review list; edit values freely.
 # A key such as 'តួនាទី##one' is a separate English entry for the same Khmer text (singular form).
 EN = {
+    "និមិត្តសញ្ញា IDNS": "IDNS logo",
+    "បិទ": "Close",
+    "បើក/បិទម៉ឺនុយ": "Toggle navigation",
+    "ឧ. sokha": "e.g. jdoe",
+    "ឧ. សុខា ចាន់": "e.g. John Doe",
     "សិទ្ធិរបស់ខ្ញុំ": "My permissions",
     "រោគវិនិច្ឆ័យថ្មីៗរបស់ខ្ញុំ": "My recent diagnoses",
     "ជាសមាជិកអស់រយៈពេល": "Member for",

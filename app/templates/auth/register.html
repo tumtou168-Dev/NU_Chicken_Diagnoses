@@ -14,7 +14,7 @@
 <div class="auth-page">
     <div class="auth-card wide">
         <div class="auth-brand">
-            <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="IDNS">
+            <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="{{ _('និមិត្តសញ្ញា IDNS') }}">
             <h1>{{ _('ចូលរួមជាមួយ IDNS') }}</h1>
             <p>{{ _('បង្កើតគណនីរបស់អ្នកដើម្បីចាប់ផ្តើមធ្វើរោគវិនិច្ឆ័យ។') }}</p>
         </div>
@@ -30,11 +30,11 @@
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
                     <label for="username" class="form-label">{{ _('ឈ្មោះអ្នកប្រើប្រាស់') }}</label>
-                    <input type="text" class="form-control" id="username" name="username" placeholder="jdoe" value="{{ username or '' }}" required>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="{{ _('ឧ. sokha') }}" value="{{ username or '' }}" required>
                 </div>
                 <div class="col-md-6">
                     <label for="full_name" class="form-label">{{ _('ឈ្មោះពេញ') }}</label>
-                    <input type="text" class="form-control" id="full_name" name="full_name" placeholder="John Doe" value="{{ full_name or '' }}" required>
+                    <input type="text" class="form-control" id="full_name" name="full_name" placeholder="{{ _('ឧ. សុខា ចាន់') }}" value="{{ full_name or '' }}" required>
                 </div>
             </div>
             <div class="mb-3">

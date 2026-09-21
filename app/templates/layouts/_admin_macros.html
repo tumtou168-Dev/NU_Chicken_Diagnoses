@@ -41,7 +41,7 @@
 {% elif action == 'UPDATE' %}<span class="badge-soft badge-soft-warning">{{ _('កែប្រែ') }}</span>
 {% elif action == 'DELETE' %}<span class="badge-soft badge-soft-danger">{{ _('លុប') }}</span>
 {% elif action == 'LOGIN' %}<span class="badge-soft badge-soft-info">{{ _('ចូល') }}</span>
-{% else %}<span class="badge-soft badge-soft-neutral">{{ action }}</span>
+{% else %}<span class="badge-soft badge-soft-neutral">{{ action | audit_action }}</span>
 {% endif %}
 {% endmacro %}
 

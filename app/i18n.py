@@ -10,6 +10,7 @@ from markupsafe import Markup, escape
 
 from app.translations.en import EN
 from app.translations.data_km import DATA_KM
+from app.translations import audit_km
 
 LANGUAGES = {"km": "ខ្មែរ", "en": "English"}
 DEFAULT_LANGUAGE = "km"
@@ -51,6 +52,20 @@ def data_text(value):
     if value and get_locale() == "km":
         return DATA_KM.get(value, value)
     return value
+
+
+def audit_target(value):
+    """Audit-log target type ("Category") in the current language."""
+    return audit_km.TARGETS.get(value, value) if value and get_locale() == "km" else value
+
+
+def audit_action(value):
+    return audit_km.ACTIONS.get(value, value) if value and get_locale() == "km" else value
+
+
+def audit_detail(value):
+    """Audit-log detail message in the current language (entries are stored in English)."""
+    return audit_km.detail_km(value) if get_locale() == "km" else value
 
 
 def gettext(text: str, **params) -> str:

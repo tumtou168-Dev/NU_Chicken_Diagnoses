@@ -54,11 +54,14 @@ def create_app(config_class: type[Config] = Config):
         """Khmer display name for a permission module (falls back to the stored value)."""
         return MODULE_LABELS.get(value, value)
 
-    from app.i18n import LANGUAGES, gettext, gettext_html, gettext_pair, gettext_inline, data_text, get_locale
+    from app.i18n import LANGUAGES, gettext, gettext_html, gettext_pair, gettext_inline, data_text, audit_target, audit_action, audit_detail, get_locale
 
     app.jinja_env.globals["_"] = gettext
     app.jinja_env.globals["_h"] = gettext_html
     app.jinja_env.globals["bi"] = gettext_pair   # bilingual (Khmer + English) label
+    app.jinja_env.filters["audit_target"] = audit_target
+    app.jinja_env.filters["audit_action"] = audit_action
+    app.jinja_env.filters["audit_detail"] = audit_detail
     app.jinja_env.filters["dt"] = data_text   # Khmer display of built-in role/permission names
     app.jinja_env.globals["bit"] = gettext_inline   # same, as one line of plain text
 

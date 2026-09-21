@@ -66,7 +66,8 @@ def create_app(config_class: type[Config] = Config):
     app.jinja_env.globals["bit"] = gettext_inline   # same, as one line of plain text
 
     from app.services.page_text_service import PageTextService
-    app.jinja_env.globals["t"] = PageTextService.text   # editable page text stored in the database
+    app.jinja_env.globals["t"] = PageTextService.text
+    app.jinja_env.globals["tb"] = PageTextService.block   # editable page text stored in the database
     login_manager.localize_callback = gettext
 
     @app.context_processor

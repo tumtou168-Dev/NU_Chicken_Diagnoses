@@ -1,21 +1,28 @@
 {% extends "layouts/base.html" %}
-{% from "layouts/_admin_macros.html" import table_filter, empty_state %}
+{% from "layouts/_admin_macros.html" import table_filter, empty_state, stat %}
 {% block title %}{{ _('ប្រភេទ') }}{% endblock %}
-{% block page_title %}{{ _('ប្រភេទ') }}{% endblock %}
-{% block page_subtitle %}{{ _('ដាក់ក្រុមជំងឺតាមការផ្តោតអារម្មណ៍គ្លីនិក។') }}{% endblock %}
+{% block page_title %}{{ bi('ប្រភេទ') }}{% endblock %}
+{% block page_subtitle %}{{ bi('ដាក់ក្រុមជំងឺតាមការផ្តោតអារម្មណ៍គ្លីនិក។') }}{% endblock %}
 
 {% block content %}
+{% set with_diseases = categories | selectattr('diseases') | list | length %}
+<div class="stat-grid stat-grid-3">
+    {{ stat('tags', categories | length, _('ប្រភេទសរុប'), 'primary') }}
+    {{ stat('virus', categories | map(attribute='diseases') | map('length') | sum, _('ជំងឺសរុប'), 'success') }}
+    {{ stat('inbox', (categories | length) - with_diseases, _('ប្រភេទទទេ'), 'warning') }}
+</div>
+
 <div class="admin-card">
     <div class="admin-card-header">
-        <h5 class="admin-card-title">{{ _('ប្រភេទទាំងអស់ (%(n)s)', n=categories | length) }}</h5>
+        <h5 class="admin-card-title">{{ bi('ប្រភេទទាំងអស់ (%(n)s)', n=categories | length) }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#categoriesTable', _('ស្វែងរកប្រភេទ...')) }}
-            <a href="{{ url_for('expert_system.categories_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ _('បន្ថែមប្រភេទ') }}</a>
+            <a href="{{ url_for('expert_system.categories_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ bi('បន្ថែមប្រភេទ') }}</a>
         </div>
     </div>
     <div class="table-responsive">
         <table class="table table-hover admin-table" id="categoriesTable">
-            <thead><tr><th>{{ _('ឈ្មោះ') }}</th><th>{{ _('ការពិពណ៌នា') }}</th><th class="text-end">{{ _('សកម្មភាព') }}</th></tr></thead>
+            <thead><tr><th>{{ bi('ឈ្មោះ') }}</th><th>{{ bi('ការពិពណ៌នា') }}</th><th class="text-end">{{ bi('សកម្មភាព') }}</th></tr></thead>
             <tbody>
                 {% for category in categories %}
                 <tr data-row>

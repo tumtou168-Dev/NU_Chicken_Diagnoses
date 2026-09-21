@@ -1,10 +1,10 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ _('បន្ថែមរោគសញ្ញា') }}{% endblock %}
-{% block page_title %}{{ _('បន្ថែមរោគសញ្ញាថ្មី') }}{% endblock %}
-{% block page_subtitle %}{{ _('កំណត់រោគសញ្ញាថ្មីសម្រាប់ប្រព័ន្ធជំនាញ។') }}{% endblock %}
+{% block page_title %}{{ bi('បន្ថែមរោគសញ្ញាថ្មី') }}{% endblock %}
+{% block page_subtitle %}{{ bi('កំណត់រោគសញ្ញាថ្មីសម្រាប់ប្រព័ន្ធជំនាញ។') }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('expert_system.symptoms_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅបណ្ណាល័យ') }}</a>
+<a href="{{ url_for('expert_system.symptoms_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅបណ្ណាល័យ') }}</a>
 <div class="row g-4">
     <div class="col-lg-7">
         <div class="admin-card">

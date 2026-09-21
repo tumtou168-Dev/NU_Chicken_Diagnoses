@@ -1,11 +1,11 @@
 {% extends "layouts/base.html" %}
 {% from "layouts/_admin_macros.html" import field, form_actions %}
 {% block title %}{{ _('កែប្រែអត្ថបទ') }}{% endblock %}
-{% block page_title %}{{ _('កែប្រែអត្ថបទ') }}{% endblock %}
+{% block page_title %}{{ bi('កែប្រែអត្ថបទ') }}{% endblock %}
 {% block page_subtitle %}{{ item.pair("description") or item.key }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('expert_system.page_texts_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅអត្ថបទទំព័រ') }}</a>
+<a href="{{ url_for('expert_system.page_texts_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅអត្ថបទទំព័រ') }}</a>
 <div class="admin-card form-narrow">
     <form method="post" novalidate>
         {{ form.hidden_tag() }}
@@ -18,7 +18,7 @@
     </form>
     <form method="post" action="{{ url_for('expert_system.page_texts_reset', text_id=item.id) }}" class="px-4 pb-4" onsubmit="return confirm('{{ _('ស្តារអត្ថបទនេះទៅលំនាំដើមវិញឬ?') }}');">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-link btn-sm text-muted p-0"><i class="bi bi-arrow-counterclockwise me-1"></i>{{ _('ស្តារទៅលំនាំដើម') }}</button>
+        <button type="submit" class="btn btn-link btn-sm text-muted p-0"><i class="bi bi-arrow-counterclockwise me-1"></i>{{ bi('ស្តារទៅលំនាំដើម') }}</button>
     </form>
 </div>
 {% endblock %}

@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
 {% from "layouts/_admin_macros.html" import confirm_delete with context %}
 {% block title %}{{ _('លុបប្រភេទ') }}{% endblock %}
-{% block page_title %}{{ _('លុបប្រភេទ') }}{% endblock %}
+{% block page_title %}{{ bi('លុបប្រភេទ') }}{% endblock %}
 {% block content %}{{ confirm_delete(_('បញ្ជាក់ការលុប'), category.inline("name"), url_for('expert_system.categories_index')) }}{% endblock %}

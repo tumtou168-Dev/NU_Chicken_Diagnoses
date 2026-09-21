@@ -1,0 +1,16 @@
+{# Brand panel shown beside the sign-in / register card on wide screens #}
+<aside class="auth-aside" aria-hidden="false">
+    <div class="auth-aside-brand">
+        <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="{{ _('និមិត្តសញ្ញា IDNS') }}">
+        <span>IDNS</span>
+    </div>
+    <div class="auth-aside-body">
+        <h2>{{ _('ប្រព័ន្ធជំនាញសម្រាប់រោគវិនិច្ឆ័យមាន់') }}</h2>
+        <p>{{ _('ជ្រើសរើសរោគសញ្ញា ហើយទទួលបានជំងឺដែលអាចកើតមាន និងការព្យាបាលដែលបានណែនាំក្នុងរយៈពេលខ្លី។') }}</p>
+        <ul>
+            <li><i class="bi bi-lightning-charge-fill"></i>{{ _('ការវិភាគរហ័ស') }}</li>
+            <li><i class="bi bi-patch-check-fill"></i>{{ _('វិធានអ្នកជំនាញ') }}</li>
+            <li><i class="bi bi-shield-check"></i>{{ _('មានសុវត្ថិភាព និងតាមដានសកម្មភាពបាន') }}</li>
+        </ul>
+    </div>
+</aside>

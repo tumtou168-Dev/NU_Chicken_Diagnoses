@@ -1,10 +1,10 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ _('កែប្រែរោគសញ្ញា') }}{% endblock %}
-{% block page_title %}{{ _('កែប្រែរោគសញ្ញា') }}{% endblock %}
-{% block page_subtitle %}{{ _('ធ្វើបច្ចុប្បន្នភាពព័ត៌មានលម្អិតនៃរោគសញ្ញា %(name)s។', name=symptom.inline("name")) }}{% endblock %}
+{% block page_title %}{{ bi('កែប្រែរោគសញ្ញា') }}{% endblock %}
+{% block page_subtitle %}{{ bi('ធ្វើបច្ចុប្បន្នភាពព័ត៌មានលម្អិតនៃរោគសញ្ញា %(name)s។', name=symptom.inline("name")) }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('expert_system.symptoms_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅបណ្ណាល័យ') }}</a>
+<a href="{{ url_for('expert_system.symptoms_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅបណ្ណាល័យ') }}</a>
 <div class="admin-card form-narrow">
     <form method="post" novalidate>{% include "expert_system/symptoms/_form.html" %}</form>
 </div>

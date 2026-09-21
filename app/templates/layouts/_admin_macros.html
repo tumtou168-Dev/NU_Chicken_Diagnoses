@@ -7,7 +7,8 @@
    kind: "input" (default) or "select" – picks the Bootstrap class. #}
 {% macro field(f, kind="input", hint=None, rows=None, label=None) %}
 <div class="mb-3">
-    {% if label %}{{ f.label(label, class="form-label") }}{% else %}{{ f.label(class="form-label") }}{% endif %}
+    {% set lbl = "form-label is-required" if f.flags.required else "form-label" %}
+    {% if label %}{{ f.label(label, class=lbl) }}{% else %}{{ f.label(class=lbl) }}{% endif %}
     {% set css = ("form-select" if kind == "select" else "form-control") ~ (" is-invalid" if f.errors else "") %}
     {% if rows %}{{ f(class=css, rows=rows) }}{% else %}{{ f(class=css) }}{% endif %}
     {% for error in f.errors %}<div class="field-error">{{ error }}</div>{% endfor %}

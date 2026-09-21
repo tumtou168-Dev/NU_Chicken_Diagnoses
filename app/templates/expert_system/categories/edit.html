@@ -1,10 +1,10 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ _('កែប្រែប្រភេទ') }}{% endblock %}
-{% block page_title %}{{ _('កែប្រែប្រភេទ') }}{% endblock %}
-{% block page_subtitle %}{{ _('កែប្រែព័ត៌មានរបស់ប្រភេទ %(name)s។', name=category.inline("name")) }}{% endblock %}
+{% block page_title %}{{ bi('កែប្រែប្រភេទ') }}{% endblock %}
+{% block page_subtitle %}{{ bi('កែប្រែព័ត៌មានរបស់ប្រភេទ %(name)s។', name=category.inline("name")) }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('expert_system.categories_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅប្រភេទ') }}</a>
+<a href="{{ url_for('expert_system.categories_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅប្រភេទ') }}</a>
 <div class="admin-card form-narrow">
     <form method="post" novalidate>{% include "expert_system/categories/_form.html" %}</form>
 </div>

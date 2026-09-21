@@ -51,6 +51,7 @@
                 <div class="viz-chart">
                     <div class="viz-columns" role="img" aria-label="{{ _('ចំនួនករណីរោគវិនិច្ឆ័យក្នុងមួយថ្ងៃ ក្នុង %(days)s ថ្ងៃចុងក្រោយ', days=d.trend | length) }}">
                         <div class="viz-plot">
+                            {% if not d.trend_total %}<div class="viz-empty"><i class="bi bi-graph-up"></i><span>{{ bi('មិនទាន់មានករណីក្នុងអំឡុងពេលនេះ') }}</span></div>{% endif %}
                             {% for tick in d.trend_axis.ticks %}
                             <div class="viz-grid" style="bottom: {{ (tick / d.trend_axis.top * 100) | round(2) }}%"><span class="viz-tick">{{ tick }}</span></div>
                             {% endfor %}
@@ -92,7 +93,7 @@
                     <div class="viz-hbars">
                         {% for row in d.top_diseases %}
                         <div class="viz-hrow" tabindex="0" data-tip data-value="{{ _('%(n)s ករណី', n=row.count) }}" data-label="{{ row.name }}" aria-label="{{ row.name }}: {{ _('%(n)s ករណី', n=row.count) }}">
-                            <div class="viz-hlabel" title="{{ row.name }}">{{ row.name }}</div>
+                            <div class="viz-hlabel" title="{{ row.name }}"><span class="viz-l1">{{ row.first }}</span>{% if row.second %}<span class="viz-l2">{{ row.second }}</span>{% endif %}</div>
                             <div class="viz-htrack"><div class="viz-hfill" style="width: {{ row.pct }}%"><div class="viz-hbar"></div><span class="viz-hvalue">{{ row.count }}</span></div></div>
                         </div>
                         {% endfor %}

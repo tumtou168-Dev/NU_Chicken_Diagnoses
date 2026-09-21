@@ -11,5 +11,10 @@ class Config:
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # Language display. False (default): show only the language chosen with the ខ្មែរ | EN switch.
+    # True: show Khmer and English together everywhere, the chosen language first.
+    # Change it here, or set SHOW_BOTH_LANGUAGES=1 in the environment. Restart the app after changing it.
+    SHOW_BOTH_LANGUAGES = os.environ.get("SHOW_BOTH_LANGUAGES", "0") == "1"
+
     # Reject oversized request bodies early (profile pictures are capped at 2 MB separately).
     MAX_CONTENT_LENGTH = 4 * 1024 * 1024

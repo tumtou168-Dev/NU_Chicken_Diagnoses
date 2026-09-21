@@ -1,21 +1,28 @@
 {% extends "layouts/base.html" %}
-{% from "layouts/_admin_macros.html" import table_filter, empty_state %}
+{% from "layouts/_admin_macros.html" import table_filter, empty_state, stat %}
 {% block title %}{{ _('វិធាន') }}{% endblock %}
-{% block page_title %}{{ _('វិធាន') }}{% endblock %}
-{% block page_subtitle %}{{ _('ផ្គូផ្គងរោគសញ្ញាទៅនឹងជំងឺ។') }}{% endblock %}
+{% block page_title %}{{ bi('វិធាន') }}{% endblock %}
+{% block page_subtitle %}{{ bi('ផ្គូផ្គងរោគសញ្ញាទៅនឹងជំងឺ។') }}{% endblock %}
 
 {% block content %}
+{% set avg = ((rules | sum(attribute='confidence')) / (rules | length)) | round(1) if rules else none %}
+<div class="stat-grid stat-grid-3">
+    {{ stat('diagram-3', rules | length, _('វិធានសរុប'), 'primary') }}
+    {{ stat('bullseye', (avg ~ '%') if avg is not none else '—', _('ទំនុកចិត្តមូលដ្ឋានមធ្យម'), 'success') }}
+    {{ stat('virus', rules | map(attribute='disease_id') | unique | list | length, _('ជំងឺដែលមានវិធាន'), 'warning') }}
+</div>
+
 <div class="admin-card">
     <div class="admin-card-header">
-        <h5 class="admin-card-title">{{ _('វិធានទាំងអស់ (%(n)s)', n=rules | length) }}</h5>
+        <h5 class="admin-card-title">{{ bi('វិធានទាំងអស់ (%(n)s)', n=rules | length) }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#rulesTable', _('ស្វែងរកវិធាន...')) }}
-            <a href="{{ url_for('expert_system.rules_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ _('បន្ថែមវិធាន') }}</a>
+            <a href="{{ url_for('expert_system.rules_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ bi('បន្ថែមវិធាន') }}</a>
         </div>
     </div>
     <div class="table-responsive">
         <table class="table table-hover admin-table" id="rulesTable">
-            <thead><tr><th>{{ _('ចំណងជើង') }}</th><th>{{ _('រោគសញ្ញា') }}</th><th>{{ _('ជំងឺ##one') }}</th><th>{{ _('ទំនុកចិត្ត') }}</th><th class="text-end">{{ _('សកម្មភាព') }}</th></tr></thead>
+            <thead><tr><th>{{ bi('ចំណងជើង') }}</th><th>{{ bi('រោគសញ្ញា') }}</th><th>{{ bi('ជំងឺ##one') }}</th><th>{{ bi('ទំនុកចិត្ត') }}</th><th class="text-end">{{ bi('សកម្មភាព') }}</th></tr></thead>
             <tbody>
                 {% for rule in rules %}
                 <tr data-row>

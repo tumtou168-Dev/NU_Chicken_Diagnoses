@@ -1,10 +1,10 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ _('បង្កើតតួនាទី') }}{% endblock %}
-{% block page_title %}{{ _('បង្កើតតួនាទី') }}{% endblock %}
-{% block page_subtitle %}{{ _('កំណត់ឈ្មោះតួនាទី និងជ្រើសរើសសិទ្ធិដែលត្រូវផ្តល់។') }}{% endblock %}
+{% block page_title %}{{ bi('បង្កើតតួនាទី') }}{% endblock %}
+{% block page_subtitle %}{{ bi('កំណត់ឈ្មោះតួនាទី និងជ្រើសរើសសិទ្ធិដែលត្រូវផ្តល់។') }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('tbl_roles.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅតួនាទី') }}</a>
+<a href="{{ url_for('tbl_roles.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅតួនាទី') }}</a>
 <div class="admin-card form-narrow">
     <form method="post" novalidate>
         {% include "roles/_form.html" %}

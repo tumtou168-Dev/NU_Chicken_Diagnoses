@@ -1,11 +1,11 @@
 {% extends "layouts/base.html" %}
 {% from "layouts/_admin_macros.html" import avatar, status_badge %}
 {% block title %}{{ _('ព័ត៌មានលម្អិតអ្នកប្រើប្រាស់') }}{% endblock %}
-{% block page_title %}{{ _('ព័ត៌មានលម្អិតអ្នកប្រើប្រាស់') }}{% endblock %}
-{% block page_subtitle %}{{ _('មើលព័ត៌មានគណនី និងតួនាទីដែលបានចាត់តាំង។') }}{% endblock %}
+{% block page_title %}{{ bi('ព័ត៌មានលម្អិតអ្នកប្រើប្រាស់') }}{% endblock %}
+{% block page_subtitle %}{{ bi('មើលព័ត៌មានគណនី និងតួនាទីដែលបានចាត់តាំង។') }}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('tbl_users.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅបញ្ជីអ្នកប្រើប្រាស់') }}</a>
+<a href="{{ url_for('tbl_users.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅបញ្ជីអ្នកប្រើប្រាស់') }}</a>
 
 <div class="admin-card form-narrow">
     <div class="admin-card-header">
@@ -17,9 +17,9 @@
             </div>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ url_for('tbl_users.edit', user_id=user.id) }}" class="btn btn-soft btn-sm"><i class="bi bi-pencil me-1"></i>{{ _('កែប្រែ') }}</a>
+            <a href="{{ url_for('tbl_users.edit', user_id=user.id) }}" class="btn btn-soft btn-sm"><i class="bi bi-pencil me-1"></i>{{ bi('កែប្រែ') }}</a>
             {% if current_user.id != user.id %}
-            <a href="{{ url_for('tbl_users.delete_confirm', user_id=user.id) }}" class="btn btn-soft btn-sm text-danger"><i class="bi bi-trash me-1"></i>{{ _('លុប') }}</a>
+            <a href="{{ url_for('tbl_users.delete_confirm', user_id=user.id) }}" class="btn btn-soft btn-sm text-danger"><i class="bi bi-trash me-1"></i>{{ bi('លុប') }}</a>
             {% endif %}
         </div>
     </div>

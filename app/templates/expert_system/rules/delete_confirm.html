@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
 {% from "layouts/_admin_macros.html" import confirm_delete with context %}
 {% block title %}{{ _('លុបវិធាន') }}{% endblock %}
-{% block page_title %}{{ _('លុបវិធាន') }}{% endblock %}
+{% block page_title %}{{ bi('លុបវិធាន') }}{% endblock %}
 {% block content %}{{ confirm_delete(_('បញ្ជាក់ការលុប'), rule.inline("title"), url_for('expert_system.rules_index')) }}{% endblock %}

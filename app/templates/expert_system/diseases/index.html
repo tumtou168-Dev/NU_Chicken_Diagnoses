@@ -1,21 +1,28 @@
 {% extends "layouts/base.html" %}
-{% from "layouts/_admin_macros.html" import table_filter, empty_state %}
+{% from "layouts/_admin_macros.html" import table_filter, empty_state, stat %}
 {% block title %}{{ _('ជំងឺ') }}{% endblock %}
-{% block page_title %}{{ _('ជំងឺ') }}{% endblock %}
-{% block page_subtitle %}{{ _('គ្រប់គ្រងប្រវត្តិរូបជំងឺ និងការព្យាបាល។') }}{% endblock %}
+{% block page_title %}{{ bi('ជំងឺ') }}{% endblock %}
+{% block page_subtitle %}{{ bi('គ្រប់គ្រងប្រវត្តិរូបជំងឺ និងការព្យាបាល។') }}{% endblock %}
 
 {% block content %}
+{% set with_rules = diseases | selectattr('rules') | list | length %}
+<div class="stat-grid stat-grid-3">
+    {{ stat('virus', diseases | length, _('ជំងឺសរុប'), 'primary') }}
+    {{ stat('diagram-3', with_rules, _('មានវិធានគាំទ្រ'), 'success') }}
+    {{ stat('exclamation-circle', (diseases | length) - with_rules, _('មិនទាន់មានវិធាន'), 'warning') }}
+</div>
+
 <div class="admin-card">
     <div class="admin-card-header">
-        <h5 class="admin-card-title">{{ _('ជំងឺទាំងអស់ (%(n)s)', n=diseases | length) }}</h5>
+        <h5 class="admin-card-title">{{ bi('ជំងឺទាំងអស់ (%(n)s)', n=diseases | length) }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#diseasesTable', _('ស្វែងរកជំងឺ...')) }}
-            <a href="{{ url_for('expert_system.diseases_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ _('បន្ថែមជំងឺ') }}</a>
+            <a href="{{ url_for('expert_system.diseases_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ bi('បន្ថែមជំងឺ') }}</a>
         </div>
     </div>
     <div class="table-responsive">
         <table class="table table-hover admin-table" id="diseasesTable">
-            <thead><tr><th>{{ _('ឈ្មោះ') }}</th><th>{{ _('ប្រភេទ##one') }}</th><th>{{ _('ការពិពណ៌នា') }}</th><th class="text-end">{{ _('សកម្មភាព') }}</th></tr></thead>
+            <thead><tr><th>{{ bi('ឈ្មោះ') }}</th><th>{{ bi('ប្រភេទ##one') }}</th><th>{{ bi('ការពិពណ៌នា') }}</th><th class="text-end">{{ bi('សកម្មភាព') }}</th></tr></thead>
             <tbody>
                 {% for disease in diseases %}
                 <tr data-row>

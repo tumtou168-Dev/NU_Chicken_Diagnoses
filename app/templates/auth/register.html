@@ -11,7 +11,9 @@
 
 {% block content %}
 {% with css='floating' %}{% include "layouts/_lang_switch.html" %}{% include "layouts/_theme_toggle.html" %}{% endwith %}
-<div class="auth-page">
+<div class="auth-shell">
+    {% include "auth/_aside.html" %}
+    <div class="auth-main">
     <div class="auth-card wide">
         <div class="auth-brand">
             <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="{{ _('និមិត្តសញ្ញា IDNS') }}">
@@ -58,6 +60,7 @@
         </form>
 
         <div class="auth-foot">{{ _('មានគណនីរួចហើយ?') }} <a href="{{ url_for('auth.login') }}">{{ _('ចូល') }}</a></div>
+    </div>
     </div>
 </div>
 {% endblock %}

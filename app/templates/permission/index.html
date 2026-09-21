@@ -1,17 +1,22 @@
 {% extends "layouts/base.html" %}
-{% from "layouts/_admin_macros.html" import table_filter, empty_state %}
+{% from "layouts/_admin_macros.html" import table_filter, empty_state, stat %}
 {% block title %}{{ _('សិទ្ធិ') }}{% endblock %}
-{% block page_title %}{{ _('សិទ្ធិ') }}{% endblock %}
-{% block page_subtitle %}{{ _('កំណត់សិទ្ធិលម្អិតដែលអាចផ្តល់ឱ្យតួនាទីនីមួយៗ។') }}{% endblock %}
+{% block page_title %}{{ bi('សិទ្ធិ') }}{% endblock %}
+{% block page_subtitle %}{{ bi('កំណត់សិទ្ធិលម្អិតដែលអាចផ្តល់ឱ្យតួនាទីនីមួយៗ។') }}{% endblock %}
 
 {% block content %}
+<div class="stat-grid stat-grid-3">
+    {{ stat('key', permissions | length, _('សិទ្ធិសរុប'), 'primary') }}
+    {{ stat('grid', permissions | map(attribute='module') | unique | list | length, _('ម៉ូឌុល##many'), 'success') }}
+</div>
+
 <div class="admin-card">
     <div class="admin-card-header">
-        <h5 class="admin-card-title">{{ _('សិទ្ធិទាំងអស់ (%(n)s)', n=permissions | length) }}</h5>
+        <h5 class="admin-card-title">{{ bi('សិទ្ធិទាំងអស់ (%(n)s)', n=permissions | length) }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#permissionsTable', _('ស្វែងរកសិទ្ធិ...')) }}
             <a href="{{ url_for('tbl_permissions.create') }}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>{{ _('បង្កើតសិទ្ធិ') }}
+                <i class="bi bi-plus-lg me-1"></i>{{ bi('បង្កើតសិទ្ធិ') }}
             </a>
         </div>
     </div>
@@ -19,10 +24,10 @@
         <table class="table table-hover admin-table" id="permissionsTable">
             <thead>
                 <tr>
-                    <th>{{ _('កូដ') }}</th>
-                    <th>{{ _('ឈ្មោះ') }}</th>
-                    <th>{{ _('ម៉ូឌុល') }}</th>
-                    <th class="text-end">{{ _('សកម្មភាព') }}</th>
+                    <th>{{ bi('កូដ') }}</th>
+                    <th>{{ bi('ឈ្មោះ') }}</th>
+                    <th>{{ bi('ម៉ូឌុល') }}</th>
+                    <th class="text-end">{{ bi('សកម្មភាព') }}</th>
                 </tr>
             </thead>
             <tbody>

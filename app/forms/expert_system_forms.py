@@ -9,8 +9,8 @@ from extensions import db
 
 
 def _label(item) -> str:
-    """Name in the current language for selects and checkbox lists."""
-    return item.loc("name")
+    """Both names for selects and checkbox lists, current language first."""
+    return item.inline("name")
 
 
 def _category_choices():

@@ -5,6 +5,7 @@ from .permission import PermissionTable
 from .expert_system import Category, Symptom, Disease, Rule, Case
 from .page_text import PageText
 from .page_feature import PageFeature
+from .chat_message import ChatMessage
 
 __all__ = [
     "UserTable",
@@ -17,4 +18,5 @@ __all__ = [
     "Case",
     "PageText",
     "PageFeature",
+    "ChatMessage",
 ]

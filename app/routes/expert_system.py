@@ -42,20 +42,27 @@ def diagnose():
     symptoms = DiagnosisService.get_all_symptoms()
     diagnosis_results = None
     selected_ids = []
-    case_id = None
+    case = None
 
     if request.method == "POST":
         selected_ids = [int(id) for id in request.form.getlist("symptoms")]
         if selected_ids:
             diagnosis_results = DiagnosisService.run_inference(selected_ids)
             if diagnosis_results:
-                case = DiagnosisService.record_case(
-                    current_user.id,
-                    selected_ids,
-                    diagnosis_results[0],
-                )
-                case_id = case.id
-                AuditService.log("DIAGNOSE", "Case", case.id, f"User ran diagnosis, result: {case.disease.name}")
+                # A language switch on the results page resubmits the same symptoms just to get
+                # the text re-rendered in the new language — that isn't a new diagnosis, so reuse
+                # the existing case instead of writing a duplicate history row.
+                reuse_case_id = request.form.get("reuse_case_id", type=int)
+                reused_case = CaseService.get_by_id(reuse_case_id) if reuse_case_id else None
+                if reused_case and reused_case.user_id == current_user.id:
+                    case = reused_case
+                else:
+                    case = DiagnosisService.record_case(
+                        current_user.id,
+                        selected_ids,
+                        diagnosis_results[0],
+                    )
+                    AuditService.log("DIAGNOSE", "Case", case.id, f"User ran diagnosis, result: {case.disease.name}")
         else:
             flash(_("សូមជ្រើសរើសរោគសញ្ញាយ៉ាងហោចណាស់មួយ។"), "warning")
 
@@ -64,41 +71,96 @@ def diagnose():
         symptoms=symptoms,
         results=diagnosis_results,
         selected_ids=set(selected_ids),
-        case_id=case_id,
+        case_id=case.id if case else None,
+        case=case,
     )
 
 
 @expert_system_bp.route("/narrate", methods=["GET", "POST"])
 @login_required
-@require_permission("run_diagnosis")
 def narrate():
     """Generates and streams AI Voice audio using Edge-TTS neural voices.
     - Female Khmer (km-KH-SreymomNeural)
     - Female English (en-US-AriaNeural)
+    Supports narrating a specific saved case history by case_id or custom text.
     """
     from app.services.voice_service import VoiceService
+
+    if not (current_user.has_permission("run_diagnosis") or current_user.has_permission("view_cases")):
+        abort(403)
 
     if request.method == "POST":
         data = request.get_json(silent=True) or request.form
         text = (data.get("text") or "").strip()
         lang = data.get("lang") or "km"
+        case_id = data.get("case_id")
+        mode = data.get("mode") or "full"
     else:
         text = (request.args.get("text") or "").strip()
         lang = request.args.get("lang") or "km"
+        case_id = request.args.get("case_id", type=int)
+        mode = request.args.get("mode") or "full"
 
-    if not text:
+    if case_id:
+        case = CaseService.get_by_id(case_id)
+        if not case:
+            abort(404, "Case not found")
+        # Security check: User can only access their own case unless Admin or Doctor
+        if not (current_user.has_role("Admin") or current_user.has_role("Doctor")):
+            if case.user_id != current_user.id:
+                abort(403, "Forbidden")
+
+        disease_name = ""
+        desc = ""
+        treatment = ""
+        if case.disease:
+            if lang == "en":
+                disease_name = case.disease.name or "Unknown"
+                desc = case.disease.description or ""
+                treatment = case.disease.treatment or ""
+            else:
+                disease_name = case.disease.name_km or case.disease.name or "មិនស្គាល់"
+                desc = case.disease.description_km or case.disease.description or ""
+                treatment = case.disease.treatment_km or case.disease.treatment or ""
+        else:
+            disease_name = "Unknown" if lang == "en" else "មិនស្គាល់"
+
+        symptoms = []
+        if case.symptoms:
+            for s in case.symptoms:
+                s_name = (s.name if lang == "en" else (s.name_km or s.name))
+                if s_name:
+                    symptoms.append(s_name)
+
+        if mode == "summary":
+            if lang == "en":
+                sym_str = ", ".join(symptoms) if symptoms else "none recorded"
+                text = f"Diagnostic Case #{case.id}. Diagnosed disease: {disease_name}. Confidence level: {case.confidence:.1f} percent. Symptoms: {sym_str}."
+            else:
+                sym_str = " និង ".join(symptoms) if symptoms else "គ្មាន"
+                text = f"ករណីរោគវិនិច្ឆ័យលេខ #{case.id}។ ជំងឺ {disease_name}។ កម្រិតទំនុកចិត្ត {case.confidence:.1f} ភាគរយ។ រោគសញ្ញារួមមាន៖ {sym_str}។"
+        else:
+            if lang == "en":
+                sym_str = ", ".join(symptoms) if symptoms else "none recorded"
+                text = f"Case History Diagnostic Report #{case.id}. Diagnosed disease: {disease_name}. Confidence level: {case.confidence:.1f} percent. Observed symptoms: {sym_str}. Disease description: {desc}. Recommended treatment: {treatment}."
+            else:
+                sym_str = " និង ".join(symptoms) if symptoms else "គ្មាន"
+                text = f"របាយការណ៍ប្រវត្តិនៃការធ្វើរោគវិនិច្ឆ័យករណី #{case.id}។ រោគវិនិច្ឆ័យគឺជំងឺ {disease_name}។ កម្រិតទំនុកចិត្ត {case.confidence:.1f} ភាគរយ។ រោគសញ្ញាដែលបានសង្កេតរួមមាន៖ {sym_str}។ ការពិពណ៌នាអំពីជំងឺ៖ {desc}។ ការព្យាបាលដែលបានណែនាំ៖ {treatment}។"
+
+    elif not text:
         disease_name = request.values.get("name", "").strip()
         confidence = request.values.get("confidence", "").strip()
         description = request.values.get("desc", "").strip()
         treatment = request.values.get("treatment", "").strip()
 
-        if lang == "en":
-            text = f"Diagnosis result: {disease_name}. Confidence level: {confidence} percent. {description}. Recommended treatment: {treatment}."
-        else:
-            text = f"លទ្ធផលនៃការវិភាគគឺជំងឺ {disease_name}។ កម្រិតទំនុកចិត្ត {confidence} ភាគរយ។ {description}។ ការព្យាបាលដែលបានណែនាំ៖ {treatment}។"
+        if disease_name:
+            if lang == "en":
+                text = f"Diagnosis result: {disease_name}. Confidence level: {confidence} percent. {description}. Recommended treatment: {treatment}."
+            else:
+                text = f"លទ្ធផលនៃការវិភាគគឺជំងឺ {disease_name}។ កម្រិតទំនុកចិត្ត {confidence} ភាគរយ។ {description}។ ការព្យាបាលដែលបានណែនាំ៖ {treatment}។"
 
     if not text:
-        abort(400, "Missing text for speech generation")
+        abort(400, "Missing text or case_id for speech generation")
 
     try:
         audio_bytes = VoiceService.text_to_speech(text, lang=lang)
@@ -108,6 +170,8 @@ def narrate():
             headers={
                 "Content-Type": "audio/mpeg",
                 "Cache-Control": "public, max-age=86400",
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(len(audio_bytes)),
             },
         )
     except Exception as e:

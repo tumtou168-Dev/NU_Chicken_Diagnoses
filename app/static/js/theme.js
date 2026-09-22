@@ -44,7 +44,8 @@
     if (e.key === KEY) apply(read() || system());
   });
 
-  document.addEventListener("DOMContentLoaded", function () {
+  var firstInit = true;
+  function init() {
     labelButtons();
     document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -53,7 +54,12 @@
         apply(next);
       });
     });
-    // enable colour transitions only after the first paint, so loading never animates
-    window.requestAnimationFrame(function () { root.classList.add("theme-ready"); });
-  });
+    if (firstInit) {
+      firstInit = false;
+      // enable colour transitions only after the first paint, so loading never animates
+      window.requestAnimationFrame(function () { root.classList.add("theme-ready"); });
+    }
+  }
+  window.ThemeUI = { init: init };
+  window.onReady(init);
 })();

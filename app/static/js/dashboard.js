@@ -1,6 +1,10 @@
 // Dashboard charts: hover/focus tooltips and the chart <-> table toggle.
 // Labels come from the database, so they are inserted with textContent only.
-document.addEventListener("DOMContentLoaded", () => {
+// Re-run safely (e.g. after a language switch): drop any tooltip left by a previous run first.
+window.onReady(() => {
+  const old = document.querySelector(".viz-tooltip");
+  if (old) old.remove();
+
   const tip = document.createElement("div");
   tip.className = "viz-tooltip";
   tip.hidden = true;

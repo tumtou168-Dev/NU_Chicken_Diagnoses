@@ -1,0 +1,65 @@
+{# Floating support chat. A normal user talks to "the doctor" (staff); staff see an inbox of threads.
+   Polling-based (no websocket dependency) — wired up by static/js/chat.js. #}
+{% set is_staff = current_user.has_role('Admin') or current_user.has_role('Doctor') %}
+<div id="chatWidget" class="chat-widget" data-is-staff="{{ 'true' if is_staff else 'false' }}" data-user-id="{{ current_user.id }}">
+    <button type="button" id="chatToggleBtn" class="chat-toggle-btn" aria-label="{{ _('ជជែកជាមួយពេទ្យ') }}">
+        <i id="chatToggleIcon" class="bi bi-chat-square-text-fill"></i>
+        <span id="chatUnreadBadge" class="chat-unread-badge" hidden>0</span>
+    </button>
+
+    <div id="chatPanel" class="chat-panel" hidden>
+        <div class="chat-panel-header">
+            {% if is_staff %}
+            <button type="button" id="chatBackBtn" class="chat-back-btn" hidden aria-label="{{ _('ត្រលប់') }}">
+                <i class="bi bi-arrow-left"></i>
+            </button>
+            {% endif %}
+            <span id="chatPanelAvatar" class="chat-avatar chat-avatar-sm" hidden></span>
+            <i id="chatPanelIcon" class="bi bi-chat-square-text-fill chat-panel-icon"></i>
+            <div class="chat-panel-title">
+                <span id="chatPanelTitle">{{ _('ជជែកជាមួយពេទ្យ') }}</span>
+                {% if not is_staff %}
+                <span id="chatPanelSubtitle" class="chat-panel-subtitle">{{ _('ក្រុមជំនួយឆ្លើយតបលឿន') }}</span>
+                {% endif %}
+            </div>
+            <button type="button" id="chatCloseBtn" class="chat-close-btn" aria-label="{{ _('បិទ') }}">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        {% if is_staff %}
+        <div id="chatThreadList" class="chat-thread-list">
+            <div class="chat-empty" id="chatThreadListEmpty" hidden>
+                <i class="bi bi-inboxes"></i>
+                <span>{{ _('មិនទាន់មានការសន្ទនាទេ។') }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <div id="chatConversation" class="chat-conversation" {% if is_staff %}hidden{% endif %}>
+            <div id="chatMessages" class="chat-messages">
+                <div class="chat-empty" id="chatMessagesEmpty" hidden>
+                    <i class="bi bi-chat-heart"></i>
+                    <span>{{ _('សរសេរសារដើម្បីចាប់ផ្តើមការសន្ទនា។') }}</span>
+                </div>
+            </div>
+            <form id="chatForm" class="chat-form" autocomplete="off">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="text" id="chatInput" name="body" class="chat-input" placeholder="{{ _('វាយសារ...') }}" maxlength="1000" required>
+                <button type="submit" class="chat-send-btn" aria-label="{{ _('ផ្ញើ') }}">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    window.CHAT_I18N = {
+        title: {{ _('ព័ត៌មានហ្វូងមាន់') | tojson }},
+        flockSize: {{ _('ចំនួនមាន់សរុប') | tojson }},
+        flockAge: {{ _('អាយុ (សប្តាហ៍)') | tojson }},
+        vaccinated: {{ _('ចាក់វ៉ាក់សាំង') | tojson }},
+        deaths: {{ _('ស្លាប់') | tojson }},
+        viewCase: {{ _('មើលករណីរោគវិនិច្ឆ័យ') | tojson }}
+    };
+</script>

@@ -20,13 +20,17 @@
                     🇬🇧 Female (EN)
                 </button>
             </div>
-            <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-1" id="aiVoiceBtn" style="font-size: 0.82rem;">
+            <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-2" id="aiVoiceBtn" style="font-size: 0.82rem;">
                 <i class="bi bi-volume-up-fill" id="aiVoiceIcon"></i>
+                <div class="ai-soundwave d-none text-white" id="aiVoiceWave">
+                    <span></span><span></span><span></span><span></span>
+                </div>
                 <span id="aiVoiceText">{{ _('ស្តាប់របាយការណ៍') }}</span>
                 <span class="spinner-border spinner-border-sm d-none" id="aiVoiceSpinner" role="status" aria-hidden="true" style="width: 0.8rem; height: 0.8rem;"></span>
             </button>
         </div>
         <button type="button" class="btn btn-soft btn-sm" onclick="window.print()"><i class="bi bi-printer me-1"></i>{{ bi('បោះពុម្ពរបាយការណ៍') }}</button>
+        {% include "expert_system/_contact_doctor_modal.html" %}
     </div>
 </div>
 
@@ -145,9 +149,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 activeAudio.currentTime = 0;
             }
             isPlaying = false;
-            aiVoiceSpinner.classList.add('d-none');
-            aiVoiceIcon.className = 'bi bi-volume-up-fill';
-            aiVoiceIcon.classList.remove('d-none');
+            if (aiVoiceSpinner) aiVoiceSpinner.classList.add('d-none');
+            if (aiVoiceWave) {
+                aiVoiceWave.classList.add('d-none');
+                aiVoiceWave.classList.remove('is-playing');
+            }
+            if (aiVoiceIcon) {
+                aiVoiceIcon.className = 'bi bi-volume-up-fill';
+                aiVoiceIcon.classList.remove('d-none');
+            }
             aiVoiceText.textContent = currentLang === 'en' ? 'Read Report' : "{{ _('ស្តាប់របាយការណ៍') }}";
             aiVoiceBtn.classList.remove('btn-danger');
             aiVoiceBtn.classList.add('btn-primary');
@@ -159,36 +169,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            const nameEl = document.getElementById('caseDiseaseName');
-            const descEl = document.getElementById('caseDiseaseDesc');
-            const treatEl = document.getElementById('caseDiseaseTreatment');
-            const confEl = document.getElementById('caseConfidence');
-            const symptomTags = Array.from(document.querySelectorAll('.symptom-tag'));
-
-            const name = (currentLang === 'en' ? nameEl?.dataset.nameEn : nameEl?.dataset.nameKm) || nameEl?.innerText || '';
-            const desc = (currentLang === 'en' ? descEl?.dataset.descEn : descEl?.dataset.descKm) || descEl?.innerText || '';
-            const treat = (currentLang === 'en' ? treatEl?.dataset.treatEn : treatEl?.dataset.treatKm) || treatEl?.innerText || '';
-            const confVal = confEl ? confEl.innerText.trim() : '';
-
-            const symptoms = symptomTags.map(tag => {
-                return (currentLang === 'en' ? tag.dataset.nameEn : tag.dataset.nameKm) || tag.innerText.trim();
-            }).filter(Boolean);
-
-            let speechText = '';
-            if (currentLang === 'en') {
-                const symText = symptoms.length ? symptoms.join(', ') : 'none recorded';
-                speechText = `Case History Diagnostic Report. Diagnosed disease: ${name}. Confidence level: ${confVal}. Observed symptoms: ${symText}. Disease description: ${desc}. Recommended treatment: ${treat}.`;
-            } else {
-                const symText = symptoms.length ? symptoms.join(' និង ') : 'គ្មាន';
-                speechText = `របាយការណ៍ប្រវត្តិនៃការធ្វើរោគវិនិច្ឆ័យករណី #{{ case.id }}។ រោគវិនិច្ឆ័យគឺជំងឺ ${name}។ កម្រិតទំនុកចិត្ត ${confVal}។ រោគសញ្ញាដែលបានសង្កេតរួមមាន៖ ${symText}។ ការពិពណ៌នាអំពីជំងឺ៖ ${desc}។ ការព្យាបាលដែលបានណែនាំ៖ ${treat}។`;
-            }
-
             // Spinner state
             aiVoiceIcon.classList.add('d-none');
+            if (aiVoiceWave) aiVoiceWave.classList.add('d-none');
             aiVoiceSpinner.classList.remove('d-none');
             aiVoiceText.textContent = currentLang === 'en' ? 'Generating Voice...' : "{{ _('កំពុងបង្កើតសំឡេង...') }}";
 
-            const url = `/expert-system/narrate?lang=${currentLang}&text=${encodeURIComponent(speechText)}`;
+            const url = `/expert-system/narrate?case_id={{ case.id }}&lang=${currentLang}&mode=full`;
 
             if (!activeAudio) {
                 activeAudio = new Audio();
@@ -204,8 +191,10 @@ document.addEventListener('DOMContentLoaded', function () {
             activeAudio.play().then(function () {
                 isPlaying = true;
                 aiVoiceSpinner.classList.add('d-none');
-                aiVoiceIcon.className = 'bi bi-stop-circle-fill';
-                aiVoiceIcon.classList.remove('d-none');
+                if (aiVoiceWave) {
+                    aiVoiceWave.classList.remove('d-none');
+                    aiVoiceWave.classList.add('is-playing');
+                }
                 aiVoiceText.textContent = currentLang === 'en' ? 'Stop' : "{{ _('បញ្ឈប់') }}";
                 aiVoiceBtn.classList.remove('btn-primary');
                 aiVoiceBtn.classList.add('btn-danger');

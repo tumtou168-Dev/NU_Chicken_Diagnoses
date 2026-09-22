@@ -16,8 +16,22 @@
 <div class="admin-card">
     <div class="admin-card-header">
         <h5 class="admin-card-title">{{ bi('ការធ្វើរោគវិនិច្ឆ័យថ្មីៗ') }}</h5>
-        <div class="admin-toolbar">
+        <div class="admin-toolbar d-flex align-items-center gap-2 flex-wrap">
             {{ table_filter('#casesTable', _('ស្វែងរកករណី...')) }}
+
+            <!-- Voice Language Selector -->
+            <div class="dx-voice-widget d-inline-flex align-items-center gap-1 p-1 px-2 rounded-pill shadow-sm" style="background-color: var(--surface-raised, #ffffff); border: 1px solid var(--border-color, #e2e8f0);" title="{{ _('សំឡេងអាន AI') }}">
+                <i class="bi bi-robot text-primary me-1" style="font-size: 0.85rem;"></i>
+                <div class="btn-group btn-group-sm" role="group" id="casesVoiceLangGroup">
+                    <button type="button" class="btn btn-sm btn-outline-primary voice-toggle-btn active" data-lang="km" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 999px 0 0 999px;" title="{{ _('សំឡេងស្រីជាភាសាខ្មែរ (Sreymom)') }}">
+                        🇰🇭 ខ្មែរ
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary voice-toggle-btn" data-lang="en" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 0 999px 999px 0;" title="{{ _('Female English Voice (Aria)') }}">
+                        🇬🇧 EN
+                    </button>
+                </div>
+            </div>
+
             <a href="{{ url_for('expert_system.diagnose') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ bi('ធ្វើរោគវិនិច្ឆ័យថ្មី') }}</a>
         </div>
     </div>
@@ -68,7 +82,19 @@
                         </div>
                     </td>
                     <td class="text-end text-nowrap">
-                        <a href="{{ url_for('expert_system.cases_detail', case_id=case.id) }}" class="btn btn-soft btn-sm">{{ _('មើលលម្អិត') }}</a>
+                        <div class="d-inline-flex align-items-center gap-1">
+                            <button type="button" 
+                                    class="btn btn-soft btn-sm case-voice-btn" 
+                                    data-case-id="{{ case.id }}"
+                                    data-disease="{{ case.disease.inline('name') if case.disease else _('មិនស្គាល់') }}"
+                                    title="{{ _('ស្តាប់លទ្ធផល (Voice AI)') }}"
+                                    style="padding: 0.25rem 0.55rem;">
+                                <i class="bi bi-volume-up-fill case-voice-icon"></i>
+                                <span class="spinner-border spinner-border-sm case-voice-spinner d-none" role="status" aria-hidden="true" style="width: 0.75rem; height: 0.75rem;"></span>
+                                <span class="case-voice-label d-none d-md-inline ms-1">{{ _('ស្តាប់') }}</span>
+                            </button>
+                            <a href="{{ url_for('expert_system.cases_detail', case_id=case.id) }}" class="btn btn-soft btn-sm">{{ _('មើលលម្អិត') }}</a>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -80,4 +106,206 @@
     </div>
     {{ pagination(pager, 'expert_system.cases_index') }}
 </div>
+
+<!-- Floating AI Voice Audio Player Bar -->
+<div class="ai-voice-floating-bar" id="floatingVoiceBar">
+    <div class="d-flex align-items-center gap-2 min-w-0 flex-grow-1">
+        <div class="ai-soundwave is-playing" id="floatingSoundwave">
+            <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="min-w-0">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="badge bg-primary-subtle text-primary rounded-pill small px-2" id="floatingCaseTag">#0</span>
+                <strong class="text-truncate small" id="floatingDiseaseName">Disease</strong>
+            </div>
+            <div class="text-muted small" style="font-size: 0.75rem;" id="floatingStatusText">{{ _('កំពុងចាក់សំឡេង AI...') }}</div>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-1">
+        <button type="button" class="btn btn-soft btn-sm rounded-circle p-2" id="floatingToggleBtn" title="{{ _('ផ្អាក') }}" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+            <i class="bi bi-pause-fill" id="floatingToggleIcon"></i>
+        </button>
+        <button type="button" class="btn btn-soft btn-sm rounded-circle p-2 text-danger" id="floatingStopBtn" title="{{ _('បញ្ឈប់') }}" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+            <i class="bi bi-stop-fill"></i>
+        </button>
+        <button type="button" class="btn btn-link btn-sm text-muted p-1 ms-1 text-decoration-none" id="floatingCloseBtn" title="{{ _('បិទ') }}">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const langBtns = Array.from(document.querySelectorAll('#casesVoiceLangGroup .voice-toggle-btn'));
+    const rowVoiceBtns = Array.from(document.querySelectorAll('.case-voice-btn'));
+    const floatingBar = document.getElementById('floatingVoiceBar');
+    const floatingSoundwave = document.getElementById('floatingSoundwave');
+    const floatingCaseTag = document.getElementById('floatingCaseTag');
+    const floatingDiseaseName = document.getElementById('floatingDiseaseName');
+    const floatingStatusText = document.getElementById('floatingStatusText');
+    const floatingToggleBtn = document.getElementById('floatingToggleBtn');
+    const floatingToggleIcon = document.getElementById('floatingToggleIcon');
+    const floatingStopBtn = document.getElementById('floatingStopBtn');
+    const floatingCloseBtn = document.getElementById('floatingCloseBtn');
+
+    let currentLang = 'km';
+    let currentCaseId = null;
+    let currentActiveBtn = null;
+    let audio = null;
+    let isPlaying = false;
+
+    // Handle Language Toggle
+    langBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            langBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentLang = this.dataset.lang;
+            // If currently playing, replay with new voice language
+            if (currentCaseId && isPlaying) {
+                playCase(currentCaseId, currentActiveBtn);
+            }
+        });
+    });
+
+    function resetActiveBtn(btn) {
+        if (!btn) return;
+        btn.classList.remove('is-active', 'btn-danger');
+        btn.classList.add('btn-soft');
+        const icon = btn.querySelector('.case-voice-icon');
+        const spinner = btn.querySelector('.case-voice-spinner');
+        const label = btn.querySelector('.case-voice-label');
+        if (icon) icon.className = 'bi bi-volume-up-fill case-voice-icon';
+        if (spinner) spinner.classList.add('d-none');
+        if (label) label.textContent = "{{ _('ស្តាប់') }}";
+    }
+
+    function stopPlayback() {
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+        }
+        isPlaying = false;
+        if (currentActiveBtn) {
+            resetActiveBtn(currentActiveBtn);
+        }
+        currentActiveBtn = null;
+        currentCaseId = null;
+        if (floatingBar) floatingBar.classList.remove('show');
+        if (floatingSoundwave) floatingSoundwave.classList.remove('is-playing');
+    }
+
+    function playCase(caseId, btn) {
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+        }
+
+        if (currentActiveBtn && currentActiveBtn !== btn) {
+            resetActiveBtn(currentActiveBtn);
+        }
+
+        currentActiveBtn = btn;
+        currentCaseId = caseId;
+
+        const icon = btn ? btn.querySelector('.case-voice-icon') : null;
+        const spinner = btn ? btn.querySelector('.case-voice-spinner') : null;
+        const label = btn ? btn.querySelector('.case-voice-label') : null;
+
+        if (icon) icon.classList.add('d-none');
+        if (spinner) spinner.classList.remove('d-none');
+        if (label) label.textContent = "{{ _('កំពុងបង្កើតសំឡេង...') }}";
+
+        const disease = btn ? btn.dataset.disease : '';
+        if (floatingCaseTag) floatingCaseTag.textContent = '#' + caseId;
+        if (floatingDiseaseName) floatingDiseaseName.textContent = disease || '';
+        if (floatingStatusText) floatingStatusText.textContent = currentLang === 'en' ? 'Generating Voice...' : "{{ _('កំពុងបង្កើតសំឡេង...') }}";
+        if (floatingSoundwave) floatingSoundwave.classList.remove('is-playing');
+        if (floatingBar) floatingBar.classList.add('show');
+
+        const url = `/expert-system/narrate?case_id=${caseId}&lang=${currentLang}&mode=summary`;
+
+        if (!audio) {
+            audio = new Audio();
+            audio.addEventListener('ended', function () {
+                stopPlayback();
+            });
+            audio.addEventListener('error', function (err) {
+                console.error('Audio playback error', err);
+                alert("{{ _('បរាជ័យក្នុងការចាក់សំឡេង។ សូមព្យាយាមម្តងទៀត។') }}");
+                stopPlayback();
+            });
+        }
+
+        audio.src = url;
+        audio.play().then(function () {
+            isPlaying = true;
+            if (spinner) spinner.classList.add('d-none');
+            if (icon) {
+                icon.className = 'bi bi-stop-circle-fill case-voice-icon';
+                icon.classList.remove('d-none');
+            }
+            if (label) label.textContent = "{{ _('បញ្ឈប់') }}";
+            if (btn) {
+                btn.classList.add('is-active', 'btn-danger');
+                btn.classList.remove('btn-soft');
+            }
+            if (floatingSoundwave) floatingSoundwave.classList.add('is-playing');
+            if (floatingToggleIcon) floatingToggleIcon.className = 'bi bi-pause-fill';
+            if (floatingStatusText) {
+                floatingStatusText.textContent = currentLang === 'en' ? 'Playing AI Voice (Aria Neural)' : 'កំពុងចាក់សំឡេង AI (Sreymom Neural)';
+            }
+        }).catch(function (err) {
+            console.error('Playback initiation error:', err);
+            stopPlayback();
+        });
+    }
+
+    // Attach click listeners to row voice buttons
+    rowVoiceBtns.forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const caseId = this.dataset.caseId;
+            if (currentCaseId === caseId && isPlaying) {
+                stopPlayback();
+            } else {
+                playCase(caseId, this);
+            }
+        });
+    });
+
+    // Floating Player Controls
+    if (floatingToggleBtn) {
+        floatingToggleBtn.addEventListener('click', function () {
+            if (!audio) return;
+            if (audio.paused) {
+                audio.play();
+                isPlaying = true;
+                if (floatingToggleIcon) floatingToggleIcon.className = 'bi bi-pause-fill';
+                if (floatingSoundwave) floatingSoundwave.classList.add('is-playing');
+                if (floatingStatusText) {
+                    floatingStatusText.textContent = currentLang === 'en' ? 'Playing AI Voice...' : "{{ _('កំពុងចាក់សំឡេង AI...') }}";
+                }
+            } else {
+                audio.pause();
+                isPlaying = false;
+                if (floatingToggleIcon) floatingToggleIcon.className = 'bi bi-play-fill';
+                if (floatingSoundwave) floatingSoundwave.classList.remove('is-playing');
+                if (floatingStatusText) {
+                    floatingStatusText.textContent = currentLang === 'en' ? 'Paused' : "{{ _('ផ្អាក') }}";
+                }
+            }
+        });
+    }
+
+    if (floatingStopBtn) {
+        floatingStopBtn.addEventListener('click', stopPlayback);
+    }
+
+    if (floatingCloseBtn) {
+        floatingCloseBtn.addEventListener('click', stopPlayback);
+    }
+});
+</script>
 {% endblock %}

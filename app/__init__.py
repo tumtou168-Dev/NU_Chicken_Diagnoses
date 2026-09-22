@@ -102,7 +102,7 @@ def create_app(config_class: type[Config] = Config):
     @app.route("/")
     def home():
         if current_user.is_authenticated:
-            return redirect(url_for("dashboard.index"))
+            return redirect(url_for(current_user.landing_endpoint()))
         return redirect(url_for("auth.login"))
     
     # create tables

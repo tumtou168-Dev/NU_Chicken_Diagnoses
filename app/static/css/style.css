@@ -778,11 +778,14 @@ html.theme-ready .form-control, html.theme-ready .form-select, html.theme-ready 
 
 /* Language switch (segmented pill) */
 .lang-switch { display: inline-flex; padding: 3px; background: var(--surface); border: 1px solid var(--border-color); border-radius: 999px; box-shadow: var(--soft-shadow); }
-.lang-switch a { padding: 0.2rem 0.75rem; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; line-height: 1.6; color: var(--text-muted); text-decoration: none; transition: background-color 0.15s, color 0.15s; }
+.lang-switch a { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.75rem; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; line-height: 1.6; color: var(--text-muted); text-decoration: none; transition: background-color 0.15s, color 0.15s; }
 .lang-switch a:hover { color: var(--heading); }
 .lang-switch a.active { background: var(--primary-color); color: #fff; }
 .lang-switch a:focus-visible { outline: none; box-shadow: var(--ring); }
 .lang-switch.floating { position: fixed; top: 1rem; right: 4rem; z-index: 1100; }
+.lang-switch .lang-flag { width: 1.1rem; height: 0.75rem; border-radius: 2px; object-fit: cover; box-shadow: 0 0 0 1px rgba(0,0,0,0.1); flex-shrink: 0; }
+.lang-switch a.active .lang-flag { box-shadow: 0 0 0 1px rgba(255,255,255,0.6); }
+@media (max-width: 575.98px) { .lang-switch .lang-label { display: none; } }
 
 /* English reads better with the Latin face first (Khmer glyphs still fall back to Noto Sans Khmer) */
 html[lang="en"] body, html[lang="en"] h1, html[lang="en"] h2, html[lang="en"] h3, html[lang="en"] h4, html[lang="en"] h5, html[lang="en"] h6, html[lang="en"] .brand-font {

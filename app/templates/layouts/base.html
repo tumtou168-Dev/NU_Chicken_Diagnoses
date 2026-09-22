@@ -25,7 +25,7 @@
             <!-- Sidebar -->
             <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
                 <div class="brand-section">
-                    <a href="{{ url_for('dashboard.index') }}" class="text-decoration-none">
+                    <a href="{{ url_for(current_user.landing_endpoint()) if current_user.is_authenticated else url_for('auth.login') }}" class="text-decoration-none">
                         <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="{{ _('និមិត្តសញ្ញា IDNS') }}" class="brand-logo">
                         <div class="brand-text">
                             <h5 class="brand-font mb-0">IDNS</h5>
@@ -38,11 +38,13 @@
                     {% if current_user.is_authenticated %}
                         <div class="nav-section-label" data-group="main">{{ bi('មេ') }}</div>
                         <ul class="nav flex-column nav-group" data-group="main">
+                            {% if current_user.has_role('Admin') or current_user.has_role('Doctor') %}
                             <li class="nav-item">
                                 <a class="nav-link {% if ep == 'dashboard.index' %}active{% endif %}" href="{{ url_for('dashboard.index') }}">
                                     <i class="bi bi-grid-1x2"></i> <span class="nav-text">{{ bi('ផ្ទាំងគ្រប់គ្រង') }}</span>
                                 </a>
                             </li>
+                            {% endif %}
                             <li class="nav-item">
                                 <a class="nav-link {% if 'expert_system.diagnose' in ep %}active{% endif %}" href="{{ url_for('expert_system.diagnose') }}">
                                     <i class="bi bi-activity"></i>

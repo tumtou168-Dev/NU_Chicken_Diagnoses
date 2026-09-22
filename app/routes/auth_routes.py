@@ -25,8 +25,8 @@ def login():
             login_user(user)
             AuditService.log("LOGIN", "User", user.id, "User logged in")
             flash(_("បានចូលដោយជោគជ័យ។"), "success")
-            
-            return redirect(url_for("dashboard.index"))
+
+            return redirect(url_for(user.landing_endpoint()))
         
         flash(_("ឈ្មោះអ្នកប្រើប្រាស់ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ។"), "danger")
         return redirect(url_for("auth.login"))
@@ -90,8 +90,8 @@ def register():
         login_user(new_user)
         AuditService.log("REGISTER", "User", new_user.id, "New user registered")
         flash(_("បានបង្កើតគណនីដោយជោគជ័យ។ អ្នកបានចូលរួចហើយ។"), "success")
-        
-        return redirect(url_for("dashboard.index"))
+
+        return redirect(url_for(new_user.landing_endpoint()))
     
     return render_template("auth/register.html")
 

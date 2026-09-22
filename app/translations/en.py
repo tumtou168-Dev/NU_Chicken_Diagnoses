@@ -202,6 +202,7 @@ EN = {
     "ទុកវាលទាំងពីរខាងក្រោមឱ្យទំនេរ ប្រសិនបើមិនចង់ប្តូរពាក្យសម្ងាត់។": "Leave both fields below empty if you do not want to change the password.",
     "ទូទៅ": "General",
     "ទៅផ្ទាំងគ្រប់គ្រង": "Go to dashboard",
+    "ទៅធ្វើរោគវិនិច្ឆ័យ": "Go to diagnosis",
     "ទំនុកចិត្ត": "Confidence",
     "ទំនុកចិត្តមធ្យម": "Average confidence",
     "ទំនុកចិត្តមូលដ្ឋាន (%)": "Base confidence (%)",

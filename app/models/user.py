@@ -37,7 +37,13 @@ class UserTable(UserMixin, db.Model):
     
     def has_permission(self, permission_code: str) -> bool:
         return permission_code in self.get_permission_codes()
-    
+
+    def landing_endpoint(self) -> str:
+        """Where to send this user after login/'/' — the dashboard is Admin/Doctor only."""
+        if self.has_role("Admin") or self.has_role("Doctor"):
+            return "dashboard.index"
+        return "expert_system.diagnose"
+
     def __repr__(self) -> str:
         return f"<User {self.username}>"
     

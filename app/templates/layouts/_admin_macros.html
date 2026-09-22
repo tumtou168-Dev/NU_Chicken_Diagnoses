@@ -16,6 +16,35 @@
 </div>
 {% endmacro %}
 
+{# Password field: label + input with a show/hide eye toggle, errors, hint.
+   meter=True adds a live strength meter (updated by static/js/password.js) below the input.
+   match_of="<other field id>" adds a live "passwords match / do not match" message instead,
+   comparing this field's value against the field with that id. #}
+{% macro password_field(f, label=None, hint=None, meter=False, match_of=None) %}
+<div class="mb-3">
+    {% set lbl = "form-label is-required" if f.flags.required else "form-label" %}
+    {% if label %}{{ f.label(label, class=lbl) }}{% else %}{{ f.label(class=lbl) }}{% endif %}
+    <div class="pw-input">
+        {{ f(class="form-control" ~ (" is-invalid" if f.errors else ""), autocomplete="new-password", **{"data-pw-input": "1"}) }}
+        <button type="button" class="pw-toggle" data-pw-toggle tabindex="-1" aria-label="{{ bit('បង្ហាញ/លាក់ពាក្យសម្ងាត់') }}"><i class="bi bi-eye"></i></button>
+    </div>
+    {% for error in f.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+    {% if hint %}<div class="field-hint">{{ hint }}</div>{% endif %}
+    {% if meter %}
+    <div class="pw-meter" data-pw-meter hidden
+         data-label-weak="{{ bit('ខ្សោយ') }}" data-label-fair="{{ bit('មធ្យម') }}"
+         data-label-good="{{ bit('ល្អ') }}" data-label-strong="{{ bit('រឹងមាំ') }}">
+        <div class="pw-meter-bars"><span></span><span></span><span></span><span></span></div>
+        <div class="pw-meter-text" data-pw-meter-text></div>
+    </div>
+    {% endif %}
+    {% if match_of %}
+    <div class="pw-match" data-pw-match data-pw-match-target="{{ match_of }}" hidden
+         data-label-match="{{ bit('ពាក្យសម្ងាត់ត្រូវគ្នា') }}" data-label-mismatch="{{ bit('ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ') }}"></div>
+    {% endif %}
+</div>
+{% endmacro %}
+
 {# Bootstrap switch for a BooleanField #}
 {% macro switch(f, label=None) %}
 <div class="form-check form-switch mb-3">

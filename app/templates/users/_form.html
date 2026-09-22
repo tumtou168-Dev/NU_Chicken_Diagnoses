@@ -1,4 +1,4 @@
-{% from "layouts/_admin_macros.html" import field, switch, form_actions %}
+{% from "layouts/_admin_macros.html" import field, switch, form_actions, password_field %}
 {% set editing = user is defined %}
 {% set pw_hint = _('យ៉ាងតិច ៨ តួអក្សរ រួមមានអក្សរធំ អក្សរតូច លេខ និងនិមិត្តសញ្ញាពិសេស។') %}
 {{ form.hidden_tag() }}
@@ -43,8 +43,8 @@
     <div class="form-section-title">{{ _('ប្តូរពាក្យសម្ងាត់') if editing else _('ពាក្យសម្ងាត់') }}</div>
     {% if editing %}<p class="text-muted small mb-3">{{ _('ទុកវាលទាំងពីរខាងក្រោមឱ្យទំនេរ ប្រសិនបើមិនចង់ប្តូរពាក្យសម្ងាត់។') }}</p>{% endif %}
     <div class="row">
-        <div class="col-md-6">{{ field(form.password, hint=pw_hint, label=(_('ពាក្យសម្ងាត់ថ្មី') if editing else _('ពាក្យសម្ងាត់'))) }}</div>
-        <div class="col-md-6">{{ field(form.confirm_password, label=(_('បញ្ជាក់ពាក្យសម្ងាត់ថ្មី') if editing else _('បញ្ជាក់ពាក្យសម្ងាត់'))) }}</div>
+        <div class="col-md-6">{{ password_field(form.password, hint=pw_hint, label=(_('ពាក្យសម្ងាត់ថ្មី') if editing else _('ពាក្យសម្ងាត់')), meter=True) }}</div>
+        <div class="col-md-6">{{ password_field(form.confirm_password, label=(_('បញ្ជាក់ពាក្យសម្ងាត់ថ្មី') if editing else _('បញ្ជាក់ពាក្យសម្ងាត់')), match_of="password") }}</div>
     </div>
 </div>
 

@@ -439,4 +439,11 @@ EN = {
     "បានស្តារអត្ថបទទៅលំនាំដើមវិញ។": "Text restored to default.",
     "អត្ថបទជាភាសាខ្មែរ": "Khmer text",
     "អត្ថបទជាភាសាអង់គ្លេស": "English text",
+    "បង្ហាញ/លាក់ពាក្យសម្ងាត់": "Show/hide password",
+    "ខ្សោយ": "Weak",
+    "មធ្យម": "Fair",
+    "ល្អ": "Good",
+    "រឹងមាំ": "Strong",
+    "ពាក្យសម្ងាត់ត្រូវគ្នា": "Passwords match",
+    "ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ": "Passwords do not match",
 }

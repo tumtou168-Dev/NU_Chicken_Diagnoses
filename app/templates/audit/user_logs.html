@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% from "layouts/_admin_macros.html" import avatar, action_badge, empty_state %}
+{% from "layouts/_admin_macros.html" import avatar, action_badge, empty_state, pagination %}
 
 {% block title %}{{ _('កំណត់ហេតុសកម្មភាពអ្នកប្រើប្រាស់') }}{% endblock %}
 {% block page_title %}{{ bi('កំណត់ហេតុសកម្មភាព') }}{% endblock %}
@@ -17,7 +17,7 @@
                 <p class="entity-sub">@{{ user.username }}</p>
             </div>
         </div>
-        <span class="badge-soft badge-soft-neutral">{{ _('%(n)s សកម្មភាព', n=logs | length) }}</span>
+        <span class="badge-soft badge-soft-neutral">{{ _('%(n)s សកម្មភាព', n=pager.total) }}</span>
     </div>
     <div class="table-responsive">
         <table class="table table-hover admin-table">
@@ -53,5 +53,6 @@
             </tbody>
         </table>
     </div>
+    {{ pagination(pager, 'audit.user_logs', user_id=user.id) }}
 </div>
 {% endblock %}

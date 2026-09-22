@@ -1,0 +1,56 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ _('ត្រួតពិនិត្យម៉ឺនុយ') }}{% endblock %}
+{% block page_title %}{{ bi('ត្រួតពិនិត្យម៉ឺនុយ') }}{% endblock %}
+{% block page_subtitle %}{{ bi('បើក/បិទម៉ឺនុយមេជាបណ្តោះអាសន្ន។') }}{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="table-responsive">
+        <table class="table table-hover admin-table">
+            <thead><tr><th>{{ bi('ម៉ឺនុយ') }}</th><th>{{ bi('ស្ថានភាព') }}</th><th class="text-end">{{ bi('សកម្មភាព') }}</th></tr></thead>
+            <tbody>
+                {% for key, (label_km, label_en, icon, endpoint) in items.items() %}
+                {% set status = statuses[key] %}
+                <tr data-row>
+                    <td class="fw-semibold"><i class="bi bi-{{ icon }} me-2"></i>{{ bi(label_km) }}</td>
+                    <td>
+                        {% if status.enabled %}
+                        <span class="badge-soft badge-soft-success"><span class="dot"></span>{{ bi('សកម្ម') }}</span>
+                        {% else %}
+                        <span class="badge-soft badge-soft-danger"><span class="dot"></span>{{ bi('បិទ (ការថែទាំ)') }}</span>
+                        {% if status.disabled_until %}
+                        <div class="small text-muted mt-1">{{ bi('នឹងបើកឡើងវិញដោយស្វ័យប្រវត្តិនៅ') }} {{ status.disabled_until.strftime('%Y-%m-%d %H:%M') }} UTC</div>
+                        {% endif %}
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex justify-content-end align-items-center gap-2 flex-wrap">
+                            {% if status.enabled %}
+                            <form method="post" action="{{ url_for('menu.disable', key=key) }}" class="d-flex align-items-center gap-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <select name="minutes" class="form-select form-select-sm" style="width:auto">
+                                    {% for m in durations %}
+                                    <option value="{{ m }}">{{ bit('បិទបណ្តោះអាសន្នរយៈពេល') }} {{ m }} {{ bit('នាទី') }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-soft btn-sm"><i class="bi bi-clock-history me-1"></i>{{ bi('បិទបណ្តោះអាសន្ន') }}</button>
+                            </form>
+                            <form method="post" action="{{ url_for('menu.disable', key=key) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-danger-solid btn-sm">{{ bi('បិទរហូតទាល់តែបើកឡើងវិញ') }}</button>
+                            </form>
+                            {% else %}
+                            <form method="post" action="{{ url_for('menu.enable', key=key) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-circle me-1"></i>{{ bi('សកម្ម') }}</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

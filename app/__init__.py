@@ -35,7 +35,8 @@ def create_app(config_class: type[Config] = Config):
     from app.routes.audit_routes import audit_bp
     from app.routes.dashboard_routes import dashboard_bp
     from app.routes.lang_routes import lang_bp
-    
+    from app.routes.menu_routes import menu_bp
+
     app.register_blueprint(user_bp)
     app.register_blueprint(role_bp)
     app.register_blueprint(permission_bp)
@@ -44,6 +45,7 @@ def create_app(config_class: type[Config] = Config):
     app.register_blueprint(audit_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(lang_bp)
+    app.register_blueprint(menu_bp)
     
     from app.services.avatar_service import AvatarService
 
@@ -68,6 +70,9 @@ def create_app(config_class: type[Config] = Config):
     from app.services.page_text_service import PageTextService
     app.jinja_env.globals["t"] = PageTextService.text
     app.jinja_env.globals["tb"] = PageTextService.block   # editable page text stored in the database
+
+    from app.services.page_feature_service import PageFeatureService
+    app.jinja_env.globals["menu_enabled"] = PageFeatureService.is_enabled   # hide a nav link an admin disabled
     login_manager.localize_callback = gettext
 
     @app.context_processor
@@ -102,7 +107,7 @@ def create_app(config_class: type[Config] = Config):
     @app.route("/")
     def home():
         if current_user.is_authenticated:
-            return redirect(url_for("dashboard.index"))
+            return redirect(url_for(current_user.landing_endpoint()))
         return redirect(url_for("auth.login"))
     
     # create tables
@@ -113,6 +118,7 @@ def create_app(config_class: type[Config] = Config):
         from app.models.expert_system import Category, Symptom, Disease, Rule, Case
         from app.models.audit_log import AuditLog
         from app.models.page_text import PageText
+        from app.models.page_feature import PageFeature
 
         # Default RESET_DB to 0 to prevent database reset on restart
         if os.environ.get("RESET_DB", "0") == "1":
@@ -121,6 +127,7 @@ def create_app(config_class: type[Config] = Config):
         db.create_all()
         _ensure_user_avatar_column()
         _ensure_khmer_columns()
+        _ensure_page_feature_columns()
         
         # Only seed if the database is empty (e.g. check if any users exist)
         if not UserTable.query.first():
@@ -131,6 +138,9 @@ def create_app(config_class: type[Config] = Config):
 
         # Runs on every start so existing databases also receive newly added page texts.
         PageTextService.ensure_defaults()
+
+        from app.services.menu_service import MenuService
+        MenuService.ensure_defaults()
 
     return app
 
@@ -151,6 +161,14 @@ KHMER_COLUMNS = {
     "tbl_rules": {"title_km": 120, "description_km": 255},
     "tbl_page_texts": {"description_km": 255},
 }
+
+
+def _ensure_page_feature_columns() -> None:
+    """create_all() never alters existing tables, so add tbl_page_features.disabled_until if it is missing."""
+    columns = {c["name"] for c in inspect(db.engine).get_columns("tbl_page_features")}
+    if "disabled_until" not in columns:
+        db.session.execute(text("ALTER TABLE tbl_page_features ADD COLUMN disabled_until TIMESTAMP"))
+        db.session.commit()
 
 
 def _ensure_khmer_columns() -> None:

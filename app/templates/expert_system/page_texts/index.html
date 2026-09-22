@@ -5,18 +5,27 @@
 {% block page_subtitle %}{{ bi('កែប្រែចំណងជើង និងអត្ថបទដែលបង្ហាញលើទំព័រ ជាភាសាខ្មែរ និងអង់គ្លេស។') }}{% endblock %}
 
 {% block content %}
-<div class="admin-card">
+{% for page, page_items in items | groupby('page') %}
+<div class="admin-card mb-3">
     <div class="admin-card-header">
-        <h5 class="admin-card-title">{{ bi('អត្ថបទទាំងអស់ (%(n)s)', n=items | length) }}</h5>
-        <div class="admin-toolbar">
-            {{ table_filter('#pageTextsTable', _('ស្វែងរកអត្ថបទ...')) }}
-        </div>
+        <h5 class="admin-card-title">{{ page | capitalize }}</h5>
+        <form method="post" action="{{ url_for('expert_system.page_texts_toggle', page=page) }}" class="form-check form-switch mb-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input class="form-check-input" type="checkbox" role="switch" id="toggle-{{ page }}"
+                   onchange="this.form.submit()" {% if page_enabled.get(page, True) %}checked{% endif %}>
+            <label class="form-check-label" for="toggle-{{ page }}">
+                {% if page_enabled.get(page, True) %}{{ bi('សកម្ម') }}{% else %}{{ bi('បិទ (ការថែទាំ)') }}{% endif %}
+            </label>
+        </form>
     </div>
+    {% if not page_enabled.get(page, True) %}
+    <div class="alert alert-warning mx-3 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>{{ bi('ទំព័រនេះត្រូវបានបិទ។ អ្នកទស្សនានឹងឃើញសារថែទាំជំនួសវិញ។') }}</div>
+    {% endif %}
     <div class="table-responsive">
         <table class="table table-hover admin-table" id="pageTextsTable">
             <thead><tr><th>{{ bi('កន្លែងប្រើ') }}</th><th>{{ bi('ខ្មែរ') }}</th><th>English</th><th class="text-end">{{ bi('សកម្មភាព') }}</th></tr></thead>
             <tbody>
-                {% for item in items %}
+                {% for item in page_items %}
                 <tr data-row>
                     <td>
                         <div class="fw-semibold">{{ item.pair("description") or item.key }}</div>
@@ -29,9 +38,11 @@
                     </td>
                 </tr>
                 {% endfor %}
-                <tr data-empty {% if items %}hidden{% endif %}><td colspan="4">{{ empty_state('fonts', _('មិនទាន់មានអត្ថបទទេ។')) }}</td></tr>
             </tbody>
         </table>
     </div>
 </div>
+{% else %}
+<div class="admin-card"><div class="admin-card-body">{{ empty_state('fonts', _('មិនទាន់មានអត្ថបទទេ។')) }}</div></div>
+{% endfor %}
 {% endblock %}

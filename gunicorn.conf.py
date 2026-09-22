@@ -2,7 +2,11 @@
 import os
 
 bind = "0.0.0.0:8000"
-workers = int(os.environ.get("WEB_CONCURRENCY", "2"))
+workers = int(os.environ.get("WEB_CONCURRENCY", "4"))
+# Each worker handles this many requests concurrently (I/O-bound Flask views spend most of
+# their time waiting on the database, so threads let a worker serve another request meanwhile).
+threads = int(os.environ.get("WEB_THREADS", "4"))
+worker_class = "gthread"
 timeout = 60
 accesslog = "-"
 errorlog = "-"

@@ -16,6 +16,35 @@
 </div>
 {% endmacro %}
 
+{# Password field: label + input with a show/hide eye toggle, errors, hint.
+   meter=True adds a live strength meter (updated by static/js/password.js) below the input.
+   match_of="<other field id>" adds a live "passwords match / do not match" message instead,
+   comparing this field's value against the field with that id. #}
+{% macro password_field(f, label=None, hint=None, meter=False, match_of=None) %}
+<div class="mb-3">
+    {% set lbl = "form-label is-required" if f.flags.required else "form-label" %}
+    {% if label %}{{ f.label(label, class=lbl) }}{% else %}{{ f.label(class=lbl) }}{% endif %}
+    <div class="pw-input">
+        {{ f(class="form-control" ~ (" is-invalid" if f.errors else ""), autocomplete="new-password", **{"data-pw-input": "1"}) }}
+        <button type="button" class="pw-toggle" data-pw-toggle tabindex="-1" aria-label="{{ bit('បង្ហាញ/លាក់ពាក្យសម្ងាត់') }}"><i class="bi bi-eye"></i></button>
+    </div>
+    {% for error in f.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+    {% if hint %}<div class="field-hint">{{ hint }}</div>{% endif %}
+    {% if meter %}
+    <div class="pw-meter" data-pw-meter hidden
+         data-label-weak="{{ bit('ខ្សោយ') }}" data-label-fair="{{ bit('មធ្យម') }}"
+         data-label-good="{{ bit('ល្អ') }}" data-label-strong="{{ bit('រឹងមាំ') }}">
+        <div class="pw-meter-bars"><span></span><span></span><span></span><span></span></div>
+        <div class="pw-meter-text" data-pw-meter-text></div>
+    </div>
+    {% endif %}
+    {% if match_of %}
+    <div class="pw-match" data-pw-match data-pw-match-target="{{ match_of }}" hidden
+         data-label-match="{{ bit('ពាក្យសម្ងាត់ត្រូវគ្នា') }}" data-label-mismatch="{{ bit('ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ') }}"></div>
+    {% endif %}
+</div>
+{% endmacro %}
+
 {# Bootstrap switch for a BooleanField #}
 {% macro switch(f, label=None) %}
 <div class="form-check form-switch mb-3">
@@ -70,6 +99,33 @@
 <div class="empty-state"><i class="bi bi-{{ icon }}"></i>{{ message }}</div>
 {% endmacro %}
 
+{# Page links for a Flask-SQLAlchemy Pagination object. `endpoint` is the route to link back to;
+   **kwargs are extra query args to keep on every link (e.g. q=search_query). #}
+{% macro pagination(pager, endpoint) %}
+{% if pager.pages > 1 %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 px-3 py-3 border-top">
+    <div class="small text-muted">
+        {{ _h('បង្ហាញ %(from)s–%(to)s នៃ %(total)s', from=strong((pager.page - 1) * pager.per_page + 1), to=strong([pager.page * pager.per_page, pager.total] | min), total=strong(pager.total)) }}
+    </div>
+    <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if not pager.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for(endpoint, page=pager.prev_num, **kwargs) if pager.has_prev else '#' }}">&laquo;</a>
+        </li>
+        {% for p in pager.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if p %}
+            <li class="page-item {% if p == pager.page %}active{% endif %}"><a class="page-link" href="{{ url_for(endpoint, page=p, **kwargs) }}">{{ p }}</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not pager.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for(endpoint, page=pager.next_num, **kwargs) if pager.has_next else '#' }}">&raquo;</a>
+        </li>
+    </ul>
+</div>
+{% endif %}
+{% endmacro %}
+
 {# Standard Save / Cancel footer for form cards #}
 {% macro form_actions(submit_field, cancel_url, submit_label=None) %}
 <div class="admin-card-footer">
@@ -100,6 +156,23 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <a href="{{ cancel_url }}" class="btn btn-soft">{{ _('បោះបង់') }}</a>
             <button type="submit" class="btn btn-danger-solid">{{ _('បញ្ជាក់ការលុប') }}</button>
+        </form>
+    </div>
+</div>
+{% endmacro %}
+
+{# Generic centred confirmation card for a non-delete action (reset, disable, ...).
+   Import with context (uses csrf_token). tone: "primary", "danger", "warning", ... #}
+{% macro confirm_action(title, message, cancel_url, submit_label, action=None, tone="primary", icon="question-circle") %}
+<div class="admin-card confirm-card">
+    <div class="admin-card-body">
+        <div class="confirm-icon"><i class="bi bi-{{ icon }}"></i></div>
+        <h5 class="fw-semibold mb-2">{{ title }}</h5>
+        <p class="text-muted mb-4">{{ message }}</p>
+        <form method="post"{% if action %} action="{{ action }}"{% endif %} class="d-flex justify-content-center gap-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <a href="{{ cancel_url }}" class="btn btn-soft">{{ _('បោះបង់') }}</a>
+            <button type="submit" class="btn btn-{{ tone }}">{{ submit_label }}</button>
         </form>
     </div>
 </div>

@@ -4,6 +4,7 @@ from .role import RoleTable
 from .permission import PermissionTable
 from .expert_system import Category, Symptom, Disease, Rule, Case
 from .page_text import PageText
+from .page_feature import PageFeature
 
 __all__ = [
     "UserTable",
@@ -15,4 +16,5 @@ __all__ = [
     "Rule",
     "Case",
     "PageText",
+    "PageFeature",
 ]

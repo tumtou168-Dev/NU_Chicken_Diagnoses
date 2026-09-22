@@ -22,10 +22,10 @@ def index():
     # Only Admin can view user list
     if not current_user.has_role("Admin"):
         abort(403)
-        
-    users = UserService.get_user_all()
+    page = request.args.get("page", 1, type=int)
+    pager = UserService.get_page(page)
     form = UserCreateForm()
-    return render_template("users/index.html", users=users, form=form)
+    return render_template("users/index.html", pager=pager, users=pager.items, counts=UserService.counts(), form=form)
 
 @user_bp.route("/profile")
 @login_required
@@ -85,8 +85,9 @@ def create():
             flash(_("បានបង្កើតអ្នកប្រើប្រាស់ '%(username)s' ដោយជោគជ័យ។", username=user.username), "success")
             return redirect(url_for("tbl_users.index"))
         
-        users = UserService.get_user_all()
-        return render_template("users/index.html", users=users, form=form, show_create_modal=True)
+        page = request.args.get("page", 1, type=int)
+        pager = UserService.get_page(page)
+        return render_template("users/index.html", pager=pager, users=pager.items, counts=UserService.counts(), form=form, show_create_modal=True)
     
     return redirect(url_for("tbl_users.index", open_create=1))
 

@@ -1,0 +1,16 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ bit('កំពុងធ្វើបច្ចុប្បន្នភាព') }}{% endblock %}
+{% block page_title %}{{ bi('កំពុងធ្វើបច្ចុប្បន្នភាព') }}{% endblock %}
+
+{% block content %}
+<div class="admin-card error-card">
+    <div class="admin-card-body">
+        <div class="error-code"><i class="bi bi-cone-striped"></i></div>
+        <h2 class="h4 mb-2">{{ bit('កំពុងធ្វើបច្ចុប្បន្នភាព') }}</h2>
+        <p class="text-muted mb-4">{{ bit('មុខងារនេះកំពុងត្រូវបានធ្វើបច្ចុប្បន្នភាព។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។') }}</p>
+        <div class="d-flex justify-content-center gap-2 flex-wrap">
+            <a href="javascript:history.back()" class="btn btn-soft"><i class="bi bi-arrow-left me-1"></i>{{ bi('ថយក្រោយ') }}</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

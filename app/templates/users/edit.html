@@ -9,7 +9,7 @@
 <a href="{{ url_for('tbl_users.profile') if own_profile else url_for('tbl_users.detail', user_id=user.id) }}" class="back-link">
     <i class="bi bi-arrow-left"></i>{{ _('ត្រឡប់ទៅប្រវត្តិរូប') if own_profile else _('ត្រឡប់ក្រោយ') }}
 </a>
-<div class="admin-card form-narrow">
+<div class="admin-card form-narrow form-centered">
     <div class="admin-card-header">
         <div class="entity-header">
             {{ avatar(user.username, 'lg', avatar_url(user)) }}

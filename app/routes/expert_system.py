@@ -20,6 +20,7 @@ from app.services.expert_system_service import (
 )
 from app.services.audit_service import AuditService
 from app.services.page_text_service import PageTextService
+from app.services.page_feature_service import PageFeatureService
 
 expert_system_bp = Blueprint("expert_system", __name__, url_prefix="/expert-system")
 
@@ -35,6 +36,9 @@ def author_rules():
 @login_required
 @require_permission("run_diagnosis")
 def diagnose():
+    if not PageFeatureService.is_enabled("diagnose"):
+        return render_template("expert_system/maintenance.html")
+
     symptoms = DiagnosisService.get_all_symptoms()
     diagnosis_results = None
     selected_ids = []
@@ -114,14 +118,20 @@ def narrate():
 @login_required
 @require_permission("view_cases")
 def cases_index():
-    # If user is Admin or Doctor, show all cases
-    if current_user.has_role("Admin") or current_user.has_role("Doctor"):
-        cases = CaseService.get_all()
-    else:
-        # Otherwise, show only their own cases
-        cases = CaseService.get_by_user(current_user.id)
-        
-    return render_template("expert_system/cases/index.html", cases=cases)
+    if not PageFeatureService.is_enabled("cases"):
+        return render_template("layouts/maintenance.html")
+
+    page = request.args.get("page", 1, type=int)
+    # Admin/Doctor see every case; everyone else only their own.
+    scope_user_id = None if (current_user.has_role("Admin") or current_user.has_role("Doctor")) else current_user.id
+    pager = CaseService.get_page(page, user_id=scope_user_id)
+
+    return render_template(
+        "expert_system/cases/index.html",
+        cases=pager.items,
+        pager=pager,
+        stats=CaseService.stats(user_id=scope_user_id),
+    )
 
 
 @expert_system_bp.route("/cases/<int:case_id>")
@@ -488,7 +498,22 @@ def rules_delete(rule_id: int):
 @login_required
 @require_permission("manage_page_texts")
 def page_texts_index():
-    return render_template("expert_system/page_texts/index.html", items=PageTextService.get_all())
+    items = PageTextService.get_all()
+    pages = sorted({item.page for item in items})
+    page_enabled = {page: PageFeatureService.is_enabled(page) for page in pages}
+    return render_template("expert_system/page_texts/index.html", items=items, page_enabled=page_enabled)
+
+
+@expert_system_bp.route("/page-texts/<page>/toggle", methods=["POST"])
+@login_required
+@require_permission("manage_page_texts")
+def page_texts_toggle(page: str):
+    enabled = not PageFeatureService.is_enabled(page)
+    PageFeatureService.set_enabled(page, enabled)
+    AuditService.log("UPDATE", "PageFeature", None,
+                      f"{'Enabled' if enabled else 'Disabled'} page: {page}")
+    flash(_("បានធ្វើបច្ចុប្បន្នភាពស្ថានភាពទំព័រ។"), "success")
+    return redirect(url_for("expert_system.page_texts_index"))
 
 
 @expert_system_bp.route("/page-texts/<int:text_id>/edit", methods=["GET", "POST"])
@@ -507,14 +532,16 @@ def page_texts_edit(text_id: int):
     return render_template("expert_system/page_texts/edit.html", form=form, item=item)
 
 
-@expert_system_bp.route("/page-texts/<int:text_id>/reset", methods=["POST"])
+@expert_system_bp.route("/page-texts/<int:text_id>/reset", methods=["GET", "POST"])
 @login_required
 @require_permission("manage_page_texts")
 def page_texts_reset(text_id: int):
     item = PageTextService.get_by_id(text_id)
     if item is None:
         abort(404)
-    PageTextService.reset(item)
-    AuditService.log("UPDATE", "PageText", item.id, f"Reset page text to default: {item.key}")
-    flash(_("បានស្តារអត្ថបទទៅលំនាំដើមវិញ។"), "success")
-    return redirect(url_for("expert_system.page_texts_edit", text_id=item.id))
+    if request.method == "POST":
+        PageTextService.reset(item)
+        AuditService.log("UPDATE", "PageText", item.id, f"Reset page text to default: {item.key}")
+        flash(_("បានស្តារអត្ថបទទៅលំនាំដើមវិញ។"), "success")
+        return redirect(url_for("expert_system.page_texts_edit", text_id=item.id))
+    return render_template("expert_system/page_texts/reset_confirm.html", item=item)

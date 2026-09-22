@@ -1,20 +1,17 @@
 {% extends "layouts/base.html" %}
-{% block title %}{{ title }}{% endblock %}
-{% block page_title %}{{ title }}{% endblock %}
+{% block title %}{{ t('diagnose.maintenance.title') }}{% endblock %}
+{% block page_title %}{{ tb('diagnose.maintenance.title') }}{% endblock %}
 
 {% block content %}
 <div class="admin-card error-card">
     <div class="admin-card-body">
-        <div class="error-code">{{ code }}</div>
-        <h2 class="h4 mb-2">{{ title }}</h2>
-        <p class="text-muted mb-4">{{ message }}</p>
+        <div class="error-code"><i class="bi bi-cone-striped"></i></div>
+        <h2 class="h4 mb-2">{{ t('diagnose.maintenance.title') }}</h2>
+        <p class="text-muted mb-4">{{ t('diagnose.maintenance.body') }}</p>
         <div class="d-flex justify-content-center gap-2 flex-wrap">
-            <a href="javascript:history.back()" class="btn btn-soft"><i class="bi bi-arrow-left me-1"></i>{{ bi('ថយក្រោយ') }}</a>
             {% if current_user.is_authenticated %}
                 {% if current_user.has_role('Admin') or current_user.has_role('Doctor') %}
                 <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary"><i class="bi bi-grid-1x2 me-1"></i>{{ bi('ទៅផ្ទាំងគ្រប់គ្រង') }}</a>
-                {% else %}
-                <a href="{{ url_for('expert_system.diagnose') }}" class="btn btn-primary"><i class="bi bi-activity me-1"></i>{{ bi('ទៅធ្វើរោគវិនិច្ឆ័យ') }}</a>
                 {% endif %}
             {% else %}
                 <a href="{{ url_for('auth.login') }}" class="btn btn-primary"><i class="bi bi-box-arrow-in-right me-1"></i>{{ bi('ចូល') }}</a>

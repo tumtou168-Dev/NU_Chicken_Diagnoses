@@ -14,26 +14,24 @@ def index():
         abort(403)
     
     search_query = request.args.get("q", "").strip()
-    
-    if search_query:
-        logs = AuditService.search_logs(search_query)
-    else:
-        logs = AuditService.get_all_logs()
-        
-    return render_template("audit/index.html", logs=logs, search_query=search_query)
+    page = request.args.get("page", 1, type=int)
+
+    pager = AuditService.get_page(page, search_query)
+    return render_template("audit/index.html", logs=pager.items, pager=pager, search_query=search_query)
 
 @audit_bp.route("/user/<int:user_id>")
 @login_required
 def user_logs(user_id):
     if not current_user.has_role("Admin"):
         abort(403)
-        
+
     user = UserService.get_user_by_id(user_id)
     if not user:
         abort(404)
-        
-    logs = AuditService.get_logs_by_user(user_id)
-    return render_template("audit/user_logs.html", logs=logs, user=user)
+
+    page = request.args.get("page", 1, type=int)
+    pager = AuditService.get_user_logs_page(user_id, page)
+    return render_template("audit/user_logs.html", logs=pager.items, pager=pager, user=user)
 
 @audit_bp.route("/export")
 @login_required

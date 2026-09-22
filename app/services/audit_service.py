@@ -43,7 +43,20 @@ class AuditService:
         """
         if not username_query:
             return AuditService.get_all_logs()
-            
+
         return AuditLog.query.join(UserTable).filter(
             UserTable.username.ilike(f"%{username_query}%")
         ).order_by(AuditLog.created_at.desc()).all()
+
+    @staticmethod
+    def get_page(page: int, username_query: str = "", per_page: int = 25):
+        query = AuditLog.query
+        if username_query:
+            query = query.join(UserTable).filter(UserTable.username.ilike(f"%{username_query}%"))
+        return query.order_by(AuditLog.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+
+    @staticmethod
+    def get_user_logs_page(user_id: int, page: int, per_page: int = 25):
+        return AuditLog.query.filter_by(user_id=user_id).order_by(
+            AuditLog.created_at.desc()
+        ).paginate(page=page, per_page=per_page, error_out=False)

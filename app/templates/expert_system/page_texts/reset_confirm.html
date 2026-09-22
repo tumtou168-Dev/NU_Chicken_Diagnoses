@@ -1,0 +1,13 @@
+{% extends "layouts/base.html" %}
+{% from "layouts/_admin_macros.html" import confirm_action, strong with context %}
+{% block title %}{{ _('ស្តារអត្ថបទទៅលំនាំដើម') }}{% endblock %}
+{% block page_title %}{{ bi('ស្តារអត្ថបទទៅលំនាំដើម') }}{% endblock %}
+{% block content %}
+{{ confirm_action(
+    _('ស្តារអត្ថបទទៅលំនាំដើម?'),
+    _h('តើអ្នកប្រាកដថាចង់ស្តារ %(name)s ទៅលំនាំដើមវិញឬ? អត្ថបទដែលបានកែប្រែនឹងបាត់។', name=strong(item.pair("description") or item.key)),
+    url_for('expert_system.page_texts_edit', text_id=item.id),
+    _('ស្តារទៅលំនាំដើម'),
+    icon='arrow-counterclockwise'
+) }}
+{% endblock %}

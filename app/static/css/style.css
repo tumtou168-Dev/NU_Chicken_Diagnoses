@@ -158,8 +158,10 @@
 /* =====================================================================
    Base
    ===================================================================== */
+/* Everything else is sized in rem, so bumping the root scales the whole UI up together. */
+html { font-size: 20px; }
 body {
-    font-family: 'Inter', 'Noto Sans Khmer', system-ui, sans-serif;
+    font-family: 'Kantumruy Pro', 'Roboto', system-ui, sans-serif;
     background-color: var(--bg-body);
     color: var(--text-main);
     line-height: 1.6;
@@ -167,7 +169,7 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, h4, h5, h6, .brand-font {
-    font-family: 'Inter', 'Noto Sans Khmer', system-ui, sans-serif;
+    font-family: 'Kantumruy Pro', 'Roboto', system-ui, sans-serif;
     color: var(--heading);
     font-weight: 600;
     letter-spacing: -0.01em;
@@ -241,6 +243,10 @@ a { color: var(--primary-text); }
 .nav-link.text-danger { color: var(--sidebar-logout) !important; }
 .nav-link.text-danger i { color: var(--sidebar-logout-icon) !important; }
 .nav-link.text-danger:hover { background: var(--sidebar-logout-hover); }
+
+/* Menu item an admin has temporarily disabled: still clickable, leads to a maintenance message */
+.nav-link-disabled { opacity: 0.55; }
+.nav-maintenance-icon { margin-left: auto; font-size: 0.9rem !important; width: auto !important; color: var(--warning-fg, #b45309) !important; }
 
 @media (prefers-reduced-motion: reduce) { .nav-link, .nav-link i { transition: none; } }
 
@@ -787,9 +793,9 @@ html.theme-ready .form-control, html.theme-ready .form-select, html.theme-ready 
 .lang-switch a.active .lang-flag { box-shadow: 0 0 0 1px rgba(255,255,255,0.6); }
 @media (max-width: 575.98px) { .lang-switch .lang-label { display: none; } }
 
-/* English reads better with the Latin face first (Khmer glyphs still fall back to Noto Sans Khmer) */
+/* English reads better with the Latin face first (Khmer glyphs still fall back to Kantumruy Pro) */
 html[lang="en"] body, html[lang="en"] h1, html[lang="en"] h2, html[lang="en"] h3, html[lang="en"] h4, html[lang="en"] h5, html[lang="en"] h6, html[lang="en"] .brand-font {
-    font-family: 'Inter', 'Noto Sans Khmer', system-ui, sans-serif;
+    font-family: 'Roboto', 'Kantumruy Pro', system-ui, sans-serif;
 }
 @media (max-width: 575.98px) { .header-actions { gap: 0.5rem; } .lang-switch a { padding: 0.2rem 0.55rem; } }
 

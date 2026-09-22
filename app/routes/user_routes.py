@@ -1,7 +1,7 @@
 # app/routes/user_routes.py
 from datetime import datetime
 
-from flask import Blueprint, render_template, redirect, url_for, flash, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, abort, request
 from flask_login import login_required, current_user
 from app.i18n import gettext as _
 from app.forms.user_forms import(
@@ -22,9 +22,10 @@ def index():
     # Only Admin can view user list
     if not current_user.has_role("Admin"):
         abort(403)
-        
-    users = UserService.get_user_all()
-    return render_template("users/index.html", users=users)
+
+    page = request.args.get("page", 1, type=int)
+    pager = UserService.get_page(page)
+    return render_template("users/index.html", pager=pager, users=pager.items, counts=UserService.counts())
 
 @user_bp.route("/profile")
 @login_required

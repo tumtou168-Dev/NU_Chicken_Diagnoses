@@ -51,6 +51,11 @@ DEFAULTS = {
                             "Select the symptoms you observe from the list below. Our expert system will analyse them and suggest possible diseases and treatments."),
     "diagnose.empty.point1": ("diagnose", "First check-mark line", "ការវិភាគរហ័ស", "Fast analysis"),
     "diagnose.empty.point2": ("diagnose", "Second check-mark line", "វិធានអ្នកជំនាញ", "Expert rules"),
+    "diagnose.maintenance.title": ("diagnose", "Shown when an admin disables this page",
+                                   "កំពុងធ្វើបច្ចុប្បន្នភាព", "Under maintenance"),
+    "diagnose.maintenance.body": ("diagnose", "Shown when an admin disables this page",
+                                  "មុខងារនេះកំពុងត្រូវបានធ្វើបច្ចុប្បន្នភាព។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។",
+                                  "This feature is under maintenance. Please check back later."),
 }
 
 # Khmer version of each row's "where it is used" note (DEFAULTS holds the English one).
@@ -78,6 +83,8 @@ DESCRIPTIONS_KM = {
     "diagnose.empty.body": "អត្ថបទមុនពេលធ្វើរោគវិនិច្ឆ័យ",
     "diagnose.empty.point1": "ចំណុចធីកទីមួយ",
     "diagnose.empty.point2": "ចំណុចធីកទីពីរ",
+    "diagnose.maintenance.title": "ចំណងជើងបង្ហាញនៅពេលអ្នកគ្រប់គ្រងបិទទំព័រនេះ",
+    "diagnose.maintenance.body": "អត្ថបទបង្ហាញនៅពេលអ្នកគ្រប់គ្រងបិទទំព័រនេះ",
 }
 
 # Earlier default wording, replaced on start only while an admin has not edited it.

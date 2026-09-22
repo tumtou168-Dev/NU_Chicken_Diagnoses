@@ -180,5 +180,22 @@ class CaseService:
         return Case.query.filter_by(user_id=user_id).order_by(Case.created_at.desc()).all()
 
     @staticmethod
+    def get_page(page: int, user_id: Optional[int] = None, per_page: int = 20):
+        query = Case.query if user_id is None else Case.query.filter_by(user_id=user_id)
+        return query.order_by(Case.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+
+    @staticmethod
+    def stats(user_id: Optional[int] = None) -> dict:
+        """Total / high-confidence / low-confidence counts via SQL COUNT, without loading every row."""
+        base = db.select(db.func.count(Case.id))
+        if user_id is not None:
+            base = base.filter_by(user_id=user_id)
+        return {
+            "total": db.session.scalar(base),
+            "high": db.session.scalar(base.filter(Case.confidence > 80)),
+            "low": db.session.scalar(base.filter(Case.confidence <= 50)),
+        }
+
+    @staticmethod
     def get_by_id(case_id: int) -> Optional[Case]:
         return Case.query.get(case_id)

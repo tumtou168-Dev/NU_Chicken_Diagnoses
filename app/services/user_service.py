@@ -9,7 +9,18 @@ class UserService:
     @staticmethod
     def get_user_all() -> List[UserTable]:
         return UserTable.query.order_by(UserTable.id.desc()).all()
-    
+
+    @staticmethod
+    def get_page(page: int, per_page: int = 20):
+        return UserTable.query.order_by(UserTable.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
+
+    @staticmethod
+    def counts() -> dict:
+        """Total / active / inactive counts via SQL COUNT, without loading every row."""
+        total = db.session.scalar(db.select(db.func.count(UserTable.id)))
+        active = db.session.scalar(db.select(db.func.count(UserTable.id)).filter_by(is_active=True))
+        return {"total": total, "active": active, "inactive": total - active}
+
     @staticmethod
     def get_user_by_id(user_id: int) -> Optional[UserTable]:
         return UserTable.query.get(user_id)

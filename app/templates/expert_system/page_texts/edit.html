@@ -16,9 +16,8 @@
         </div>
         {{ form_actions(form.submit, url_for('expert_system.page_texts_index')) }}
     </form>
-    <form method="post" action="{{ url_for('expert_system.page_texts_reset', text_id=item.id) }}" class="px-4 pb-4" onsubmit="return confirm('{{ _('ស្តារអត្ថបទនេះទៅលំនាំដើមវិញឬ?') }}');">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-link btn-sm text-muted p-0"><i class="bi bi-arrow-counterclockwise me-1"></i>{{ bi('ស្តារទៅលំនាំដើម') }}</button>
-    </form>
+    <div class="px-4 pb-4">
+        <a href="{{ url_for('expert_system.page_texts_reset', text_id=item.id) }}" class="btn btn-link btn-sm text-muted p-0"><i class="bi bi-arrow-counterclockwise me-1"></i>{{ bi('ស្តារទៅលំនាំដើម') }}</a>
+    </div>
 </div>
 {% endblock %}

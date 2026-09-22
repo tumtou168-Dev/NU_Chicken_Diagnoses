@@ -1,16 +1,15 @@
 {% extends "layouts/base.html" %}
-{% from "layouts/_admin_macros.html" import avatar, status_badge, stat, table_filter, empty_state %}
+{% from "layouts/_admin_macros.html" import avatar, status_badge, stat, table_filter, empty_state, pagination %}
 
 {% block title %}{{ _('ការគ្រប់គ្រងអ្នកប្រើប្រាស់') }}{% endblock %}
 {% block page_title %}{{ bi('ការគ្រប់គ្រងអ្នកប្រើប្រាស់') }}{% endblock %}
 {% block page_subtitle %}{{ bi('គ្រប់គ្រងគណនី តួនាទី និងស្ថានភាពនៃការចូលប្រើប្រាស់។') }}{% endblock %}
 
 {% block content %}
-{% set active_count = users | selectattr('is_active') | list | length %}
 <div class="stat-grid">
-    {{ stat('people', users | length, _('អ្នកប្រើប្រាស់សរុប'), 'primary') }}
-    {{ stat('check-circle', active_count, _('សកម្ម'), 'success') }}
-    {{ stat('slash-circle', (users | length) - active_count, _('អសកម្ម'), 'danger') }}
+    {{ stat('people', counts.total, _('អ្នកប្រើប្រាស់សរុប'), 'primary') }}
+    {{ stat('check-circle', counts.active, _('សកម្ម'), 'success') }}
+    {{ stat('slash-circle', counts.inactive, _('អសកម្ម'), 'danger') }}
 </div>
 
 <div class="admin-card">
@@ -68,5 +67,6 @@
             </tbody>
         </table>
     </div>
+    {{ pagination(pager, 'tbl_users.index') }}
 </div>
 {% endblock %}

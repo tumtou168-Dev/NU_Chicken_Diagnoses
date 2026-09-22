@@ -1198,3 +1198,15 @@ td .dual .dual-2, .info-block .dual .dual-2, .symptom-desc .dual .dual-2 { font-
 :root[data-theme="dark"] .btn-close {
     filter: invert(1) grayscale(100%) brightness(200%);
 }
+
+/* Hide Microsoft Edge / IE / WebKit native password reveal and clear buttons */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}

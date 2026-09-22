@@ -42,6 +42,21 @@
             <div class="info-label">{{ _('កាលបរិច្ឆេទ') }}</div>
             <div class="fw-medium">{{ case.created_at.strftime('%Y-%m-%d') }}</div>
             <div class="small text-muted">{{ case.created_at.strftime('%H:%M') }}</div>
+            {% if case.user and case.user.has_role('Doctor') %}
+            <div class="mt-2">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-inline-flex align-items-center gap-1 px-2 py-1">
+                    <i class="bi bi-patch-check-fill text-primary"></i>
+                    <span>Dr. {{ case.user.full_name }}</span>
+                </span>
+            </div>
+            {% elif case.disease and case.disease.doctor and case.disease.doctor.has_role('Doctor') %}
+            <div class="mt-2">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-inline-flex align-items-center gap-1 px-2 py-1">
+                    <i class="bi bi-patch-check-fill text-primary"></i>
+                    <span>Dr. {{ case.disease.doctor.full_name }}</span>
+                </span>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -81,8 +96,19 @@
         </div>
     </div>
 
-    <div class="admin-card-footer justify-content-center">
+    <div class="admin-card-footer justify-content-between flex-wrap gap-2">
         <small class="text-muted">{{ _('របាយការណ៍បង្កើតដោយប្រព័ន្ធជំនាញ IDNS • លេខសម្គាល់ករណី៖ #%(id)s', id=case.id) }}</small>
+        {% if case.user and case.user.has_role('Doctor') %}
+        <span class="d-inline-flex align-items-center gap-1 small text-primary fw-medium">
+            <i class="bi bi-patch-check-fill text-primary"></i>
+            {{ _('បានធ្វើរោគវិនិច្ឆ័យដោយ') }}: Dr. {{ case.user.full_name }}
+        </span>
+        {% elif case.disease and case.disease.doctor and case.disease.doctor.has_role('Doctor') %}
+        <span class="d-inline-flex align-items-center gap-1 small text-primary fw-medium">
+            <i class="bi bi-patch-check-fill text-primary"></i>
+            {{ _('ផ្ទៀងផ្ទាត់ដោយ') }}: Dr. {{ case.disease.doctor.full_name }}
+        </span>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

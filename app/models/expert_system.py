@@ -57,9 +57,11 @@ class Disease(BilingualMixin, db.Model):
     treatment = db.Column(db.String(255), nullable=False)
     treatment_km = db.Column(db.String(255))
     category_id = db.Column(db.Integer, db.ForeignKey("tbl_categories.id"))
+    doctor_id = db.Column(db.Integer, db.ForeignKey("tbl_users.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     category = db.relationship("Category", back_populates="diseases")
+    doctor = db.relationship("UserTable", foreign_keys=[doctor_id])
     rules = db.relationship("Rule", back_populates="disease", cascade="all, delete-orphan")
     cases = db.relationship("Case", back_populates="disease")
 

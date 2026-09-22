@@ -1,0 +1,78 @@
+<div class="modal fade" id="editRuleModal_{{ rule.id }}" tabindex="-1" aria-labelledby="editRuleModalLabel_{{ rule.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title mb-0" id="editRuleModalLabel_{{ rule.id }}">{{ bi('កែប្រែវិធាន') }}</h5>
+                    <small class="text-muted">{{ rule.pair("title") }}</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('បិទ') }}"></button>
+            </div>
+            <form method="post" action="{{ url_for('expert_system.rules_edit', rule_id=rule.id) }}" novalidate id="editRuleForm_{{ rule.id }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body">
+                    <div class="form-section-title">{{ _('ព័ត៌មានវិធាន') }}</div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ _('ចំណងជើងវិធាន (ខ្មែរ)') }}</label>
+                            <input type="text" name="title_km" class="form-control" value="{{ rule.title_km or '' }}" maxlength="120">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label is-required">{{ _('ចំណងជើងវិធាន (អង់គ្លេស)') }}</label>
+                            <input type="text" name="title" class="form-control" required value="{{ rule.title or '' }}" maxlength="120">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ _('ការពិពណ៌នាវិធាន (ខ្មែរ)') }}</label>
+                            <textarea name="description_km" class="form-control" rows="2" maxlength="255">{{ rule.description_km or '' }}</textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label is-required">{{ _('ការពិពណ៌នាវិធាន (អង់គ្លេស)') }}</label>
+                            <textarea name="description" class="form-control" rows="2" required maxlength="255">{{ rule.description or '' }}</textarea>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label is-required">{{ _('អាទិភាព') }}</label>
+                            <input type="number" name="priority" class="form-control" min="1" max="100" required value="{{ rule.priority }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label is-required">{{ _('ទំនុកចិត្តមូលដ្ឋាន (%)') }}</label>
+                            <input type="number" step="any" name="confidence" class="form-control" min="1" max="100" required value="{{ rule.confidence }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label is-required">{{ _('ជំងឺ##one') }}</label>
+                            <select name="disease_id" class="form-select" required>
+                                {% if diseases %}
+                                {% for d in diseases %}
+                                <option value="{{ d.id }}" {% if rule.disease_id == d.id %}selected{% endif %}>{{ d.inline("name") }}</option>
+                                {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                    </div>
+
+                    {% set rule_sym_ids = rule.symptoms | map(attribute='id') | list %}
+                    <div class="form-section-title">{{ _('រោគសញ្ញា') }}</div>
+                    <div class="checklist">
+                        <ul>
+                            {% if symptoms %}
+                            {% for sym in symptoms %}
+                            <li>
+                                <input class="form-check-input" type="checkbox" id="rule-sym-{{ rule.id }}-{{ sym.id }}" name="symptom_ids" value="{{ sym.id }}" {% if sym.id in rule_sym_ids %}checked{% endif %}>
+                                <label for="rule-sym-{{ rule.id }}-{{ sym.id }}">{{ sym.inline("name") }}</label>
+                            </li>
+                            {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-soft" data-bs-dismiss="modal">{{ _('បោះបង់') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('រក្សាទុកការផ្លាស់ប្តូរ') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

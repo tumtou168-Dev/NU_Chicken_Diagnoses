@@ -1,0 +1,43 @@
+<div class="modal fade" id="editCategoryModal_{{ category.id }}" tabindex="-1" aria-labelledby="editCategoryModalLabel_{{ category.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title mb-0" id="editCategoryModalLabel_{{ category.id }}">{{ bi('កែប្រែប្រភេទ') }}</h5>
+                    <small class="text-muted">{{ category.pair("name") }}</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('បិទ') }}"></button>
+            </div>
+            <form method="post" action="{{ url_for('expert_system.categories_edit', category_id=category.id) }}" novalidate id="editCategoryForm_{{ category.id }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body">
+                    <div class="form-section-title">{{ _('ព័ត៌មានប្រភេទ') }}</div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ _('ឈ្មោះ (ខ្មែរ)') }}</label>
+                            <input type="text" name="name_km" class="form-control" value="{{ category.name_km or '' }}" maxlength="120">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label is-required">{{ _('ឈ្មោះ (អង់គ្លេស)') }}</label>
+                            <input type="text" name="name" class="form-control" required value="{{ category.name or '' }}" maxlength="120">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ _('ការពិពណ៌នា (ខ្មែរ)') }}</label>
+                            <textarea name="description_km" class="form-control" rows="3" maxlength="255">{{ category.description_km or '' }}</textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ _('ការពិពណ៌នា (អង់គ្លេស)') }}</label>
+                            <textarea name="description" class="form-control" rows="3">{{ category.description or '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-soft" data-bs-dismiss="modal">{{ _('បោះបង់') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('រក្សាទុកការផ្លាស់ប្តូរ') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

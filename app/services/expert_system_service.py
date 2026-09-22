@@ -86,7 +86,7 @@ class DiseaseService:
         return Disease.query.get(disease_id)
 
     @staticmethod
-    def create(data: dict) -> Disease:
+    def create(data: dict, doctor_id: Optional[int] = None) -> Disease:
         disease = Disease(
             name=data["name"],
             name_km=data.get("name_km") or None,
@@ -95,6 +95,7 @@ class DiseaseService:
             treatment=data["treatment"],
             treatment_km=data.get("treatment_km") or None,
             category_id=data.get("category_id") or None,
+            doctor_id=doctor_id or data.get("doctor_id") or None,
         )
         db.session.add(disease)
         db.session.commit()
@@ -109,6 +110,8 @@ class DiseaseService:
         disease.treatment = data["treatment"]
         disease.treatment_km = data.get("treatment_km") or None
         disease.category_id = data.get("category_id") or None
+        if "doctor_id" in data:
+            disease.doctor_id = data["doctor_id"]
         db.session.commit()
         return disease
 

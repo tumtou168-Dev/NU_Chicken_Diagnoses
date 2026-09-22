@@ -85,6 +85,26 @@ def seed_admin_user():
     db.session.commit()
 
 
+def seed_doctor_user():
+    doctor = db.session.scalar(db.select(UserTable).filter_by(username="doctor"))
+    if doctor:
+        return doctor
+    doctor_role = db.session.scalar(db.select(RoleTable).filter_by(name="Doctor"))
+    if not doctor_role:
+        return None
+    doctor = UserTable(
+        username="doctor",
+        email="doctor@example.com",
+        full_name="Sokha Meas",
+        is_active=True,
+    )
+    doctor.set_password("Doctor@123")
+    doctor.roles = [doctor_role]
+    db.session.add(doctor)
+    db.session.commit()
+    return doctor
+
+
 def seed_expert_data():
     # 1. Categories
     category_data = [
@@ -356,5 +376,6 @@ def seed_expert_data():
 def seed_all():
     seed_permissions_and_roles()
     seed_admin_user()
+    seed_doctor_user()
     seed_expert_data()
 

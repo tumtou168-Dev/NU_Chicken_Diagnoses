@@ -124,7 +124,20 @@
         <article class="dx-top admin-card tone-{{ tone }}">
             <div class="dx-top-main">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                    <div class="dx-best"><i class="bi bi-award-fill"></i>{{ _('ការផ្គូផ្គងល្អបំផុត') }}</div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="dx-best"><i class="bi bi-award-fill"></i>{{ _('ការផ្គូផ្គងល្អបំផុត') }}</div>
+                        {% if current_user.is_authenticated and current_user.has_role('Doctor') %}
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-inline-flex align-items-center gap-1 px-2.5 py-1" style="font-size: 0.8rem;">
+                            <i class="bi bi-patch-check-fill text-primary"></i>
+                            <span>{{ _('វេជ្ជបណ្ឌិតធ្វើរោគវិនិច្ឆ័យ') }}: Dr. {{ current_user.full_name }}</span>
+                        </span>
+                        {% elif top.disease.doctor and top.disease.doctor.has_role('Doctor') %}
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-inline-flex align-items-center gap-1 px-2.5 py-1" style="font-size: 0.8rem;">
+                            <i class="bi bi-patch-check-fill text-primary"></i>
+                            <span>{{ _('វេជ្ជបណ្ឌិតផ្ទៀងផ្ទាត់') }}: Dr. {{ top.disease.doctor.full_name }}</span>
+                        </span>
+                        {% endif %}
+                    </div>
 
                     <!-- AI Reading Voice Widget (Female Khmer & Female English) -->
                     <div class="dx-voice-widget d-inline-flex align-items-center gap-2 p-1 px-2 rounded-pill shadow-sm" style="background-color: var(--surface-raised, #ffffff); border: 1px solid var(--border-color, #e2e8f0);">

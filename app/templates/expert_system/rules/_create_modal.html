@@ -1,0 +1,51 @@
+{% from "layouts/_admin_macros.html" import field %}
+
+<div class="modal fade" id="createRuleModal" tabindex="-1" aria-labelledby="createRuleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title mb-0" id="createRuleModalLabel">{{ bi('បន្ថែមវិធាន') }}</h5>
+                    <small class="text-muted">{{ bi('ផ្គូផ្គងរោគសញ្ញាទៅនឹងជំងឺ។') }}</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('បិទ') }}"></button>
+            </div>
+            <form method="post" action="{{ url_for('expert_system.rules_create') }}" novalidate id="createRuleForm">
+                <div class="modal-body">
+                    {{ form.hidden_tag() }}
+                    <div class="form-section-title">{{ _('ព័ត៌មានវិធាន') }}</div>
+                    <div class="row">
+                        <div class="col-md-6">{{ field(form.title_km) }}</div>
+                        <div class="col-md-6">{{ field(form.title) }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">{{ field(form.description_km, rows=2) }}</div>
+                        <div class="col-md-6">{{ field(form.description, rows=2) }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">{{ field(form.priority) }}</div>
+                        <div class="col-md-4">{{ field(form.confidence) }}</div>
+                        <div class="col-md-4">{{ field(form.disease_id, kind="select") }}</div>
+                    </div>
+
+                    <div class="form-section-title">{{ form.symptom_ids.label.text }}</div>
+                    <div class="checklist">
+                        <ul>
+                            {% for value, label, checked, _ in form.symptom_ids.iter_choices() %}
+                            <li>
+                                <input class="form-check-input" type="checkbox" id="modal-sym-{{ value }}" name="{{ form.symptom_ids.name }}" value="{{ value }}" {% if checked %}checked{% endif %}>
+                                <label for="modal-sym-{{ value }}">{{ label }}</label>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% for error in form.symptom_ids.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="modal-footer d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-soft" data-bs-dismiss="modal">{{ _('បោះបង់') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('បង្កើតវិធាន') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

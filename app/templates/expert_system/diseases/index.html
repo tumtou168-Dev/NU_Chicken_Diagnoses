@@ -17,7 +17,9 @@
         <h5 class="admin-card-title">{{ bi('ជំងឺទាំងអស់ (%(n)s)', n=diseases | length) }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#diseasesTable', _('ស្វែងរកជំងឺ...')) }}
-            <a href="{{ url_for('expert_system.diseases_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ bi('បន្ថែមជំងឺ') }}</a>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createDiseaseModal">
+                <i class="bi bi-plus-lg me-1"></i>{{ bi('បន្ថែមជំងឺ') }}
+            </button>
         </div>
     </div>
     <div class="table-responsive">
@@ -43,4 +45,20 @@
         </table>
     </div>
 </div>
+
+{% include "expert_system/diseases/_create_modal.html" %}
+{% endblock %}
+
+{% block scripts %}
+{% if show_create_modal or request.args.get('open_create') %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const modalEl = document.getElementById("createDiseaseModal");
+    if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+});
+</script>
+{% endif %}
 {% endblock %}

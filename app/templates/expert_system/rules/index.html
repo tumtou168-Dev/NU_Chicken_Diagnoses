@@ -17,7 +17,9 @@
         <h5 class="admin-card-title">{{ bi('វិធានទាំងអស់ (%(n)s)', n=rules | length) }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#rulesTable', _('ស្វែងរកវិធាន...')) }}
-            <a href="{{ url_for('expert_system.rules_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ bi('បន្ថែមវិធាន') }}</a>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createRuleModal">
+                <i class="bi bi-plus-lg me-1"></i>{{ bi('បន្ថែមវិធាន') }}
+            </button>
         </div>
     </div>
     <div class="table-responsive">
@@ -41,4 +43,20 @@
         </table>
     </div>
 </div>
+
+{% include "expert_system/rules/_create_modal.html" %}
+{% endblock %}
+
+{% block scripts %}
+{% if show_create_modal or request.args.get('open_create') %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const modalEl = document.getElementById("createRuleModal");
+    if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+});
+</script>
+{% endif %}
 {% endblock %}

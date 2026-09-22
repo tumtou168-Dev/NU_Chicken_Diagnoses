@@ -17,7 +17,9 @@
         <h5 class="admin-card-title">{{ bi('ប្រភេទទាំងអស់ (%(n)s)', n=categories | length) }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#categoriesTable', _('ស្វែងរកប្រភេទ...')) }}
-            <a href="{{ url_for('expert_system.categories_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ bi('បន្ថែមប្រភេទ') }}</a>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+                <i class="bi bi-plus-lg me-1"></i>{{ bi('បន្ថែមប្រភេទ') }}
+            </button>
         </div>
     </div>
     <div class="table-responsive">
@@ -39,4 +41,20 @@
         </table>
     </div>
 </div>
+
+{% include "expert_system/categories/_create_modal.html" %}
+{% endblock %}
+
+{% block scripts %}
+{% if show_create_modal or request.args.get('open_create') %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const modalEl = document.getElementById("createCategoryModal");
+    if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+});
+</script>
+{% endif %}
 {% endblock %}

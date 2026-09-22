@@ -1,6 +1,6 @@
 // Password fields: show/hide toggle, live strength meter, live "passwords match" check.
 // Markup comes from the password_field() macro in layouts/_admin_macros.html.
-document.addEventListener("DOMContentLoaded", () => {
+function initPasswordUI() {
   document.querySelectorAll("[data-pw-toggle]").forEach((btn) => {
     const input = btn.parentElement.querySelector("input[data-pw-input]");
     if (!input) return;
@@ -70,4 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
     input.addEventListener("input", update);
     target.addEventListener("input", update);
   });
-});
+}
+
+window.PasswordUI = { init: initPasswordUI };
+window.onReady(initPasswordUI);

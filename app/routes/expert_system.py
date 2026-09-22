@@ -42,20 +42,27 @@ def diagnose():
     symptoms = DiagnosisService.get_all_symptoms()
     diagnosis_results = None
     selected_ids = []
-    case_id = None
+    case = None
 
     if request.method == "POST":
         selected_ids = [int(id) for id in request.form.getlist("symptoms")]
         if selected_ids:
             diagnosis_results = DiagnosisService.run_inference(selected_ids)
             if diagnosis_results:
-                case = DiagnosisService.record_case(
-                    current_user.id,
-                    selected_ids,
-                    diagnosis_results[0],
-                )
-                case_id = case.id
-                AuditService.log("DIAGNOSE", "Case", case.id, f"User ran diagnosis, result: {case.disease.name}")
+                # A language switch on the results page resubmits the same symptoms just to get
+                # the text re-rendered in the new language — that isn't a new diagnosis, so reuse
+                # the existing case instead of writing a duplicate history row.
+                reuse_case_id = request.form.get("reuse_case_id", type=int)
+                reused_case = CaseService.get_by_id(reuse_case_id) if reuse_case_id else None
+                if reused_case and reused_case.user_id == current_user.id:
+                    case = reused_case
+                else:
+                    case = DiagnosisService.record_case(
+                        current_user.id,
+                        selected_ids,
+                        diagnosis_results[0],
+                    )
+                    AuditService.log("DIAGNOSE", "Case", case.id, f"User ran diagnosis, result: {case.disease.name}")
         else:
             flash(_("សូមជ្រើសរើសរោគសញ្ញាយ៉ាងហោចណាស់មួយ។"), "warning")
 
@@ -64,7 +71,8 @@ def diagnose():
         symptoms=symptoms,
         results=diagnosis_results,
         selected_ids=set(selected_ids),
-        case_id=case_id,
+        case_id=case.id if case else None,
+        case=case,
     )
 
 

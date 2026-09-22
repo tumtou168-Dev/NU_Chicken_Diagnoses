@@ -29,7 +29,7 @@
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+window.onReady(function () {
     const bind = (input, preview) => {
         if (!input || !preview) return;
         const sync = () => { preview.textContent = input.value.trim() || preview.dataset.default; };

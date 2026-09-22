@@ -1,0 +1,56 @@
+{# "Contact the doctor" button + modal form, for the owner of a saved diagnosis case.
+   Posts to chat.contact_doctor, which raises a structured message in the support chat
+   and sends the requester back here with ?open_chat=1 so the chat widget opens on it. #}
+{% if case and not (current_user.has_role('Admin') or current_user.has_role('Doctor')) %}
+<button type="button" class="btn btn-primary btn-sm no-print" data-bs-toggle="modal" data-bs-target="#contactDoctorModal">
+    <i class="bi bi-headset me-1"></i>{{ _('ទាក់ទងពេទ្យ') }}
+</button>
+
+<div class="modal fade" id="contactDoctorModal" tabindex="-1" aria-labelledby="contactDoctorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('chat.contact_doctor') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="case_id" value="{{ case.id }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contactDoctorModalLabel"><i class="bi bi-headset me-2"></i>{{ _('ទាក់ទងពេទ្យសត្វ') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('បិទ') }}"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">{{ _('ផ្តល់ព័ត៌មានអំពីហ្វូងមាន់របស់អ្នក ដើម្បីឲ្យពេទ្យសត្វជួយណែនាំបានត្រឹមត្រូវជាងមុន។') }}</p>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label" for="flock_size">{{ _('ចំនួនមាន់សរុប') }}</label>
+                            <input type="number" min="0" class="form-control" id="flock_size" name="flock_size" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" for="flock_age_weeks">{{ _('អាយុមាន់ (សប្តាហ៍)') }}</label>
+                            <input type="number" min="0" class="form-control" id="flock_age_weeks" name="flock_age_weeks" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" for="vaccinated_count">{{ _('ចំនួនមាន់ដែលបានចាក់វ៉ាក់សាំង') }}</label>
+                            <input type="number" min="0" class="form-control" id="vaccinated_count" name="vaccinated_count" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" for="death_count">{{ _('ចំនួនមាន់ស្លាប់') }}</label>
+                            <input type="number" min="0" class="form-control" id="death_count" name="death_count" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="note">{{ _('កំណត់ចំណាំបន្ថែម (ស្រេចចិត្ត)') }}</label>
+                            <textarea class="form-control" id="note" name="note" rows="2" maxlength="1000"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="image">{{ _('រូបភាពមាន់ឬហ្វូងមាន់ (ស្រេចចិត្ត)') }}</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/png,image/jpeg,image/webp">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-soft" data-bs-dismiss="modal">{{ _('បោះបង់') }}</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>{{ _('ផ្ញើសំណើ') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}

@@ -36,6 +36,7 @@ def create_app(config_class: type[Config] = Config):
     from app.routes.dashboard_routes import dashboard_bp
     from app.routes.lang_routes import lang_bp
     from app.routes.menu_routes import menu_bp
+    from app.routes.chat_routes import chat_bp
 
     app.register_blueprint(user_bp)
     app.register_blueprint(role_bp)
@@ -46,6 +47,7 @@ def create_app(config_class: type[Config] = Config):
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(lang_bp)
     app.register_blueprint(menu_bp)
+    app.register_blueprint(chat_bp)
     
     from app.services.avatar_service import AvatarService
 
@@ -119,6 +121,7 @@ def create_app(config_class: type[Config] = Config):
         from app.models.audit_log import AuditLog
         from app.models.page_text import PageText
         from app.models.page_feature import PageFeature
+        from app.models.chat_message import ChatMessage
 
         # Default RESET_DB to 0 to prevent database reset on restart
         if os.environ.get("RESET_DB", "0") == "1":
@@ -128,7 +131,8 @@ def create_app(config_class: type[Config] = Config):
         _ensure_user_avatar_column()
         _ensure_khmer_columns()
         _ensure_page_feature_columns()
-        
+        _ensure_chat_message_columns()
+
         # Only seed if the database is empty (e.g. check if any users exist)
         if not UserTable.query.first():
             from app.services.seed_service import seed_all
@@ -169,6 +173,26 @@ def _ensure_page_feature_columns() -> None:
     if "disabled_until" not in columns:
         db.session.execute(text("ALTER TABLE tbl_page_features ADD COLUMN disabled_until TIMESTAMP"))
         db.session.commit()
+
+
+# "Contact the doctor" fields added to tbl_chat_messages after it first shipped.
+CHAT_MESSAGE_COLUMNS = {
+    "case_id": "INTEGER",
+    "flock_size": "INTEGER",
+    "flock_age_weeks": "INTEGER",
+    "vaccinated_count": "INTEGER",
+    "death_count": "INTEGER",
+    "image": "VARCHAR(255)",
+}
+
+
+def _ensure_chat_message_columns() -> None:
+    """create_all() never alters existing tables, so add the contact-request columns if missing."""
+    columns = {c["name"] for c in inspect(db.engine).get_columns("tbl_chat_messages")}
+    for name, sql_type in CHAT_MESSAGE_COLUMNS.items():
+        if name not in columns:
+            db.session.execute(text(f"ALTER TABLE tbl_chat_messages ADD COLUMN {name} {sql_type}"))
+    db.session.commit()
 
 
 def _ensure_khmer_columns() -> None:

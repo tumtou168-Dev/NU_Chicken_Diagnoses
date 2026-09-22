@@ -103,7 +103,7 @@
 
     {# ---------- results ---------- #}
     {% if has_results %}
-    <section id="results" class="dx-results">
+    <section id="results" class="dx-results" {% if case_id %}data-case-id="{{ case_id }}"{% endif %}>
         <div class="dx-results-head">
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <h4 class="h5 mb-0">{{ tb('diagnose.results.title') }}</h4>
@@ -112,6 +112,7 @@
             <div class="d-flex gap-2 flex-wrap no-print">
                 {% if case_id %}<a href="{{ url_for('expert_system.cases_detail', case_id=case_id) }}" class="btn btn-soft btn-sm"><i class="bi bi-file-earmark-text me-1"></i>{{ _('មើលរបាយការណ៍ដែលបានរក្សាទុក') }}</a>{% endif %}
                 <a href="{{ url_for('expert_system.diagnose') }}" class="btn btn-soft btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ _('ធ្វើរោគវិនិច្ឆ័យថ្មី') }}</a>
+                {% include "expert_system/_contact_doctor_modal.html" %}
             </div>
         </div>
 
@@ -225,7 +226,7 @@
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+window.onReady(function () {
     const input = document.getElementById('symptomSearch');
     const boxes = Array.from(document.querySelectorAll('input[name="symptoms"]'));
     const items = Array.from(document.querySelectorAll('.symptom-item'));

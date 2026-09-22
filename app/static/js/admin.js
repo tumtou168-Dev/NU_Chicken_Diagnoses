@@ -1,6 +1,6 @@
 // Client-side row filter for admin tables.
 // Usage: <input data-table-filter="#tableId"> filters the tbody rows of that table.
-document.addEventListener("DOMContentLoaded", () => {
+function initAdminTableFilter() {
   document.querySelectorAll("[data-table-filter]").forEach((input) => {
     const table = document.querySelector(input.dataset.tableFilter);
     if (!table) return;
@@ -19,4 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (empty) empty.hidden = visible !== 0;
     });
   });
-});
+}
+
+window.AdminTableFilter = { init: initAdminTableFilter };
+window.onReady(initAdminTableFilter);

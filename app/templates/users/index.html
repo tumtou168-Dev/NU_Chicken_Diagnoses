@@ -18,9 +18,9 @@
         <h5 class="admin-card-title">{{ bi('អ្នកប្រើប្រាស់ដែលបានចុះឈ្មោះ') }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#usersTable', _('ស្វែងរកអ្នកប្រើប្រាស់...')) }}
-            <a href="{{ url_for('tbl_users.create') }}" class="btn btn-primary btn-sm">
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">
                 <i class="bi bi-plus-lg me-1"></i>{{ bi('អ្នកប្រើប្រាស់ថ្មី') }}
-            </a>
+            </button>
         </div>
     </div>
     <div class="table-responsive">
@@ -69,4 +69,20 @@
         </table>
     </div>
 </div>
+
+{% include "users/_create_modal.html" %}
+{% endblock %}
+
+{% block scripts %}
+{% if show_create_modal or request.args.get('open_create') %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const modalEl = document.getElementById("createUserModal");
+    if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+});
+</script>
+{% endif %}
 {% endblock %}

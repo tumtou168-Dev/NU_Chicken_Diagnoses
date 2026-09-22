@@ -16,5 +16,18 @@ class Config:
     # Change it here, or set SHOW_BOTH_LANGUAGES=1 in the environment. Restart the app after changing it.
     SHOW_BOTH_LANGUAGES = os.environ.get("SHOW_BOTH_LANGUAGES", "0") == "1"
 
+    # Google OAuth 2.0 Credentials
+    GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+
+    # SMTP Mail Configuration (Password Reset)
+    MAIL_SERVER = os.environ.get("MAIL_SERVER", "")
+    MAIL_PORT = int(os.environ.get("MAIL_PORT", "587"))
+    MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "1") == "1"
+    MAIL_USE_SSL = os.environ.get("MAIL_USE_SSL", "0") == "1"
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "")
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
+    MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "")
+
     # Reject oversized request bodies early (profile pictures are capped at 2 MB separately).
     MAX_CONTENT_LENGTH = 4 * 1024 * 1024

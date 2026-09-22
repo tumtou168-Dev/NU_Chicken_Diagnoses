@@ -1,7 +1,7 @@
 # app/routes/user_routes.py
 from datetime import datetime
 
-from flask import Blueprint, render_template, redirect, url_for, flash, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, abort, request
 from flask_login import login_required, current_user
 from app.i18n import gettext as _
 from app.forms.user_forms import(
@@ -24,7 +24,8 @@ def index():
         abort(403)
         
     users = UserService.get_user_all()
-    return render_template("users/index.html", users=users)
+    form = UserCreateForm()
+    return render_template("users/index.html", users=users, form=form)
 
 @user_bp.route("/profile")
 @login_required
@@ -68,22 +69,26 @@ def create():
         abort(403)
 
     form = UserCreateForm()
-    if form.validate_on_submit():
-        data = {
-            "username": form.username.data,
-            "email": form.email.data,
-            "full_name": form.full_name.data,
-            "is_active": form.is_active.data,
-        }
-        password = form.password.data
-        role_id = form.role_id.data or None
+    if request.method == "POST":
+        if form.validate_on_submit():
+            data = {
+                "username": form.username.data,
+                "email": form.email.data,
+                "full_name": form.full_name.data,
+                "is_active": form.is_active.data,
+            }
+            password = form.password.data
+            role_id = form.role_id.data or None
+            
+            user = UserService.create_user(data, password, role_id)
+            AuditService.log("CREATE", "User", user.id, f"Created user: {user.username}")
+            flash(_("បានបង្កើតអ្នកប្រើប្រាស់ '%(username)s' ដោយជោគជ័យ។", username=user.username), "success")
+            return redirect(url_for("tbl_users.index"))
         
-        user = UserService.create_user(data, password, role_id)
-        AuditService.log("CREATE", "User", user.id, f"Created user: {user.username}")
-        flash(_("បានបង្កើតអ្នកប្រើប្រាស់ '%(username)s' ដោយជោគជ័យ។", username=user.username), "success")
-        return redirect(url_for("tbl_users.index"))
+        users = UserService.get_user_all()
+        return render_template("users/index.html", users=users, form=form, show_create_modal=True)
     
-    return render_template("users/create.html", form=form)
+    return redirect(url_for("tbl_users.index", open_create=1))
 
 @user_bp.route("/<int:user_id>/edit", methods=["GET", "POST"])
 @login_required

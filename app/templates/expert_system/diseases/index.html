@@ -24,7 +24,7 @@
     </div>
     <div class="table-responsive">
         <table class="table table-hover admin-table" id="diseasesTable">
-            <thead><tr><th>{{ bi('ឈ្មោះ') }}</th><th>{{ bi('ប្រភេទ##one') }}</th><th>{{ bi('ការពិពណ៌នា') }}</th><th class="text-end">{{ bi('សកម្មភាព') }}</th></tr></thead>
+            <thead><tr><th>{{ bi('ឈ្មោះ') }}</th><th>{{ bi('ប្រភេទ##one') }}</th><th>{{ bi('វេជ្ជបណ្ឌិតផ្ទៀងផ្ទាត់') }}</th><th>{{ bi('ការពិពណ៌នា') }}</th><th class="text-end">{{ bi('សកម្មភាព') }}</th></tr></thead>
             <tbody>
                 {% for disease in diseases %}
                 <tr data-row>
@@ -33,32 +33,87 @@
                         {% if disease.category %}<span class="badge-soft badge-soft-primary">{{ disease.category.inline("name") }}</span>
                         {% else %}<span class="text-muted small">{{ _('គ្មានប្រភេទ') }}</span>{% endif %}
                     </td>
+                    <td>
+                        {% if disease.doctor and disease.doctor.has_role('Doctor') %}
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-inline-flex align-items-center gap-1 px-2 py-1" style="font-size: 0.78rem;">
+                            <i class="bi bi-patch-check-fill text-primary"></i>
+                            <span>Dr. {{ disease.doctor.full_name }}</span>
+                        </span>
+                        {% elif disease.doctor %}
+                        <span class="text-muted small d-inline-flex align-items-center gap-1">
+                            <i class="bi bi-person"></i> {{ disease.doctor.full_name }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
                     <td class="text-muted"><div class="text-truncate text-truncate-cell" title="{{ disease.loc('description') }}">{{ disease.pair("description") or "—" }}</div></td>
                     <td class="text-end text-nowrap">
-                        <a href="{{ url_for('expert_system.diseases_edit', disease_id=disease.id) }}" class="icon-btn" title="{{ _('កែប្រែ') }}"><i class="bi bi-pencil"></i></a>
-                        <a href="{{ url_for('expert_system.diseases_delete', disease_id=disease.id) }}" class="icon-btn danger" title="{{ _('លុប') }}"><i class="bi bi-trash"></i></a>
+                        <button type="button" class="icon-btn" data-bs-toggle="modal" data-bs-target="#editDiseaseModal_{{ disease.id }}" title="{{ _('កែប្រែ') }}"><i class="bi bi-pencil"></i></button>
+                        <button type="button" class="icon-btn danger" data-bs-toggle="modal" data-bs-target="#deleteDiseaseModal" data-delete-url="{{ url_for('expert_system.diseases_delete', disease_id=disease.id) }}" data-delete-name="{{ disease.pair('name') }}" title="{{ _('លុប') }}"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
                 {% endfor %}
-                <tr data-empty {% if diseases %}hidden{% endif %}><td colspan="4">{{ empty_state('virus', _('មិនទាន់មានជំងឺទេ។')) }}</td></tr>
+                <tr data-empty {% if diseases %}hidden{% endif %}><td colspan="5">{{ empty_state('virus', _('មិនទាន់មានជំងឺទេ។')) }}</td></tr>
             </tbody>
         </table>
     </div>
 </div>
 
 {% include "expert_system/diseases/_create_modal.html" %}
+{% for disease in diseases %}
+    {% include "expert_system/diseases/_edit_modal.html" %}
+{% endfor %}
+
+<!-- Delete Pop-up Alert Modal -->
+<div class="modal fade" id="deleteDiseaseModal" tabindex="-1" aria-labelledby="deleteDiseaseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+        <div class="modal-content text-center p-4 border-0 shadow">
+            <div class="modal-body p-0">
+                <div class="confirm-icon mb-3">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <h5 class="modal-title fw-bold mb-2" id="deleteDiseaseModalLabel">{{ _('បញ្ជាក់ការលុប') }}</h5>
+                <p class="text-muted mb-4" id="deleteDiseaseModalMsg">{{ _('តើអ្នកប្រាកដថាចង់លុបជំងឺនេះទេ?') }}</p>
+                <form method="post" id="deleteDiseaseModalForm" action="">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-soft px-4" data-bs-dismiss="modal">{{ _('បោះបង់') }}</button>
+                        <button type="submit" class="btn btn-danger-solid px-4">{{ _('លុប') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
-{% if show_create_modal or request.args.get('open_create') %}
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+    // Delete Alert Modal setup
+    const deleteModal = document.getElementById("deleteDiseaseModal");
+    if (deleteModal) {
+        deleteModal.addEventListener("show.bs.modal", (event) => {
+            const btn = event.relatedTarget;
+            if (!btn) return;
+            const form = deleteModal.querySelector("#deleteDiseaseModalForm");
+            const msg = deleteModal.querySelector("#deleteDiseaseModalMsg");
+            if (form) form.action = btn.getAttribute("data-delete-url") || "";
+            const name = btn.getAttribute("data-delete-name") || "";
+            if (msg) {
+                msg.innerHTML = `{{ _('តើអ្នកប្រាកដថាចង់លុប') }} <strong>${name}</strong> {{ _('ទេ?') }}<br><span class="small text-danger">{{ _('សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។') }}</span>`;
+            }
+        });
+    }
+
+    {% if show_create_modal or request.args.get('open_create') %}
     const modalEl = document.getElementById("createDiseaseModal");
     if (modalEl) {
         const modal = new bootstrap.Modal(modalEl);
         modal.show();
     }
+    {% endif %}
 });
 </script>
-{% endif %}
 {% endblock %}

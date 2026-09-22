@@ -308,7 +308,7 @@ def symptoms_delete(symptom_id: int):
 def diseases_index():
     diseases = DiseaseService.get_all()
     form = DiseaseForm()
-    return render_template("expert_system/diseases/index.html", diseases=diseases, form=form)
+    return render_template("expert_system/diseases/index.html", diseases=diseases, form=form, categories=CategoryService.get_all())
 
 
 @expert_system_bp.route("/diseases/create", methods=["GET", "POST"])
@@ -328,7 +328,8 @@ def diseases_create():
                 "treatment": form.treatment.data,
                 "treatment_km": form.treatment_km.data,
                 "category_id": form.category_id.data,
-            }
+            },
+            doctor_id=current_user.id if current_user.is_authenticated else None,
         )
         AuditService.log("CREATE", "Disease", disease.id, f"Created disease: {disease.name}")
         flash(_("បានបង្កើតជំងឺ '%(name)s' ដោយជោគជ័យ។", name=disease.name), "success")
@@ -351,18 +352,18 @@ def diseases_edit(disease_id: int):
         abort(404)
     form = DiseaseForm(obj=disease)
     if form.validate_on_submit():
-        DiseaseService.update(
-            disease,
-            {
-                "name": form.name.data,
-                "name_km": form.name_km.data,
-                "description": form.description.data,
-                "description_km": form.description_km.data,
-                "treatment": form.treatment.data,
-                "treatment_km": form.treatment_km.data,
-                "category_id": form.category_id.data,
-            },
-        )
+        update_data = {
+            "name": form.name.data,
+            "name_km": form.name_km.data,
+            "description": form.description.data,
+            "description_km": form.description_km.data,
+            "treatment": form.treatment.data,
+            "treatment_km": form.treatment_km.data,
+            "category_id": form.category_id.data,
+        }
+        if not disease.doctor_id and current_user.is_authenticated and current_user.has_role("Doctor"):
+            update_data["doctor_id"] = current_user.id
+        DiseaseService.update(disease, update_data)
         AuditService.log("UPDATE", "Disease", disease.id, f"Updated disease: {disease.name}")
         flash(_("បានកែប្រែជំងឺដោយជោគជ័យ។"), "success")
         return redirect(url_for("expert_system.diseases_index"))
@@ -398,7 +399,7 @@ def diseases_delete(disease_id: int):
 def rules_index():
     rules = RuleService.get_all()
     form = RuleForm()
-    return render_template("expert_system/rules/index.html", rules=rules, form=form)
+    return render_template("expert_system/rules/index.html", rules=rules, form=form, diseases=DiseaseService.get_all(), symptoms=SymptomService.get_all())
 
 
 @expert_system_bp.route("/rules/create", methods=["GET", "POST"])

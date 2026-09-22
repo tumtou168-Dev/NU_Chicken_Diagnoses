@@ -126,6 +126,7 @@ def create_app(config_class: type[Config] = Config):
 
         db.create_all()
         _ensure_user_avatar_column()
+        _ensure_disease_doctor_column()
         _ensure_khmer_columns()
         _ensure_page_feature_columns()
         
@@ -150,6 +151,14 @@ def _ensure_user_avatar_column() -> None:
     columns = {c["name"] for c in inspect(db.engine).get_columns("tbl_users")}
     if "avatar" not in columns:
         db.session.execute(text("ALTER TABLE tbl_users ADD COLUMN avatar VARCHAR(255)"))
+        db.session.commit()
+
+
+def _ensure_disease_doctor_column() -> None:
+    """create_all() never alters existing tables, so add tbl_diseases.doctor_id if it is missing."""
+    columns = {c["name"] for c in inspect(db.engine).get_columns("tbl_diseases")}
+    if "doctor_id" not in columns:
+        db.session.execute(text("ALTER TABLE tbl_diseases ADD COLUMN doctor_id INTEGER REFERENCES tbl_users(id)"))
         db.session.commit()
 
 

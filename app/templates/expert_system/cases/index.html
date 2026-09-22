@@ -44,7 +44,15 @@
                     <td>
                         <div class="d-flex align-items-center gap-2">
                             {{ avatar(case.user.username if case.user else '?', 'sm', avatar_url(case.user) if case.user else None) }}
-                            <span>{{ case.user.username if case.user else _('មិនស្គាល់') }}</span>
+                            <div>
+                                <div>{{ case.user.full_name or case.user.username if case.user else _('មិនស្គាល់') }}</div>
+                                {% if case.user and case.user.has_role('Doctor') %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-inline-flex align-items-center gap-1 py-0 px-1" style="font-size: 0.72rem;">
+                                    <i class="bi bi-patch-check-fill text-primary"></i>
+                                    <span>Dr. {{ case.user.full_name }}</span>
+                                </span>
+                                {% endif %}
+                            </div>
                         </div>
                     </td>
                     {% endif %}

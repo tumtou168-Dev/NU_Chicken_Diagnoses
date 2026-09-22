@@ -8,3 +8,4 @@ Flask-Login==0.6.3
 psycopg2-binary
 gunicorn
 requests>=2.31.0
+edge-tts>=6.1.0

@@ -122,15 +122,35 @@
 
         <article class="dx-top admin-card tone-{{ tone }}">
             <div class="dx-top-main">
-                <div class="dx-best"><i class="bi bi-award-fill"></i>{{ _('ការផ្គូផ្គងល្អបំផុត') }}</div>
-                <h3 class="dx-name">{{ top.disease.pair("name") }}</h3>
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                    <div class="dx-best"><i class="bi bi-award-fill"></i>{{ _('ការផ្គូផ្គងល្អបំផុត') }}</div>
+
+                    <!-- AI Reading Voice Widget (Female Khmer & Female English) -->
+                    <div class="dx-voice-widget d-inline-flex align-items-center gap-2 p-1 px-2 rounded-pill shadow-sm" style="background-color: var(--surface-raised, #ffffff); border: 1px solid var(--border-color, #e2e8f0);">
+                        <div class="btn-group btn-group-sm" role="group" id="voiceLangGroup">
+                            <button type="button" class="btn btn-sm btn-outline-primary voice-toggle-btn active" data-lang="km" style="font-size: 0.78rem; padding: 2px 10px; border-radius: 999px 0 0 999px;" title="{{ _('សំឡេងស្រីជាភាសាខ្មែរ (Sreymom)') }}">
+                                🇰🇭 ស្រី (Khmer)
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary voice-toggle-btn" data-lang="en" style="font-size: 0.78rem; padding: 2px 10px; border-radius: 0 999px 999px 0;" title="{{ _('Female English Voice (Aria)') }}">
+                                🇬🇧 Female (EN)
+                            </button>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-1" id="aiVoiceBtn" style="font-size: 0.82rem;">
+                            <i class="bi bi-volume-up-fill" id="aiVoiceIcon"></i>
+                            <span id="aiVoiceText">{{ _('ស្តាប់លទ្ធផល') }}</span>
+                            <span class="spinner-border spinner-border-sm d-none" id="aiVoiceSpinner" role="status" aria-hidden="true" style="width: 0.8rem; height: 0.8rem;"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <h3 class="dx-name" id="dxDiseaseName" data-name-km="{{ top.disease.name_km or top.disease.name }}" data-name-en="{{ top.disease.name }}">{{ top.disease.pair("name") }}</h3>
                 <span class="badge-soft badge-soft-neutral">{{ top.disease.category.inline("name") }}</span>
-                <p class="dx-desc">{{ top.disease.pair("description") }}</p>
+                <p class="dx-desc" id="dxDiseaseDesc" data-desc-km="{{ top.disease.description_km or top.disease.description }}" data-desc-en="{{ top.disease.description }}">{{ top.disease.pair("description") }}</p>
 
                 <div class="dx-panels">
                     <div class="dx-panel dx-panel-treat">
                         <div class="info-label"><i class="bi bi-bandaid me-1"></i>{{ tb('diagnose.result.treatment') }}</div>
-                        <p class="mb-0">{{ top.disease.pair("treatment") }}</p>
+                        <p class="mb-0" id="dxDiseaseTreatment" data-treat-km="{{ top.disease.treatment_km or top.disease.treatment }}" data-treat-en="{{ top.disease.treatment }}">{{ top.disease.pair("treatment") }}</p>
                     </div>
                     <div class="dx-panel">
                         <div class="info-label"><i class="bi bi-clipboard2-data me-1"></i>{{ _('ភស្តុតាងរោគសញ្ញា') }}</div>
@@ -269,6 +289,100 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const results = document.getElementById('results');
     if (results) results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // AI Voice Narration Handler
+    const aiVoiceBtn = document.getElementById('aiVoiceBtn');
+    const aiVoiceIcon = document.getElementById('aiVoiceIcon');
+    const aiVoiceText = document.getElementById('aiVoiceText');
+    const aiVoiceSpinner = document.getElementById('aiVoiceSpinner');
+    const voiceToggleBtns = Array.from(document.querySelectorAll('.voice-toggle-btn'));
+
+    if (aiVoiceBtn) {
+        let activeAudio = null;
+        let isPlaying = false;
+        let currentLang = 'km'; // default Female Khmer (km-KH-SreymomNeural)
+
+        voiceToggleBtns.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                voiceToggleBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentLang = this.dataset.lang;
+                if (isPlaying) {
+                    stopAudio();
+                } else {
+                    aiVoiceText.textContent = currentLang === 'en' ? 'Read Aloud' : "{{ _('ស្តាប់លទ្ធផល') }}";
+                }
+            });
+        });
+
+        function stopAudio() {
+            if (activeAudio) {
+                activeAudio.pause();
+                activeAudio.currentTime = 0;
+            }
+            isPlaying = false;
+            aiVoiceSpinner.classList.add('d-none');
+            aiVoiceIcon.className = 'bi bi-volume-up-fill';
+            aiVoiceIcon.classList.remove('d-none');
+            aiVoiceText.textContent = currentLang === 'en' ? 'Read Aloud' : "{{ _('ស្តាប់លទ្ធផល') }}";
+            aiVoiceBtn.classList.remove('btn-danger');
+            aiVoiceBtn.classList.add('btn-primary');
+        }
+
+        aiVoiceBtn.addEventListener('click', function () {
+            if (isPlaying) {
+                stopAudio();
+                return;
+            }
+
+            const nameEl = document.getElementById('dxDiseaseName');
+            const descEl = document.getElementById('dxDiseaseDesc');
+            const treatEl = document.getElementById('dxDiseaseTreatment');
+            const confVal = document.querySelector('.dx-donut-value')?.innerText.trim() || '';
+
+            const name = (currentLang === 'en' ? nameEl?.dataset.nameEn : nameEl?.dataset.nameKm) || nameEl?.innerText || '';
+            const desc = (currentLang === 'en' ? descEl?.dataset.descEn : descEl?.dataset.descKm) || descEl?.innerText || '';
+            const treat = (currentLang === 'en' ? treatEl?.dataset.treatEn : treatEl?.dataset.treatKm) || treatEl?.innerText || '';
+
+            let speechText = '';
+            if (currentLang === 'en') {
+                speechText = `Diagnosis result: ${name}. Confidence level: ${confVal}. Description: ${desc}. Recommended treatment: ${treat}.`;
+            } else {
+                speechText = `លទ្ធផលនៃការវិភាគគឺជំងឺ ${name}។ កម្រិតទំនុកចិត្ត ${confVal}។ ការពិពណ៌នា៖ ${desc}។ ការព្យាបាលដែលបានណែនាំ៖ ${treat}។`;
+            }
+
+            // Spinner state
+            aiVoiceIcon.classList.add('d-none');
+            aiVoiceSpinner.classList.remove('d-none');
+            aiVoiceText.textContent = currentLang === 'en' ? 'Generating Voice...' : "{{ _('កំពុងបង្កើតសំឡេង...') }}";
+
+            const url = `/expert-system/narrate?lang=${currentLang}&text=${encodeURIComponent(speechText)}`;
+
+            if (!activeAudio) {
+                activeAudio = new Audio();
+                activeAudio.addEventListener('ended', stopAudio);
+                activeAudio.addEventListener('error', function (err) {
+                    console.error('Audio playback error', err);
+                    alert("{{ _('បរាជ័យក្នុងការចាក់សំឡេង។ សូមព្យាយាមម្តងទៀត។') }}");
+                    stopAudio();
+                });
+            }
+
+            activeAudio.src = url;
+            activeAudio.play().then(function () {
+                isPlaying = true;
+                aiVoiceSpinner.classList.add('d-none');
+                aiVoiceIcon.className = 'bi bi-stop-circle-fill';
+                aiVoiceIcon.classList.remove('d-none');
+                aiVoiceText.textContent = currentLang === 'en' ? 'Stop' : "{{ _('បញ្ឈប់') }}";
+                aiVoiceBtn.classList.remove('btn-primary');
+                aiVoiceBtn.classList.add('btn-danger');
+            }).catch(function (err) {
+                console.error('Playback error:', err);
+                stopAudio();
+            });
+        });
+    }
 });
 </script>
 {% endblock %}

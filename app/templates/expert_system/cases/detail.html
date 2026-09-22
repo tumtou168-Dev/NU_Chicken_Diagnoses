@@ -7,16 +7,34 @@
 {% block content %}
 {% set tone = 'success' if case.confidence > 80 else ('warning' if case.confidence > 50 else 'danger') %}
 {% set bar = {'success': 'bg-success', 'warning': 'bg-warning', 'danger': 'bg-danger'}[tone] %}
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 no-print">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 no-print mb-3">
     <a href="{{ url_for('expert_system.cases_index') }}" class="back-link mb-0"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅប្រវត្តិ') }}</a>
-    <button type="button" class="btn btn-soft btn-sm" onclick="window.print()"><i class="bi bi-printer me-1"></i>{{ bi('បោះពុម្ពរបាយការណ៍') }}</button>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <!-- AI Reading Voice Widget (Female Khmer & Female English) -->
+        <div class="dx-voice-widget d-inline-flex align-items-center gap-2 p-1 px-2 rounded-pill shadow-sm" style="background-color: var(--surface-raised, #ffffff); border: 1px solid var(--border-color, #e2e8f0);">
+            <div class="btn-group btn-group-sm" role="group" id="voiceLangGroup">
+                <button type="button" class="btn btn-sm btn-outline-primary voice-toggle-btn active" data-lang="km" style="font-size: 0.78rem; padding: 2px 10px; border-radius: 999px 0 0 999px;" title="{{ _('សំឡេងស្រីជាភាសាខ្មែរ (Sreymom)') }}">
+                    🇰🇭 ស្រី (Khmer)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary voice-toggle-btn" data-lang="en" style="font-size: 0.78rem; padding: 2px 10px; border-radius: 0 999px 999px 0;" title="{{ _('Female English Voice (Aria)') }}">
+                    🇬🇧 Female (EN)
+                </button>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-1" id="aiVoiceBtn" style="font-size: 0.82rem;">
+                <i class="bi bi-volume-up-fill" id="aiVoiceIcon"></i>
+                <span id="aiVoiceText">{{ _('ស្តាប់របាយការណ៍') }}</span>
+                <span class="spinner-border spinner-border-sm d-none" id="aiVoiceSpinner" role="status" aria-hidden="true" style="width: 0.8rem; height: 0.8rem;"></span>
+            </button>
+        </div>
+        <button type="button" class="btn btn-soft btn-sm" onclick="window.print()"><i class="bi bi-printer me-1"></i>{{ bi('បោះពុម្ពរបាយការណ៍') }}</button>
+    </div>
 </div>
 
 <div class="admin-card">
     <div class="admin-card-header">
         <div>
             <div class="info-label">{{ _('ការធ្វើរោគវិនិច្ឆ័យសម្រាប់') }}</div>
-            <h3 class="h4 mb-1">{{ case.disease.pair("name") }}</h3>
+            <h3 class="h4 mb-1" id="caseDiseaseName" data-name-km="{{ case.disease.name_km or case.disease.name }}" data-name-en="{{ case.disease.name }}">{{ case.disease.pair("name") }}</h3>
             <span class="badge-soft badge-soft-primary">{{ case.disease.category.inline("name") }}</span>
         </div>
         <div class="text-end">
@@ -29,7 +47,7 @@
     <div class="px-4 py-3 border-bottom" style="background: var(--surface-muted);">
         <div class="d-flex justify-content-between align-items-end mb-2">
             <span class="info-label mb-0">{{ _('កម្រិតទំនុកចិត្ត') }}</span>
-            <span class="confidence-value text-{{ tone }}">{{ case.confidence }}%</span>
+            <span class="confidence-value text-{{ tone }}" id="caseConfidence">{{ case.confidence }}%</span>
         </div>
         <div class="progress" style="height: 8px;">
             <div class="progress-bar {{ bar }}" role="progressbar" style="width: {{ case.confidence }}%" aria-valuenow="{{ case.confidence }}" aria-valuemin="0" aria-valuemax="100"></div>
@@ -40,12 +58,12 @@
         <div class="col-md-7 p-4 border-end">
             <div class="mb-4">
                 <div class="info-label"><i class="bi bi-info-circle me-1"></i>{{ _('ការពិពណ៌នា') }}</div>
-                <p class="mb-0">{{ case.disease.pair("description") }}</p>
+                <p class="mb-0" id="caseDiseaseDesc" data-desc-km="{{ case.disease.description_km or case.disease.description }}" data-desc-en="{{ case.disease.description }}">{{ case.disease.pair("description") }}</p>
             </div>
             <div>
                 <div class="info-label"><i class="bi bi-bandaid me-1"></i>{{ _('ការព្យាបាលដែលបានណែនាំ') }}</div>
                 <div class="p-3 rounded-3 treatment-box">
-                    <p class="mb-0">{{ case.disease.pair("treatment") }}</p>
+                    <p class="mb-0" id="caseDiseaseTreatment" data-treat-km="{{ case.disease.treatment_km or case.disease.treatment }}" data-treat-en="{{ case.disease.treatment }}">{{ case.disease.pair("treatment") }}</p>
                 </div>
             </div>
         </div>
@@ -55,7 +73,7 @@
                 {% for symptom in case.symptoms %}
                 <div class="d-flex align-items-center gap-2 bg-surface px-3 py-2 rounded-3 border">
                     <i class="bi bi-check-circle-fill text-primary"></i>
-                    <span class="fw-medium">{{ symptom.pair("name") }}</span>
+                    <span class="fw-medium symptom-tag" data-name-km="{{ symptom.name_km or symptom.name }}" data-name-en="{{ symptom.name }}">{{ symptom.pair("name") }}</span>
                 </div>
                 {% endfor %}
             </div>
@@ -66,4 +84,111 @@
         <small class="text-muted">{{ _('របាយការណ៍បង្កើតដោយប្រព័ន្ធជំនាញ IDNS • លេខសម្គាល់ករណី៖ #%(id)s', id=case.id) }}</small>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const aiVoiceBtn = document.getElementById('aiVoiceBtn');
+    const aiVoiceIcon = document.getElementById('aiVoiceIcon');
+    const aiVoiceText = document.getElementById('aiVoiceText');
+    const aiVoiceSpinner = document.getElementById('aiVoiceSpinner');
+    const voiceToggleBtns = Array.from(document.querySelectorAll('.voice-toggle-btn'));
+
+    if (aiVoiceBtn) {
+        let activeAudio = null;
+        let isPlaying = false;
+        let currentLang = 'km'; // default Female Khmer (km-KH-SreymomNeural)
+
+        voiceToggleBtns.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                voiceToggleBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentLang = this.dataset.lang;
+                if (isPlaying) {
+                    stopAudio();
+                } else {
+                    aiVoiceText.textContent = currentLang === 'en' ? 'Read Report' : "{{ _('ស្តាប់របាយការណ៍') }}";
+                }
+            });
+        });
+
+        function stopAudio() {
+            if (activeAudio) {
+                activeAudio.pause();
+                activeAudio.currentTime = 0;
+            }
+            isPlaying = false;
+            aiVoiceSpinner.classList.add('d-none');
+            aiVoiceIcon.className = 'bi bi-volume-up-fill';
+            aiVoiceIcon.classList.remove('d-none');
+            aiVoiceText.textContent = currentLang === 'en' ? 'Read Report' : "{{ _('ស្តាប់របាយការណ៍') }}";
+            aiVoiceBtn.classList.remove('btn-danger');
+            aiVoiceBtn.classList.add('btn-primary');
+        }
+
+        aiVoiceBtn.addEventListener('click', function () {
+            if (isPlaying) {
+                stopAudio();
+                return;
+            }
+
+            const nameEl = document.getElementById('caseDiseaseName');
+            const descEl = document.getElementById('caseDiseaseDesc');
+            const treatEl = document.getElementById('caseDiseaseTreatment');
+            const confEl = document.getElementById('caseConfidence');
+            const symptomTags = Array.from(document.querySelectorAll('.symptom-tag'));
+
+            const name = (currentLang === 'en' ? nameEl?.dataset.nameEn : nameEl?.dataset.nameKm) || nameEl?.innerText || '';
+            const desc = (currentLang === 'en' ? descEl?.dataset.descEn : descEl?.dataset.descKm) || descEl?.innerText || '';
+            const treat = (currentLang === 'en' ? treatEl?.dataset.treatEn : treatEl?.dataset.treatKm) || treatEl?.innerText || '';
+            const confVal = confEl ? confEl.innerText.trim() : '';
+
+            const symptoms = symptomTags.map(tag => {
+                return (currentLang === 'en' ? tag.dataset.nameEn : tag.dataset.nameKm) || tag.innerText.trim();
+            }).filter(Boolean);
+
+            let speechText = '';
+            if (currentLang === 'en') {
+                const symText = symptoms.length ? symptoms.join(', ') : 'none recorded';
+                speechText = `Case History Diagnostic Report. Diagnosed disease: ${name}. Confidence level: ${confVal}. Observed symptoms: ${symText}. Disease description: ${desc}. Recommended treatment: ${treat}.`;
+            } else {
+                const symText = symptoms.length ? symptoms.join(' និង ') : 'គ្មាន';
+                speechText = `របាយការណ៍ប្រវត្តិនៃការធ្វើរោគវិនិច្ឆ័យករណី #{{ case.id }}។ រោគវិនិច្ឆ័យគឺជំងឺ ${name}។ កម្រិតទំនុកចិត្ត ${confVal}។ រោគសញ្ញាដែលបានសង្កេតរួមមាន៖ ${symText}។ ការពិពណ៌នាអំពីជំងឺ៖ ${desc}។ ការព្យាបាលដែលបានណែនាំ៖ ${treat}។`;
+            }
+
+            // Spinner state
+            aiVoiceIcon.classList.add('d-none');
+            aiVoiceSpinner.classList.remove('d-none');
+            aiVoiceText.textContent = currentLang === 'en' ? 'Generating Voice...' : "{{ _('កំពុងបង្កើតសំឡេង...') }}";
+
+            const url = `/expert-system/narrate?lang=${currentLang}&text=${encodeURIComponent(speechText)}`;
+
+            if (!activeAudio) {
+                activeAudio = new Audio();
+                activeAudio.addEventListener('ended', stopAudio);
+                activeAudio.addEventListener('error', function (err) {
+                    console.error('Audio playback error', err);
+                    alert("{{ _('បរាជ័យក្នុងការចាក់សំឡេង។ សូមព្យាយាមម្តងទៀត។') }}");
+                    stopAudio();
+                });
+            }
+
+            activeAudio.src = url;
+            activeAudio.play().then(function () {
+                isPlaying = true;
+                aiVoiceSpinner.classList.add('d-none');
+                aiVoiceIcon.className = 'bi bi-stop-circle-fill';
+                aiVoiceIcon.classList.remove('d-none');
+                aiVoiceText.textContent = currentLang === 'en' ? 'Stop' : "{{ _('បញ្ឈប់') }}";
+                aiVoiceBtn.classList.remove('btn-primary');
+                aiVoiceBtn.classList.add('btn-danger');
+            }).catch(function (err) {
+                console.error('Playback error:', err);
+                stopAudio();
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

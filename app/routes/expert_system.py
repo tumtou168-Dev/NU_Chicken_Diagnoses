@@ -1,5 +1,5 @@
 # app/routes/expert_system.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, Response
 from flask_login import login_required, current_user
 from app.i18n import gettext as _
 from utils.decorators import require_permission
@@ -62,6 +62,52 @@ def diagnose():
         selected_ids=set(selected_ids),
         case_id=case_id,
     )
+
+
+@expert_system_bp.route("/narrate", methods=["GET", "POST"])
+@login_required
+@require_permission("run_diagnosis")
+def narrate():
+    """Generates and streams AI Voice audio using Edge-TTS neural voices.
+    - Female Khmer (km-KH-SreymomNeural)
+    - Female English (en-US-AriaNeural)
+    """
+    from app.services.voice_service import VoiceService
+
+    if request.method == "POST":
+        data = request.get_json(silent=True) or request.form
+        text = (data.get("text") or "").strip()
+        lang = data.get("lang") or "km"
+    else:
+        text = (request.args.get("text") or "").strip()
+        lang = request.args.get("lang") or "km"
+
+    if not text:
+        disease_name = request.values.get("name", "").strip()
+        confidence = request.values.get("confidence", "").strip()
+        description = request.values.get("desc", "").strip()
+        treatment = request.values.get("treatment", "").strip()
+
+        if lang == "en":
+            text = f"Diagnosis result: {disease_name}. Confidence level: {confidence} percent. {description}. Recommended treatment: {treatment}."
+        else:
+            text = f"លទ្ធផលនៃការវិភាគគឺជំងឺ {disease_name}។ កម្រិតទំនុកចិត្ត {confidence} ភាគរយ។ {description}។ ការព្យាបាលដែលបានណែនាំ៖ {treatment}។"
+
+    if not text:
+        abort(400, "Missing text for speech generation")
+
+    try:
+        audio_bytes = VoiceService.text_to_speech(text, lang=lang)
+        return Response(
+            audio_bytes,
+            mimetype="audio/mpeg",
+            headers={
+                "Content-Type": "audio/mpeg",
+                "Cache-Control": "public, max-age=86400",
+            },
+        )
+    except Exception as e:
+        abort(500, f"Speech synthesis failed: {e}")
 
 
 @expert_system_bp.route("/cases")

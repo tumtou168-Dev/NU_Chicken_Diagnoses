@@ -1,0 +1,44 @@
+{% from "layouts/_admin_macros.html" import field, switch %}
+
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title mb-0" id="createUserModalLabel">{{ bi('បង្កើតអ្នកប្រើប្រាស់') }}</h5>
+                    <small class="text-muted">{{ bi('បន្ថែមគណនីថ្មី និងកំណត់តួនាទី។') }}</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('បិទ') }}"></button>
+            </div>
+            <form method="post" action="{{ url_for('tbl_users.create') }}" novalidate id="createUserForm">
+                <div class="modal-body">
+                    {% set pw_hint = _('យ៉ាងតិច ៨ តួអក្សរ រួមមានអក្សរធំ អក្សរតូច លេខ និងនិមិត្តសញ្ញាពិសេស។') %}
+                    {{ form.hidden_tag() }}
+
+                    <div class="form-section-title">{{ _('ព័ត៌មានគណនី') }}</div>
+                    <div class="row">
+                        <div class="col-md-6">{{ field(form.full_name, label=_('ឈ្មោះពេញ')) }}</div>
+                        <div class="col-md-6">{{ field(form.username, label=_('ឈ្មោះអ្នកប្រើប្រាស់')) }}</div>
+                    </div>
+                    {{ field(form.email, label=_('អាសយដ្ឋានអ៊ីមែល')) }}
+
+                    <div class="form-section-title">{{ _('ការចូលប្រើប្រាស់') }}</div>
+                    <div class="row">
+                        <div class="col-md-6">{{ field(form.role_id, kind="select", label=_('តួនាទី##one')) }}</div>
+                        <div class="col-md-6 d-flex align-items-center pt-md-3">{{ switch(form.is_active, label=_('គណនីសកម្ម')) }}</div>
+                    </div>
+
+                    <div class="form-section-title">{{ _('ពាក្យសម្ងាត់') }}</div>
+                    <div class="row">
+                        <div class="col-md-6">{{ field(form.password, hint=pw_hint, label=_('ពាក្យសម្ងាត់')) }}</div>
+                        <div class="col-md-6">{{ field(form.confirm_password, label=_('បញ្ជាក់ពាក្យសម្ងាត់')) }}</div>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-soft" data-bs-dismiss="modal">{{ _('បោះបង់') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('បង្កើតអ្នកប្រើប្រាស់') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,11 +1,16 @@
-# app/routes/auth_routes.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+import re
+import secrets
+import urllib.parse
+import requests
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
 from flask_login import login_user, logout_user, login_required, current_user
+from extensions import db
 from app.i18n import gettext as _
 from app.models.user import UserTable
 from app.models.role import RoleTable
 from app.services.user_service import UserService
 from app.services.audit_service import AuditService
+from app.services.email_service import EmailService, generate_reset_token, verify_reset_token
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -96,22 +101,219 @@ def register():
     return render_template("auth/register.html")
 
 
+@auth_bp.route("/google")
+def google_login():
+    client_id = current_app.config.get("GOOGLE_CLIENT_ID")
+    if not client_id:
+        flash(_("ការចូលតាម Google មិនទាន់ត្រូវបានកំណត់រចនាសម្ព័ន្ធទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រង។"), "warning")
+        return redirect(request.referrer or url_for("auth.login"))
+
+    state = secrets.token_urlsafe(32)
+    session["oauth_state"] = state
+
+    redirect_uri = url_for("auth.google_callback", _external=True)
+    params = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "state": state,
+        "access_type": "offline",
+        "prompt": "select_account",
+    }
+    auth_url = f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}"
+    return redirect(auth_url)
+
+
+@auth_bp.route("/google/callback")
+def google_callback():
+    client_id = current_app.config.get("GOOGLE_CLIENT_ID")
+    client_secret = current_app.config.get("GOOGLE_CLIENT_SECRET")
+
+    if not client_id or not client_secret:
+        flash(_("ការចូលតាម Google មិនទាន់ត្រូវបានកំណត់រចនាសម្ព័ន្ធទេ។"), "danger")
+        return redirect(url_for("auth.login"))
+
+    state = request.args.get("state")
+    saved_state = session.pop("oauth_state", None)
+    if not state or state != saved_state:
+        flash(_("សុពលភាពសុវត្ថិភាពបរាជ័យ (State mismatch)។ សូមព្យាយាមម្តងទៀត។"), "danger")
+        return redirect(url_for("auth.login"))
+
+    code = request.args.get("code")
+    if not code:
+        err = request.args.get("error", "Access denied")
+        flash(_("ការចូលតាម Google ត្រូវបានបោះបង់ ឬបរាជ័យ៖ %(error)s", error=err), "warning")
+        return redirect(url_for("auth.login"))
+
+    # Exchange code for tokens
+    redirect_uri = url_for("auth.google_callback", _external=True)
+    token_url = "https://oauth2.googleapis.com/token"
+    token_data = {
+        "code": code,
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "redirect_uri": redirect_uri,
+        "grant_type": "authorization_code",
+    }
+
+    try:
+        token_resp = requests.post(token_url, data=token_data, timeout=10)
+        token_json = token_resp.json()
+        if token_resp.status_code != 200 or "access_token" not in token_json:
+            flash(_("មិនអាចទាញយកព័ត៌មានផ្ទៀងផ្ទាត់ពី Google បានទេ។"), "danger")
+            return redirect(url_for("auth.login"))
+
+        access_token = token_json["access_token"]
+
+        # Fetch user profile info
+        userinfo_resp = requests.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10,
+        )
+        userinfo = userinfo_resp.json()
+        if userinfo_resp.status_code != 200 or "email" not in userinfo:
+            flash(_("មិនអាចទទួលព័ត៌មានគណនីពី Google បានទេ។"), "danger")
+            return redirect(url_for("auth.login"))
+
+    except Exception:
+        flash(_("មានបញ្ហាក្នុងការតភ្ជាប់ជាមួយសេវាកម្ម Google។"), "danger")
+        return redirect(url_for("auth.login"))
+
+    email = userinfo.get("email", "").strip().lower()
+    full_name = userinfo.get("name", "").strip() or email.split("@")[0]
+
+    user = UserTable.query.filter_by(email=email).first()
+
+    if user:
+        if not user.is_active:
+            flash(_("គណនីរបស់អ្នកអសកម្ម។ សូមទាក់ទងអ្នកគ្រប់គ្រង។"), "warning")
+            return redirect(url_for("auth.login"))
+
+        login_user(user)
+        AuditService.log("LOGIN", "User", user.id, f"Google login: {user.username}")
+        flash(_("បានចូលតាមរយៈ Google ដោយជោគជ័យ។"), "success")
+        return redirect(url_for("dashboard.index"))
+
+    # Register new user from Google account
+    default_role = RoleTable.query.filter_by(name="User").first()
+    default_role_id = default_role.id if default_role else None
+
+    # Generate clean unique username
+    base_user = re.sub(r"[^a-zA-Z0-9_]", "", (userinfo.get("given_name") or email.split("@")[0]).lower())
+    if not base_user or len(base_user) < 3:
+        base_user = re.sub(r"[^a-zA-Z0-9_]", "", email.split("@")[0].lower())
+    if not base_user or len(base_user) < 3:
+        base_user = "user"
+
+    candidate_username = base_user[:70]
+    count = 1
+    while UserTable.query.filter_by(username=candidate_username).first():
+        candidate_username = f"{base_user[:65]}_{count}"
+        count += 1
+
+    random_pw = secrets.token_urlsafe(24) + "A1!"
+
+    new_user = UserService.create_user(
+        data={
+            "username": candidate_username,
+            "email": email,
+            "full_name": full_name,
+            "is_active": True,
+        },
+        password=random_pw,
+        role_id=default_role_id,
+    )
+
+    login_user(new_user)
+    AuditService.log("REGISTER", "User", new_user.id, f"Google registration: {new_user.username}")
+    flash(_("បានចុះឈ្មោះ និងចូលតាមរយៈ Google ដោយជោគជ័យ។"), "success")
+    return redirect(url_for("dashboard.index"))
+
+
 @auth_bp.route("/logout")
 @login_required
 def logout():
     user_id = current_user.id
     logout_user()
-    # Note: current_user is anonymous after logout_user(), so we can't use it for logging user_id directly inside AuditService if we rely on current_user there.
-    # However, AuditService uses current_user. Since we just logged out, current_user is anonymous.
-    # We should log BEFORE logging out if we want to capture the user ID, or pass it explicitly.
-    # But AuditService.log uses current_user internally. Let's adjust AuditService or log before logout.
-    # Actually, let's log before logout to capture the user.
-    # Wait, I can't easily change AuditService to take user_id as optional override without changing its signature.
-    # Let's just log "LOGOUT" before calling logout_user().
-    
-    # Re-implementing log here manually or calling service before logout
-    # But wait, AuditService.log uses current_user.id.
     AuditService.log("LOGOUT", "User", user_id, "User logged out")
-
     flash(_("អ្នកបានចាកចេញរួចរាល់។"), "info")
     return redirect(url_for("auth.login"))
+
+
+@auth_bp.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard.index"))
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        if not email:
+            flash(_("សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលរបស់អ្នក។"), "danger")
+            return render_template("auth/forgot_password.html", email=email)
+
+        user = UserTable.query.filter_by(email=email).first()
+        if user and user.is_active:
+            token = generate_reset_token(user.email, current_app.config["SECRET_KEY"])
+            reset_url = url_for("auth.reset_password", token=token, _external=True)
+            EmailService.send_password_reset_email(user.email, reset_url, user.full_name)
+            AuditService.log("PASSWORD_RESET_REQUEST", "User", user.id, f"Password reset requested for {user.username}")
+
+        # Always show the same message to protect against email enumeration attacks
+        flash(_("ប្រសិនបើអ៊ីមែលនេះមានក្នុងប្រព័ន្ធ យើងបានផ្ញើតំណភ្ជាប់ដើម្បីកំណត់ពាក្យសម្ងាត់ឡើងវិញទៅកាន់អ៊ីមែលរបស់អ្នកហើយ។"), "info")
+        return redirect(url_for("auth.login"))
+
+    return render_template("auth/forgot_password.html")
+
+
+@auth_bp.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token: str):
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard.index"))
+
+    email = verify_reset_token(token, current_app.config["SECRET_KEY"], max_age=3600)
+    if not email:
+        flash(_("តំណភ្ជាប់កំណត់ពាក្យសម្ងាត់ឡើងវិញមិនត្រឹមត្រូវ ឬផុតកំណត់ហើយ។ សូមស្នើសុំម្តងទៀត។"), "danger")
+        return redirect(url_for("auth.forgot_password"))
+
+    user = UserTable.query.filter_by(email=email).first()
+    if not user:
+        flash(_("រកមិនឃើញគណនីរបស់អ្នកប្រើប្រាស់នេះទេ។"), "danger")
+        return redirect(url_for("auth.forgot_password"))
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        errors: list[str] = []
+        if not password:
+            errors.append(_("សូមបញ្ចូលពាក្យសម្ងាត់ថ្មី។"))
+        elif len(password) < 8:
+            errors.append(_("ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។"))
+        elif not re.search(r"[A-Z]", password):
+            errors.append(_("ពាក្យសម្ងាត់ត្រូវមានអក្សរធំ (A-Z) យ៉ាងតិចមួយ។"))
+        elif not re.search(r"[a-z]", password):
+            errors.append(_("ពាក្យសម្ងាត់ត្រូវមានអក្សរតូច (a-z) យ៉ាងតិចមួយ។"))
+        elif not re.search(r"[0-9]", password):
+            errors.append(_("ពាក្យសម្ងាត់ត្រូវមានលេខ (0-9) យ៉ាងតិចមួយ។"))
+        elif not re.search(r"[!@#$%^&*()<>?\"{}|<>_\-+=]", password):
+            errors.append(_("ពាក្យសម្ងាត់ត្រូវមាននិមិត្តសញ្ញាពិសេសយ៉ាងតិចមួយ (ឧ. ! @ # $)។"))
+
+        if password and password != confirm_password:
+            errors.append(_("ពាក្យសម្ងាត់មិនដូចគ្នាទេ។"))
+
+        if errors:
+            for msg in errors:
+                flash(msg, "danger")
+            return render_template("auth/reset_password.html", token=token, email=email)
+
+        user.set_password(password)
+        db.session.commit()
+        AuditService.log("PASSWORD_RESET", "User", user.id, f"Password reset successful for {user.username}")
+        flash(_("ពាក្យសម្ងាត់របស់អ្នកត្រូវបានកំណត់ឡើងវិញដោយជោគជ័យ។ សូមចូលប្រើប្រាស់។"), "success")
+        return redirect(url_for("auth.login"))
+
+    return render_template("auth/reset_password.html", token=token, email=email)
+
+

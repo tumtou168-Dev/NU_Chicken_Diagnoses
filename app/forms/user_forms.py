@@ -67,7 +67,7 @@ class UserCreateForm(FlaskForm):
         render_kw={"placeholder": lazy("ពាក្យសម្ងាត់រឹងមាំ")},
     )
     confirm_password = PasswordField(
-        "Confirm_password",
+        lazy("បញ្ជាក់ពាក្យសម្ងាត់"),
         validators=[
             val.required(),
             val.passwords_match(),

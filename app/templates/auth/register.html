@@ -10,71 +10,380 @@
 {% block footer %}{% endblock %}
 
 {% block content %}
+<style>
+/* Suppress native browser password reveal icon (Edge / IE / Chromium) */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+</style>
 {% with css='floating' %}{% include "layouts/_lang_switch.html" %}{% include "layouts/_theme_toggle.html" %}{% endwith %}
 <div class="auth-shell">
     {% include "auth/_aside.html" %}
     <div class="auth-main">
-    <div class="auth-card wide">
-        <div class="auth-brand">
-            <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="{{ _('និមិត្តសញ្ញា IDNS') }}">
-            <h1>{{ _('ចូលរួមជាមួយ IDNS') }}</h1>
-            <p>{{ _('បង្កើតគណនីរបស់អ្នកដើម្បីចាប់ផ្តើមធ្វើរោគវិនិច្ឆ័យ។') }}</p>
+        <div class="auth-card wide">
+            <div class="auth-brand">
+                <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="{{ _('និមិត្តសញ្ញា IDNS') }}">
+                <h1>{{ _('ចូលរួមជាមួយ IDNS') }}</h1>
+                <p>{{ _('បង្កើតគណនីរបស់អ្នកដើម្បីចាប់ផ្តើមធ្វើរោគវិនិច្ឆ័យ។') }}</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+            {% endfor %}
+            {% endwith %}
+
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="username" class="form-label">{{ _('ឈ្មោះអ្នកប្រើប្រាស់') }}</label>
+                        <input type="text" class="form-control" id="username" name="username"
+                            placeholder="{{ _('ឧ. sokha') }}" value="{{ username or '' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="full_name" class="form-label">{{ _('ឈ្មោះពេញ') }}</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name"
+                            placeholder="{{ _('ឧ. សុខា ចាន់') }}" value="{{ full_name or '' }}" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">{{ _('អាសយដ្ឋានអ៊ីមែល') }}</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com"
+                            value="{{ email or '' }}" required>
+                    </div>
+                </div>
+                <div class="row g-3 mb-2">
+                    <!-- Password Field -->
+                    <div class="col-md-6">
+                        <label for="password" class="form-label">{{ _('ពាក្យសម្ងាត់') }}</label>
+                        <div class="password-input-box position-relative" id="passwordBox">
+                            <input type="password" 
+                                   class="form-control pe-5" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="••••••••"
+                                   required 
+                                   autocomplete="new-password"
+                                   style="border-radius: 8px; transition: border-color 0.25s ease, box-shadow 0.25s ease;">
+                            
+                            <!-- Toggle Eye Button inside field -->
+                            <button type="button" 
+                                    class="btn-toggle-eye position-absolute end-0 top-50 translate-middle-y border-0 bg-transparent p-0 me-3" 
+                                    id="togglePassword" 
+                                    tabindex="-1"
+                                    aria-label="{{ _('បង្ហាញ/លាក់ពាក្យសម្ងាត់') }}"
+                                    style="color: #94a3b8; cursor: pointer; z-index: 5; font-size: 1.1rem; line-height: 1; transition: color 0.25s ease;">
+                                <i class="bi bi-eye-slash" id="togglePasswordIcon"></i>
+                            </button>
+
+                            <!-- Progress bar INSIDE the field at bottom edge -->
+                            <div class="inner-progress-track position-absolute bottom-0 start-0 w-100 overflow-hidden" 
+                                 style="height: 3.5px; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; pointer-events: none; z-index: 4;">
+                                <div id="passwordProgressBar" 
+                                     style="height: 100%; width: 0%; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; transition: width 0.3s ease, background-color 0.3s ease;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status text below password input like Codinglab style -->
+                        <div class="password-status-line small mt-1 d-flex align-items-center gap-1 fw-medium" id="passwordStatusLine" style="display: none !important; min-height: 20px;">
+                            <i class="bi bi-exclamation-circle-fill" id="passwordStatusIcon" style="font-size: 0.8rem;"></i>
+                            <span id="passwordStatusText"></span>
+                            <span class="ms-auto small fw-bold" id="strengthPercentage">0%</span>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password Field -->
+                    <div class="col-md-6">
+                        <label for="confirm_password" class="form-label">{{ _('បញ្ជាក់ពាក្យសម្ងាត់') }}</label>
+                        <div class="password-input-box position-relative" id="confirmPasswordBox">
+                            <input type="password" 
+                                   class="form-control pe-5" 
+                                   id="confirm_password" 
+                                   name="confirm_password" 
+                                   placeholder="••••••••" 
+                                   required 
+                                   autocomplete="new-password"
+                                   style="border-radius: 8px; transition: border-color 0.25s ease, box-shadow 0.25s ease;">
+                            
+                            <!-- Toggle Eye Button inside confirm field -->
+                            <button type="button" 
+                                    class="btn-toggle-eye position-absolute end-0 top-50 translate-middle-y border-0 bg-transparent p-0 me-3" 
+                                    id="toggleConfirmPassword" 
+                                    tabindex="-1"
+                                    aria-label="{{ _('បង្ហាញ/លាក់ពាក្យសម្ងាត់') }}"
+                                    style="color: #94a3b8; cursor: pointer; z-index: 5; font-size: 1.1rem; line-height: 1; transition: color 0.25s ease;">
+                                <i class="bi bi-eye-slash" id="toggleConfirmPasswordIcon"></i>
+                            </button>
+                        </div>
+
+                        <!-- Match status line below confirm password input -->
+                        <div class="confirm-status-line small mt-1 d-flex align-items-center gap-1 fw-medium" id="confirmStatusLine" style="display: none !important; min-height: 20px;">
+                            <i class="bi bi-exclamation-circle-fill" id="confirmStatusIcon" style="font-size: 0.8rem;"></i>
+                            <span id="confirmStatusText"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vertical Criteria List Card -->
+                <div class="password-criteria-card mb-4 p-3 rounded-3" style="background-color: var(--surface-muted, #f8fafc); border: 1px solid var(--border-color, #e2e8f0);">
+                    <div class="password-criteria d-flex flex-column gap-2">
+                        <div class="criteria-item d-flex align-items-center gap-2 small text-muted" id="critLength">
+                            <i class="bi bi-circle" style="font-size: 0.68rem; transition: all 0.2s ease;"></i>
+                            <span>{{ _('យ៉ាងហោច ៨ តួអក្សរ') }}</span>
+                        </div>
+                        <div class="criteria-item d-flex align-items-center gap-2 small text-muted" id="critCase">
+                            <i class="bi bi-circle" style="font-size: 0.68rem; transition: all 0.2s ease;"></i>
+                            <span>{{ _('អក្សរធំ និងតូច') }}</span>
+                        </div>
+                        <div class="criteria-item d-flex align-items-center gap-2 small text-muted" id="critNumber">
+                            <i class="bi bi-circle" style="font-size: 0.68rem; transition: all 0.2s ease;"></i>
+                            <span>{{ _('លេខយ៉ាងហោច ១') }}</span>
+                        </div>
+                        <div class="criteria-item d-flex align-items-center gap-2 small text-muted" id="critSpecial">
+                            <i class="bi bi-circle" style="font-size: 0.68rem; transition: all 0.2s ease;"></i>
+                            <span>{{ _('សញ្ញាពិសេស (!@#$...)') }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid"><button type="submit" class="btn btn-primary py-2" id="submitBtn">{{ _('បង្កើតគណនី') }}</button></div>
+            </form>
+
+            <div class="auth-divider">
+                <span>{{ _('ឬ') }}</span>
+            </div>
+
+            <a href="{{ url_for('auth.google_login') }}" class="btn btn-google w-100">
+                <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18">
+                    <path fill="#4285F4"
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853"
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05"
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335"
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                </svg>
+                <span>{{ _('បន្តជាមួយ Google') }}</span>
+            </a>
+
+            <div class="auth-foot">{{ _('មានគណនីរួចហើយ?') }} <a href="{{ url_for('auth.login') }}">{{ _('ចូល') }}</a>
+            </div>
         </div>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
-        {% endfor %}
-        {% endwith %}
-
-        <form method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="row g-3 mb-3">
-                <div class="col-md-6">
-                    <label for="username" class="form-label">{{ _('ឈ្មោះអ្នកប្រើប្រាស់') }}</label>
-                    <input type="text" class="form-control" id="username" name="username" placeholder="{{ _('ឧ. sokha') }}" value="{{ username or '' }}" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="full_name" class="form-label">{{ _('ឈ្មោះពេញ') }}</label>
-                    <input type="text" class="form-control" id="full_name" name="full_name" placeholder="{{ _('ឧ. សុខា ចាន់') }}" value="{{ full_name or '' }}" required>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label for="email" class="form-label">{{ _('អាសយដ្ឋានអ៊ីមែល') }}</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                    <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" value="{{ email or '' }}" required>
-                </div>
-            </div>
-            <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                    <label for="password" class="form-label">{{ _('ពាក្យសម្ងាត់') }}</label>
-                    <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="confirm_password" class="form-label">{{ _('បញ្ជាក់ពាក្យសម្ងាត់') }}</label>
-                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="••••••••" required>
-                </div>
-            </div>
-            <div class="d-grid"><button type="submit" class="btn btn-primary py-2">{{ _('បង្កើតគណនី') }}</button></div>
-        </form>
-
-        <div class="auth-divider">
-            <span>{{ _('ឬ') }}</span>
-        </div>
-
-        <a href="{{ url_for('auth.google_login') }}" class="btn btn-google w-100">
-            <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-            </svg>
-            <span>{{ _('បន្តជាមួយ Google') }}</span>
-        </a>
-
-        <div class="auth-foot">{{ _('មានគណនីរួចហើយ?') }} <a href="{{ url_for('auth.login') }}">{{ _('ចូល') }}</a></div>
-    </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('confirm_password');
+        const progressBar = document.getElementById('passwordProgressBar');
+
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+        const toggleConfirmBtn = document.getElementById('toggleConfirmPassword');
+        const toggleConfirmIcon = document.getElementById('toggleConfirmPasswordIcon');
+
+        const passwordStatusLine = document.getElementById('passwordStatusLine');
+        const passwordStatusIcon = document.getElementById('passwordStatusIcon');
+        const passwordStatusText = document.getElementById('passwordStatusText');
+        const strengthPercentage = document.getElementById('strengthPercentage');
+
+        const confirmStatusLine = document.getElementById('confirmStatusLine');
+        const confirmStatusIcon = document.getElementById('confirmStatusIcon');
+        const confirmStatusText = document.getElementById('confirmStatusText');
+
+        const critLength = document.getElementById('critLength');
+        const critCase = document.getElementById('critCase');
+        const critNumber = document.getElementById('critNumber');
+        const critSpecial = document.getElementById('critSpecial');
+
+        const i18n = {
+            weak: "{{ _('ពាក្យសម្ងាត់ខ្សោយ') }}",
+            medium: "{{ _('ពាក្យសម្ងាត់មធ្យម') }}",
+            strong: "{{ _('ពាក្យសម្ងាត់រឹងមាំ') }}",
+            match: "{{ _('ពាក្យសម្ងាត់ត្រូវគ្នា') }}",
+            mismatch: "{{ _('ពាក្យសម្ងាត់មិនទាន់ដូចគ្នាទេ') }}"
+        };
+
+        // Eye toggle handlers
+        function setupPasswordToggle(btn, input, icon) {
+            if (!btn || !input || !icon) return;
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const isPassword = input.getAttribute('type') === 'password';
+                input.setAttribute('type', isPassword ? 'text' : 'password');
+                icon.className = isPassword ? 'bi bi-eye' : 'bi bi-eye-slash';
+            });
+        }
+        setupPasswordToggle(togglePasswordBtn, passwordInput, togglePasswordIcon);
+        setupPasswordToggle(toggleConfirmBtn, confirmInput, toggleConfirmIcon);
+
+        function updateCriteriaItem(el, passed) {
+            const icon = el.querySelector('i');
+            if (passed) {
+                icon.className = 'bi bi-check-circle-fill text-success';
+                icon.style.fontSize = '0.82rem';
+                el.classList.remove('text-muted');
+                el.style.color = 'var(--text-main, #1e293b)';
+                el.style.fontWeight = '500';
+            } else {
+                icon.className = 'bi bi-circle text-muted';
+                icon.style.fontSize = '0.68rem';
+                el.classList.add('text-muted');
+                el.style.color = '';
+                el.style.fontWeight = 'normal';
+            }
+        }
+
+        function evaluateStrength(pwd) {
+            if (!pwd) {
+                return {
+                    percent: 0,
+                    hasLength: false,
+                    hasCase: false,
+                    hasNum: false,
+                    hasSpecial: false
+                };
+            }
+
+            const hasLength = pwd.length >= 8;
+            const hasUpper = /[A-Z]/.test(pwd);
+            const hasLower = /[a-z]/.test(pwd);
+            const hasCase = hasUpper && hasLower;
+            const hasNum = /[0-9]/.test(pwd);
+            const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
+
+            let score = 0;
+            if (hasLength) score += 25;
+            if (hasCase) score += 25;
+            if (hasNum) score += 25;
+            if (hasSpecial) score += 25;
+
+            // If short (<6 chars), cap score at 25% max
+            if (pwd.length > 0 && pwd.length < 6) {
+                score = Math.min(score, 25);
+            }
+
+            return {
+                percent: score,
+                hasLength,
+                hasCase,
+                hasNum,
+                hasSpecial
+            };
+        }
+
+        function updatePasswordMeter() {
+            const pwd = passwordInput.value;
+            const result = evaluateStrength(pwd);
+
+            updateCriteriaItem(critLength, result.hasLength);
+            updateCriteriaItem(critCase, result.hasCase);
+            updateCriteriaItem(critNumber, result.hasNum);
+            updateCriteriaItem(critSpecial, result.hasSpecial);
+
+            const pct = result.percent;
+            progressBar.style.width = pct + '%';
+            strengthPercentage.textContent = pct + '%';
+
+            if (!pwd) {
+                // Empty state: default border
+                passwordInput.style.borderColor = '';
+                passwordInput.style.boxShadow = '';
+                togglePasswordBtn.style.color = '#94a3b8';
+                progressBar.style.backgroundColor = 'transparent';
+                passwordStatusLine.style.setProperty('display', 'none', 'important');
+            } else if (pct < 50) {
+                // Weak state: Red border & accents
+                const redColor = '#ef4444';
+                passwordInput.style.borderColor = redColor;
+                passwordInput.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.15)';
+                togglePasswordBtn.style.color = redColor;
+                progressBar.style.backgroundColor = redColor;
+
+                passwordStatusLine.style.setProperty('display', 'flex', 'important');
+                passwordStatusLine.style.color = redColor;
+                passwordStatusIcon.className = 'bi bi-exclamation-circle-fill';
+                passwordStatusText.textContent = i18n.weak;
+            } else if (pct < 100) {
+                // Medium state: Orange/amber border & accents
+                const orangeColor = '#f59e0b';
+                passwordInput.style.borderColor = orangeColor;
+                passwordInput.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.15)';
+                togglePasswordBtn.style.color = orangeColor;
+                progressBar.style.backgroundColor = orangeColor;
+
+                passwordStatusLine.style.setProperty('display', 'flex', 'important');
+                passwordStatusLine.style.color = orangeColor;
+                passwordStatusIcon.className = 'bi bi-exclamation-circle-fill';
+                passwordStatusText.textContent = i18n.medium;
+            } else {
+                // Strong state (100%): Emerald Green border & accents
+                const greenColor = '#10b981';
+                passwordInput.style.borderColor = greenColor;
+                passwordInput.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.18)';
+                togglePasswordBtn.style.color = greenColor;
+                progressBar.style.backgroundColor = greenColor;
+
+                passwordStatusLine.style.setProperty('display', 'flex', 'important');
+                passwordStatusLine.style.color = greenColor;
+                passwordStatusIcon.className = 'bi bi-check-circle-fill';
+                passwordStatusText.textContent = i18n.strong;
+            }
+
+            updateMatchIndicator();
+        }
+
+        function updateMatchIndicator() {
+            const pwd = passwordInput.value;
+            const confirm = confirmInput.value;
+
+            if (!confirm) {
+                confirmInput.style.borderColor = '';
+                confirmInput.style.boxShadow = '';
+                toggleConfirmBtn.style.color = '#94a3b8';
+                confirmStatusLine.style.setProperty('display', 'none', 'important');
+                return;
+            }
+
+            confirmStatusLine.style.setProperty('display', 'flex', 'important');
+            if (pwd === confirm) {
+                const greenColor = '#10b981';
+                confirmInput.style.borderColor = greenColor;
+                confirmInput.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.18)';
+                toggleConfirmBtn.style.color = greenColor;
+
+                confirmStatusLine.style.color = greenColor;
+                confirmStatusIcon.className = 'bi bi-check-circle-fill';
+                confirmStatusText.textContent = i18n.match;
+            } else {
+                const redColor = '#ef4444';
+                confirmInput.style.borderColor = redColor;
+                confirmInput.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.15)';
+                toggleConfirmBtn.style.color = redColor;
+
+                confirmStatusLine.style.color = redColor;
+                confirmStatusIcon.className = 'bi bi-exclamation-circle-fill';
+                confirmStatusText.textContent = i18n.mismatch;
+            }
+        }
+
+        passwordInput.addEventListener('input', updatePasswordMeter);
+        confirmInput.addEventListener('input', updateMatchIndicator);
+    });
+</script>
 {% endblock %}

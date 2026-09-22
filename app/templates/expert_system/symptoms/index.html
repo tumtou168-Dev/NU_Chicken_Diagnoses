@@ -17,7 +17,9 @@
         <h5 class="admin-card-title">{{ bi('រោគសញ្ញាទាំងអស់ (%(n)s)', n=symptoms | length) }}</h5>
         <div class="admin-toolbar">
             {{ table_filter('#symptomsTable', _('ស្វែងរករោគសញ្ញា...')) }}
-            <a href="{{ url_for('expert_system.symptoms_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ bi('រោគសញ្ញាថ្មី') }}</a>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createSymptomModal">
+                <i class="bi bi-plus-lg me-1"></i>{{ bi('រោគសញ្ញាថ្មី') }}
+            </button>
         </div>
     </div>
     <div class="table-responsive">
@@ -43,4 +45,20 @@
         </table>
     </div>
 </div>
+
+{% include "expert_system/symptoms/_create_modal.html" %}
+{% endblock %}
+
+{% block scripts %}
+{% if show_create_modal or request.args.get('open_create') %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const modalEl = document.getElementById("createSymptomModal");
+    if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+});
+</script>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,42 @@
+{% from "layouts/_admin_macros.html" import field %}
+
+<div class="modal fade" id="createDiseaseModal" tabindex="-1" aria-labelledby="createDiseaseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title mb-0" id="createDiseaseModalLabel">{{ bi('បន្ថែមជំងឺ') }}</h5>
+                    <small class="text-muted">{{ bi('បង្កើតប្រវត្តិរូបជំងឺ និងការព្យាបាលថ្មី។') }}</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('បិទ') }}"></button>
+            </div>
+            <form method="post" action="{{ url_for('expert_system.diseases_create') }}" novalidate id="createDiseaseForm">
+                <div class="modal-body">
+                    {{ form.hidden_tag() }}
+                    <div class="form-section-title">{{ _('ព័ត៌មានទូទៅ') }}</div>
+                    <div class="row">
+                        <div class="col-md-6">{{ field(form.name_km) }}</div>
+                        <div class="col-md-6">{{ field(form.name) }}</div>
+                    </div>
+                    {{ field(form.category_id, kind="select") }}
+
+                    <div class="form-section-title">{{ _('ការពិពណ៌នា') }}</div>
+                    <div class="row">
+                        <div class="col-md-6">{{ field(form.description_km, rows=3) }}</div>
+                        <div class="col-md-6">{{ field(form.description, rows=3) }}</div>
+                    </div>
+
+                    <div class="form-section-title">{{ _('ការព្យាបាល') }}</div>
+                    <div class="row">
+                        <div class="col-md-6">{{ field(form.treatment_km, rows=3) }}</div>
+                        <div class="col-md-6">{{ field(form.treatment, rows=3) }}</div>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-soft" data-bs-dismiss="modal">{{ _('បោះបង់') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('បង្កើតជំងឺ') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

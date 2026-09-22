@@ -99,7 +99,8 @@ def cases_detail(case_id: int):
 @require_permission("manage_categories")
 def categories_index():
     categories = CategoryService.get_all()
-    return render_template("expert_system/categories/index.html", categories=categories)
+    form = CategoryForm()
+    return render_template("expert_system/categories/index.html", categories=categories, form=form)
 
 
 @expert_system_bp.route("/categories/create", methods=["GET", "POST"])
@@ -107,6 +108,8 @@ def categories_index():
 @require_permission("manage_categories")
 def categories_create():
     form = CategoryForm()
+    if request.method == "GET":
+        return redirect(url_for("expert_system.categories_index", open_create=1))
     if form.validate_on_submit():
         category = CategoryService.create(
             {"name": form.name.data, "name_km": form.name_km.data,
@@ -115,7 +118,13 @@ def categories_create():
         AuditService.log("CREATE", "Category", category.id, f"Created category: {category.name}")
         flash(_("បានបង្កើតប្រភេទ '%(name)s' ដោយជោគជ័យ។", name=category.name), "success")
         return redirect(url_for("expert_system.categories_index"))
-    return render_template("expert_system/categories/create.html", form=form)
+    categories = CategoryService.get_all()
+    return render_template(
+        "expert_system/categories/index.html",
+        categories=categories,
+        form=form,
+        show_create_modal=True,
+    )
 
 
 @expert_system_bp.route("/categories/<int:category_id>/edit", methods=["GET", "POST"])
@@ -166,7 +175,8 @@ def categories_delete(category_id: int):
 @require_permission("manage_symptoms")
 def symptoms_index():
     symptoms = SymptomService.get_all()
-    return render_template("expert_system/symptoms/index.html", symptoms=symptoms)
+    form = SymptomForm()
+    return render_template("expert_system/symptoms/index.html", symptoms=symptoms, form=form)
 
 
 @expert_system_bp.route("/symptoms/create", methods=["GET", "POST"])
@@ -174,6 +184,8 @@ def symptoms_index():
 @require_permission("manage_symptoms")
 def symptoms_create():
     form = SymptomForm()
+    if request.method == "GET":
+        return redirect(url_for("expert_system.symptoms_index", open_create=1))
     if form.validate_on_submit():
         symptom = SymptomService.create(
             {"name": form.name.data, "name_km": form.name_km.data,
@@ -182,7 +194,13 @@ def symptoms_create():
         AuditService.log("CREATE", "Symptom", symptom.id, f"Created symptom: {symptom.name}")
         flash(_("បានបង្កើតរោគសញ្ញា '%(name)s' ដោយជោគជ័យ។", name=symptom.name), "success")
         return redirect(url_for("expert_system.symptoms_index"))
-    return render_template("expert_system/symptoms/create.html", form=form)
+    symptoms = SymptomService.get_all()
+    return render_template(
+        "expert_system/symptoms/index.html",
+        symptoms=symptoms,
+        form=form,
+        show_create_modal=True,
+    )
 
 
 @expert_system_bp.route("/symptoms/<int:symptom_id>/edit", methods=["GET", "POST"])
@@ -233,7 +251,8 @@ def symptoms_delete(symptom_id: int):
 @require_permission("manage_diseases")
 def diseases_index():
     diseases = DiseaseService.get_all()
-    return render_template("expert_system/diseases/index.html", diseases=diseases)
+    form = DiseaseForm()
+    return render_template("expert_system/diseases/index.html", diseases=diseases, form=form)
 
 
 @expert_system_bp.route("/diseases/create", methods=["GET", "POST"])
@@ -241,6 +260,8 @@ def diseases_index():
 @require_permission("manage_diseases")
 def diseases_create():
     form = DiseaseForm()
+    if request.method == "GET":
+        return redirect(url_for("expert_system.diseases_index", open_create=1))
     if form.validate_on_submit():
         disease = DiseaseService.create(
             {
@@ -256,7 +277,13 @@ def diseases_create():
         AuditService.log("CREATE", "Disease", disease.id, f"Created disease: {disease.name}")
         flash(_("បានបង្កើតជំងឺ '%(name)s' ដោយជោគជ័យ។", name=disease.name), "success")
         return redirect(url_for("expert_system.diseases_index"))
-    return render_template("expert_system/diseases/create.html", form=form)
+    diseases = DiseaseService.get_all()
+    return render_template(
+        "expert_system/diseases/index.html",
+        diseases=diseases,
+        form=form,
+        show_create_modal=True,
+    )
 
 
 @expert_system_bp.route("/diseases/<int:disease_id>/edit", methods=["GET", "POST"])
@@ -314,7 +341,8 @@ def diseases_delete(disease_id: int):
 @require_permission("manage_rules")
 def rules_index():
     rules = RuleService.get_all()
-    return render_template("expert_system/rules/index.html", rules=rules)
+    form = RuleForm()
+    return render_template("expert_system/rules/index.html", rules=rules, form=form)
 
 
 @expert_system_bp.route("/rules/create", methods=["GET", "POST"])
@@ -322,6 +350,8 @@ def rules_index():
 @require_permission("manage_rules")
 def rules_create():
     form = RuleForm()
+    if request.method == "GET":
+        return redirect(url_for("expert_system.rules_index", open_create=1))
     if form.validate_on_submit():
         rule = RuleService.create(
             {
@@ -343,7 +373,13 @@ def rules_create():
     if form.errors:
         print(f"Form validation errors: {form.errors}")
         
-    return render_template("expert_system/rules/create.html", form=form)
+    rules = RuleService.get_all()
+    return render_template(
+        "expert_system/rules/index.html",
+        rules=rules,
+        form=form,
+        show_create_modal=True,
+    )
 
 
 @expert_system_bp.route("/rules/<int:rule_id>/edit", methods=["GET", "POST"])

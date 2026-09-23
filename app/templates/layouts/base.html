@@ -8,6 +8,22 @@
     <script src="{{ url_for('static', filename='js/ready.js') }}"></script>
     <!-- Apply the saved theme before first paint (prevents a flash of the wrong theme) -->
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <!-- Page entrance animation: only on the first page of a visit (per tab) — the auth pages reset
+         it, so the first page after signing in animates; later menu clicks show pages instantly. -->
+    <script>
+      (function () {
+        var KEY = "idns-entered";
+        try {
+          if (location.pathname.indexOf("/auth/") === 0) { sessionStorage.removeItem(KEY); return; }
+          if (!sessionStorage.getItem(KEY)) {
+            document.documentElement.classList.add("page-anim");
+            sessionStorage.setItem(KEY, "1");
+            // Drop it once the entrance is done, so a language switch (content swapped in place) doesn't replay it.
+            setTimeout(function () { document.documentElement.classList.remove("page-anim"); }, 1800);
+          }
+        } catch (e) { /* no storage: just no animation */ }
+      })();
+    </script>
     <title>{% block title %}{{ _('ផ្ទាំងគ្រប់គ្រង') }}{% endblock %} {{ _('- ប្រព័ន្ធជំនាញមាន់') }}</title>
 
     <!-- Bootstrap 5 CSS -->

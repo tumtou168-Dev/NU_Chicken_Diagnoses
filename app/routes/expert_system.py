@@ -3,7 +3,9 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from app.i18n import gettext as _
 from utils.decorators import require_permission
+from extensions import db
 from app.forms.expert_system_forms import (
+    doctor_choices_query,
     CategoryForm,
     SymptomForm,
     DiseaseForm,
@@ -457,13 +459,24 @@ def diseases_delete(disease_id: int):
     )
 
 
+def _rules_page_context() -> dict:
+    return {
+        "rules": RuleService.get_all(),
+        "diseases": DiseaseService.get_all(),
+        "symptoms": SymptomService.get_all(),
+        "doctors": db.session.scalars(doctor_choices_query()).all(),
+    }
+
+
 @expert_system_bp.route("/rules")
 @login_required
 @require_permission("manage_rules")
 def rules_index():
-    rules = RuleService.get_all()
     form = RuleForm()
-    return render_template("expert_system/rules/index.html", rules=rules, form=form, diseases=DiseaseService.get_all(), symptoms=SymptomService.get_all())
+    # A doctor adding a rule is most likely approving it themselves.
+    if current_user.has_role("Doctor"):
+        form.approved_by_id.data = current_user.id
+    return render_template("expert_system/rules/index.html", form=form, **_rules_page_context())
 
 
 @expert_system_bp.route("/rules/create", methods=["GET", "POST"])
@@ -483,6 +496,7 @@ def rules_create():
                 "priority": form.priority.data,
                 "confidence": form.confidence.data,
                 "disease_id": form.disease_id.data,
+                "approved_by_id": form.approved_by_id.data,
             },
             symptom_ids=form.symptom_ids.data or [],
         )
@@ -494,12 +508,11 @@ def rules_create():
     if form.errors:
         print(f"Form validation errors: {form.errors}")
         
-    rules = RuleService.get_all()
     return render_template(
         "expert_system/rules/index.html",
-        rules=rules,
         form=form,
         show_create_modal=True,
+        **_rules_page_context(),
     )
 
 
@@ -522,6 +535,7 @@ def rules_edit(rule_id: int):
                 "priority": form.priority.data,
                 "confidence": form.confidence.data,
                 "disease_id": form.disease_id.data,
+                "approved_by_id": form.approved_by_id.data,
             },
             symptom_ids=form.symptom_ids.data or [],
         )

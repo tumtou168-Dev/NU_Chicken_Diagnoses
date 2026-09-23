@@ -4,17 +4,15 @@ from extensions import db
 
 
 class ChatMessage(db.Model):
-    """One chat message. Two kinds of conversation share this table:
+    """One message in a support conversation between a normal user and staff (Admin/Doctor).
 
-    - Support thread (thread_user_id set): a normal user and staff (Admin/Doctor). Every message
-      in it shares the normal user's id, whichever staff member replied — staff share one inbox.
-    - Direct staff message (recipient_id set, thread_user_id NULL): one Admin/Doctor to another,
-      private to the two of them, with its own read flag.
+    Every message in a conversation shares the same thread_user_id (the normal user side),
+    regardless of which staff member replied — staff share one inbox per user.
     """
     __tablename__ = "tbl_chat_messages"
 
     id = db.Column(db.Integer, db.Sequence("seq_chat_messages_id"), primary_key=True)
-    thread_user_id = db.Column(db.Integer, db.ForeignKey("tbl_users.id"), nullable=True, index=True)   # NULL for a direct staff message
+    thread_user_id = db.Column(db.Integer, db.ForeignKey("tbl_users.id"), nullable=False, index=True)
     sender_id = db.Column(db.Integer, db.ForeignKey("tbl_users.id"), nullable=False)
     is_from_staff = db.Column(db.Boolean, default=False, nullable=False)
     body = db.Column(db.String(1000), nullable=False)
@@ -35,21 +33,12 @@ class ChatMessage(db.Model):
     audio = db.Column(db.String(255), nullable=True)  # filename under static/uploads/chat_audio
     audio_duration = db.Column(db.Integer, nullable=True)  # seconds, rounded
 
-    # Set only on a direct staff-to-staff message.
-    recipient_id = db.Column(db.Integer, db.ForeignKey("tbl_users.id"), nullable=True, index=True)
-    read_by_recipient = db.Column(db.Boolean, default=False, nullable=False)
-
     is_deleted = db.Column(db.Boolean, default=False, nullable=False)
     edited_at = db.Column(db.DateTime, nullable=True)
 
     thread_user = db.relationship("UserTable", foreign_keys=[thread_user_id])
     sender = db.relationship("UserTable", foreign_keys=[sender_id])
-    recipient = db.relationship("UserTable", foreign_keys=[recipient_id])
     case = db.relationship("Case")
-
-    @property
-    def is_direct(self) -> bool:
-        return self.recipient_id is not None
 
     @property
     def is_contact_request(self) -> bool:

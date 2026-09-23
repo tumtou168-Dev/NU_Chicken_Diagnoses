@@ -152,6 +152,7 @@ def create_app(config_class: type[Config] = Config):
         db.create_all()
         _ensure_user_avatar_column()
         _ensure_disease_doctor_column()
+        _ensure_rule_approver_column()
         _ensure_khmer_columns()
         _ensure_page_feature_columns()
         _ensure_chat_message_columns()
@@ -180,6 +181,14 @@ def _ensure_user_avatar_column() -> None:
         db.session.commit()
     if "last_seen_at" not in columns:
         db.session.execute(text("ALTER TABLE tbl_users ADD COLUMN last_seen_at TIMESTAMP"))
+        db.session.commit()
+
+
+def _ensure_rule_approver_column() -> None:
+    """create_all() never alters existing tables, so add tbl_rules.approved_by_id if it is missing."""
+    columns = {c["name"] for c in inspect(db.engine).get_columns("tbl_rules")}
+    if "approved_by_id" not in columns:
+        db.session.execute(text("ALTER TABLE tbl_rules ADD COLUMN approved_by_id INTEGER REFERENCES tbl_users(id)"))
         db.session.commit()
 
 
@@ -222,8 +231,6 @@ CHAT_MESSAGE_COLUMNS = {
     "is_deleted": "BOOLEAN NOT NULL DEFAULT FALSE",
     "edited_at": "TIMESTAMP",
     "caption": "VARCHAR(1000)",
-    "recipient_id": "INTEGER REFERENCES tbl_users(id)",
-    "read_by_recipient": "BOOLEAN NOT NULL DEFAULT FALSE",
 }
 
 
@@ -233,14 +240,6 @@ def _ensure_chat_message_columns() -> None:
     for name, sql_type in CHAT_MESSAGE_COLUMNS.items():
         if name not in columns:
             db.session.execute(text(f"ALTER TABLE tbl_chat_messages ADD COLUMN {name} {sql_type}"))
-    # Commit before inspecting again: inspect() uses its own connection, which would wait forever
-    # on the lock this session's uncommitted ALTER TABLE still holds.
-    db.session.commit()
-    # Direct staff messages have no support thread.
-    thread_col = next(c for c in inspect(db.engine).get_columns("tbl_chat_messages") if c["name"] == "thread_user_id")
-    if not thread_col["nullable"]:
-        db.session.execute(text("ALTER TABLE tbl_chat_messages ALTER COLUMN thread_user_id DROP NOT NULL"))
-    db.session.execute(text("CREATE INDEX IF NOT EXISTS ix_tbl_chat_messages_recipient_id ON tbl_chat_messages (recipient_id)"))
     db.session.commit()
 
 

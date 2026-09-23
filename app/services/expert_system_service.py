@@ -2,6 +2,7 @@
 from typing import List, Optional
 from extensions import db
 from app.models.expert_system import Category, Symptom, Disease, Rule, Case
+from app.models.user import UserTable
 
 
 class CategoryService:
@@ -123,6 +124,14 @@ class DiseaseService:
 
 class RuleService:
     @staticmethod
+    def _approver_id(value) -> Optional[int]:
+        """Only an active Doctor may be recorded as the approver; anything else means "not approved"."""
+        if not value:
+            return None
+        user = db.session.get(UserTable, int(value))
+        return user.id if user and user.is_active and user.has_role("Doctor") else None
+
+    @staticmethod
     def get_all() -> List[Rule]:
         return Rule.query.order_by(Rule.priority.asc(), Rule.id.asc()).all()
 
@@ -140,6 +149,7 @@ class RuleService:
             priority=data["priority"],
             confidence=data["confidence"],
             disease_id=data["disease_id"],
+            approved_by_id=RuleService._approver_id(data.get("approved_by_id")),
         )
         if symptom_ids:
             # Ensure symptom_ids are integers
@@ -158,6 +168,7 @@ class RuleService:
         rule.priority = data["priority"]
         rule.confidence = data["confidence"]
         rule.disease_id = data["disease_id"]
+        rule.approved_by_id = RuleService._approver_id(data.get("approved_by_id"))
         if symptom_ids:
              # Ensure symptom_ids are integers
             symptom_ids = [int(sid) for sid in symptom_ids]

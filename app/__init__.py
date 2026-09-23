@@ -124,8 +124,8 @@ def create_app(config_class: type[Config] = Config):
     @app.errorhandler(413)
     def file_too_large(_error):
         if request.path.startswith("/chat/api/"):  # fetch() callers expect JSON, not a redirect
-            return jsonify({"error": gettext("ឯកសារដែលបានផ្ទុកឡើងធំពេក។ ទំហំអតិបរមាគឺ 2MB។")}), 413
-        flash(gettext("ឯកសារដែលបានផ្ទុកឡើងធំពេក។ ទំហំអតិបរមាគឺ 2MB។"), "danger")
+            return jsonify({"error": gettext("ឯកសារដែលបានផ្ទុកឡើងធំពេក។ ទំហំអតិបរមាគឺ 16MB។")}), 413
+        flash(gettext("ឯកសារដែលបានផ្ទុកឡើងធំពេក។ ទំហំអតិបរមាគឺ 16MB។"), "danger")
         return redirect(request.referrer or url_for("tbl_users.profile"))
 
     @app.route("/")

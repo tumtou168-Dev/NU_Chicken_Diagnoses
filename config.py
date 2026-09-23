@@ -29,5 +29,6 @@ class Config:
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "")
 
-    # Reject oversized request bodies early (profile pictures are capped at 2 MB separately).
-    MAX_CONTENT_LENGTH = 4 * 1024 * 1024
+    # Reject oversized request bodies early. Phone photos are often 5-10 MB; profile and chat
+    # pictures are shrunk after upload, so this only needs to fit an unedited photo.
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024

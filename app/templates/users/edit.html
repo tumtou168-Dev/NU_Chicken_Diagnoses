@@ -29,18 +29,56 @@
 
 {% block scripts %}
 <script>
+// Phone photos are several MB; resize to a 512px JPEG in the browser before upload so it's quick
+// and always under the upload limit. The server shrinks too, in case this can't run.
+const AVATAR_SIDE = 512;
+
+function shrinkAvatar(file) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            const scale = Math.min(1, AVATAR_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+            if (scale === 1 && file.size <= 500 * 1024) { resolve(file); return; }
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.naturalWidth * scale);
+            canvas.height = Math.round(img.naturalHeight * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fff';  // JPEG has no transparency
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+                resolve(blob ? new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file);
+            }, 'image/jpeg', 0.88);
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+        img.src = url;
+    });
+}
+
 window.onReady(function () {
     const input = document.getElementById('avatar');
     const preview = document.getElementById('avatarPreview');
     const remove = document.getElementById('remove_avatar');
     if (!input || !preview) return;
     const original = preview.innerHTML;
-    input.addEventListener('change', function () {
+    const form = input.form;
+    const submitBtn = form && form.querySelector('[type=submit]');
+    input.addEventListener('change', async function () {
         const file = input.files && input.files[0];
         if (!file) { preview.innerHTML = original; return; }
+        if (submitBtn) submitBtn.disabled = true;  // wait for the resize before allowing Save
+        const small = await shrinkAvatar(file);
+        if (small !== file && window.DataTransfer) {
+            const dt = new DataTransfer();
+            dt.items.add(small);
+            input.files = dt.files;
+        }
+        if (submitBtn) submitBtn.disabled = false;
         const img = document.createElement('img');
         img.alt = '';
-        img.src = URL.createObjectURL(file);
+        img.src = URL.createObjectURL(small);
         preview.replaceChildren(img);
         if (remove) remove.checked = false;
     });

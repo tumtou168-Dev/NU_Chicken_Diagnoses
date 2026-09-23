@@ -52,6 +52,21 @@
                             </select>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ _('ពេទ្យដែលអនុម័ត') }}</label>
+                            <select name="approved_by_id" class="form-select">
+                                <option value="0">{{ _('— មិនទាន់អនុម័ត —') }}</option>
+                                {% for doc in doctors or [] %}
+                                <option value="{{ doc.id }}" {% if rule.approved_by_id == doc.id %}selected{% endif %}>{{ doc.full_name }}</option>
+                                {% endfor %}
+                                {# A previous approver who is no longer an active doctor stays selectable for this rule. #}
+                                {% if rule.approved_by and rule.approved_by not in (doctors or []) %}
+                                <option value="{{ rule.approved_by.id }}" selected>{{ rule.approved_by.full_name }}</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                    </div>
 
                     {% set rule_sym_ids = rule.symptoms | map(attribute='id') | list %}
                     <div class="form-section-title">{{ _('រោគសញ្ញា') }}</div>

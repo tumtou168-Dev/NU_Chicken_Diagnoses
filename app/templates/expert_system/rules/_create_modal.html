@@ -27,6 +27,9 @@
                         <div class="col-md-4">{{ field(form.confidence) }}</div>
                         <div class="col-md-4">{{ field(form.disease_id, kind="select") }}</div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6">{{ field(form.approved_by_id, kind="select") }}</div>
+                    </div>
 
                     <div class="form-section-title">{{ form.symptom_ids.label.text }}</div>
                     <div class="checklist">

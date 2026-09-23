@@ -80,9 +80,11 @@ class Rule(BilingualMixin, db.Model):
     priority = db.Column(db.Integer, nullable=False, default=1)
     confidence = db.Column(db.Float, nullable=False, default=80.0)
     disease_id = db.Column(db.Integer, db.ForeignKey("tbl_diseases.id"), nullable=False)
+    approved_by_id = db.Column(db.Integer, db.ForeignKey("tbl_users.id"), nullable=True)   # the Doctor who approved the rule
     created_at = db.Column(db.DateTime, default=now_kh, nullable=False)
 
     disease = db.relationship("Disease", back_populates="rules")
+    approved_by = db.relationship("UserTable", foreign_keys=[approved_by_id])
     symptoms = db.relationship(
         "Symptom",
         secondary=tbl_rules_symptoms,

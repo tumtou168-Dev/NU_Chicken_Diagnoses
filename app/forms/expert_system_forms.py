@@ -5,6 +5,8 @@ from app.forms import validation as val
 from app.i18n import lazy, gettext as _
 from app.forms.multi_checkbox_field import MultiCheckboxField
 from app.models.expert_system import Category, Disease, Symptom, Rule
+from app.models.role import RoleTable
+from app.models.user import UserTable
 from extensions import db
 
 
@@ -25,6 +27,21 @@ def _disease_choices():
         db.select(Disease).order_by(Disease.name)
     ).all()
     return [(d.id, _label(d)) for d in items]
+
+
+def doctor_choices_query():
+    """Active users with the Doctor role — who can approve a rule."""
+    return (
+        db.select(UserTable)
+        .join(UserTable.roles)
+        .where(RoleTable.name == "Doctor", UserTable.is_active.is_(True))
+        .order_by(UserTable.full_name)
+    )
+
+
+def _doctor_choices():
+    doctors = db.session.scalars(doctor_choices_query()).all()
+    return [(0, _("— មិនទាន់អនុម័ត —"))] + [(d.id, d.full_name) for d in doctors]
 
 
 def _symptom_choices():
@@ -73,15 +90,18 @@ class RuleForm(FlaskForm):
     priority = IntegerField(lazy("អាទិភាព"), validators=[val.required(), val.number_range(min=1, max=100)])
     confidence = FloatField(lazy("ទំនុកចិត្តមូលដ្ឋាន (%)"), validators=[val.required(), val.number_range(min=1, max=100)])
     disease_id = SelectField(lazy("ជំងឺ##one"), coerce=int, validators=[val.required()])
+    approved_by_id = SelectField(lazy("ពេទ្យដែលអនុម័ត"), coerce=int, default=0)   # 0 = not approved yet
     symptom_ids = MultiCheckboxField(lazy("រោគសញ្ញា"), coerce=int)
     submit = SubmitField(lazy("រក្សាទុក"))
 
     def __init__(self, original_rule: Rule | None = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.disease_id.choices = _disease_choices()
+        self.approved_by_id.choices = _doctor_choices()
         self.symptom_ids.choices = _symptom_choices()
         if original_rule and not self.is_submitted():
             self.symptom_ids.data = [s.id for s in original_rule.symptoms]
+            self.approved_by_id.data = original_rule.approved_by_id or 0
 
 
 class PageTextForm(FlaskForm):

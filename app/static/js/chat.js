@@ -87,6 +87,7 @@ function initChatWidget() {
   const csrfToken = widget.querySelector('input[name="csrf_token"]').value;
 
   const toggleBtn = document.getElementById("chatToggleBtn");
+  const toggleIcon = document.getElementById("chatToggleIcon");
   const closeBtn = document.getElementById("chatCloseBtn");
   const backBtn = document.getElementById("chatBackBtn");
   const panel = document.getElementById("chatPanel");
@@ -124,21 +125,7 @@ function initChatWidget() {
 
   const defaultTitle = panelTitle.textContent;
   let open = false;
-  // The open conversation: a user's support thread (activeUserId) or, for staff, a direct
-  // conversation with another staff member (activePeerId). Never both.
   let activeUserId = isStaff ? null : parseInt(widget.dataset.userId, 10);
-  let activePeerId = null;
-  let inboxTab = "farmers";
-
-  function hasTarget() { return !!(activeUserId || activePeerId); }
-  function targetKey() { return activePeerId ? `p${activePeerId}` : `u${activeUserId}`; }
-  // Adds user_id / peer_id to a URLSearchParams or FormData (a normal user's thread needs neither).
-  function addTarget(params) {
-    if (!isStaff) return params;
-    if (activePeerId) params.set("peer_id", activePeerId);
-    else params.set("user_id", activeUserId);
-    return params;
-  }
 
   function fetchJson(url, options) {
     return fetch(url, Object.assign({ headers: { "X-CSRFToken": csrfToken } }, options)).then((r) => r.json());
@@ -205,7 +192,7 @@ function initChatWidget() {
 
   function renderMessages(items, force) {
     // Include the deleted flag so a "delete for everyone" from the other side re-renders on the next poll.
-    const key = targetKey() + ":" + items.map((m) => m.id + (m.is_deleted ? "d" : "")).join(",");
+    const key = activeUserId + ":" + items.map((m) => m.id + (m.is_deleted ? "d" : "")).join(",");
     if (!force && key === lastMessagesKey) return;   // nothing new — don't touch the DOM or scroll position
     lastMessagesKey = key;
 
@@ -216,9 +203,9 @@ function initChatWidget() {
 
     messagesEmpty.hidden = items.length !== 0;
     messagesBox.querySelectorAll(".chat-bubble, .chat-date-divider").forEach((el) => el.remove());
-    const animateNew = renderedThreadId === targetKey();
+    const animateNew = renderedThreadId === activeUserId;
     const seenIds = renderedIds;
-    renderedThreadId = targetKey();
+    renderedThreadId = activeUserId;
     renderedIds = new Set(items.map((m) => m.id));
     let lastDate = null;
     let prev = null;
@@ -427,8 +414,8 @@ function initChatWidget() {
   deleteDialog.addEventListener("click", (e) => { if (e.target === deleteDialog) closeDeleteDialog(); });
 
   function loadMessages(force) {
-    if (!hasTarget()) return;
-    const url = "/chat/api/messages?" + addTarget(new URLSearchParams()).toString();
+    if (!activeUserId) return;
+    const url = isStaff ? `/chat/api/messages?user_id=${activeUserId}` : "/chat/api/messages";
     fetchJson(url).then((data) => {
       if (data.messages) renderMessages(data.messages, force);
       if ("peer_online" in data) setPeerOnline(data.peer_online);
@@ -439,221 +426,40 @@ function initChatWidget() {
   function refreshUnreadBadge() {
     fetchJson("/chat/api/unread-count").then((data) => {
       const count = data.count || 0;
-      const previous = window.__chatUnreadCount;
-      window.__chatUnreadCount = count;
       unreadBadge.hidden = count === 0;
       unreadBadge.textContent = count > 99 ? "99+" : String(count);
-      toggleBtn.classList.toggle("has-unread", count > 0);   // ripple around the launcher
-      // The count went up (1 -> 2 ...): pop the badge so the new number is noticed.
-      if (count > (previous || 0)) {
-        unreadBadge.classList.remove("is-bump");
-        void unreadBadge.offsetWidth;   // restart the animation
-        unreadBadge.classList.add("is-bump");
-      }
-      setTitleCount(count);
-      maybeNotify(data.latest);
     });
-  }
-
-  // --- New-message notification -----------------------------------------
-  // In-page card above the launcher + a soft chime, and a desktop notification while the tab is
-  // in the background. The last announced id is kept per tab (sessionStorage) so moving between
-  // pages neither re-announces old messages nor misses one that arrived in between.
-  const NOTIFIED_KEY = "idns-chat-notified";
-  function readNotified() {
-    if (window.__chatLastNotifiedId !== undefined) return window.__chatLastNotifiedId;
-    try { const v = parseInt(sessionStorage.getItem(NOTIFIED_KEY), 10); return Number.isNaN(v) ? undefined : v; } catch (e) { return undefined; }
-  }
-  function writeNotified(id) {
-    window.__chatLastNotifiedId = id;
-    try { sessionStorage.setItem(NOTIFIED_KEY, String(id)); } catch (e) { /* per-page memory still works */ }
-  }
-  const notifyEl = document.getElementById("chatNotify");
-  const notifyAvatar = document.getElementById("chatNotifyAvatar");
-  const notifyName = document.getElementById("chatNotifyName");
-  const notifyPreview = document.getElementById("chatNotifyPreview");
-  let notifyTimer = null;
-  let notifyLatest = null;
-
-  function maybeNotify(latest) {
-    const seen = readNotified();
-    if (!latest) {
-      // Nothing unread: the next message to arrive is new, so it should be announced.
-      if (seen === undefined) writeNotified(0);
-      return;
-    }
-    writeNotified(Math.max(seen || 0, latest.id));
-    // First check in this tab: those were already unread (the badge shows them) — don't announce.
-    if (seen === undefined || latest.id <= seen) return;
-    // Already looking at that conversation.
-    const viewing = open && !document.hidden &&
-      (latest.peer_id ? activePeerId === latest.peer_id : activeUserId === latest.thread_user_id);
-    if (viewing) return;
-    // With the panel open (another conversation, or the inbox) the card would cover it — the
-    // inbox badge already shows the message, so just chime.
-    if (!open) showNotifyCard(latest);
-    playChime();
-    showDesktopNotification(latest);
-  }
-
-  function showNotifyCard(latest) {
-    if (!notifyEl) return;
-    notifyLatest = latest;
-    notifyAvatar.innerHTML = avatarInner(latest.sender_avatar_url, latest.sender_name);
-    notifyName.textContent = latest.sender_name;
-    notifyPreview.textContent = latest.preview;
-    notifyEl.hidden = false;
-    notifyEl.classList.remove("is-leaving");
-    notifyEl.style.animation = "none"; void notifyEl.offsetWidth; notifyEl.style.animation = "";   // replay the slide-in
-    toggleBtn.classList.remove("is-ringing"); void toggleBtn.offsetWidth; toggleBtn.classList.add("is-ringing");
-    clearTimeout(notifyTimer);
-    notifyTimer = setTimeout(hideNotifyCard, 6000);
-  }
-
-  function hideNotifyCard() {
-    clearTimeout(notifyTimer);
-    if (!notifyEl || notifyEl.hidden) return;
-    notifyEl.classList.add("is-leaving");
-    setTimeout(() => { notifyEl.hidden = true; notifyEl.classList.remove("is-leaving"); }, 220);
-  }
-
-  function openNotified(latest) {
-    hideNotifyCard();
-    if (!open) openPanel();
-    if (isStaff && latest) {
-      if (latest.peer_id) openPeer(latest.peer_id, latest.sender_name, latest.sender_avatar_url);
-      else openThread(latest.thread_user_id, latest.sender_name, latest.sender_avatar_url);
-    }
-  }
-
-  if (notifyEl) {
-    document.getElementById("chatNotifyOpen").addEventListener("click", () => openNotified(notifyLatest));
-    document.getElementById("chatNotifyClose").addEventListener("click", hideNotifyCard);
-    notifyEl.addEventListener("mouseenter", () => clearTimeout(notifyTimer));
-    notifyEl.addEventListener("mouseleave", () => { notifyTimer = setTimeout(hideNotifyCard, 2500); });
-  }
-
-  // A short two-note chime made with Web Audio (no sound file). Browsers only allow audio after the
-  // visitor has interacted with the page, so this silently does nothing until then.
-  function playChime() {
-    try {
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if (!Ctx) return;
-      const ctx = window.__chatAudioCtx || (window.__chatAudioCtx = new Ctx());
-      if (ctx.state === "suspended") ctx.resume();
-      [[880, 0], [1320, 0.12]].forEach(([freq, delay]) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const t = ctx.currentTime + delay;
-        osc.type = "sine";
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(0.12, t + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.4);
-      });
-    } catch (err) { /* no sound is fine */ }
-  }
-
-  function showDesktopNotification(latest) {
-    if (!document.hidden || !("Notification" in window) || Notification.permission !== "granted") return;
-    try {
-      const n = new Notification(`${latest.sender_name} · ${CONTACT_LABELS.newMessage || "New message"}`, {
-        body: latest.preview,
-        icon: latest.sender_avatar_url || undefined,
-        tag: "idns-chat",   // replace the previous one instead of stacking
-      });
-      n.onclick = () => { window.focus(); openNotified(latest); n.close(); };
-    } catch (err) { /* some browsers only allow notifications from a service worker */ }
-  }
-
-  // Ask once, from a real click on the chat button (browsers require a user gesture).
-  function askNotificationPermission() {
-    if ("Notification" in window && Notification.permission === "default") {
-      try { Notification.requestPermission(); } catch (err) { /* ignore */ }
-    }
-  }
-
-  // "(2) Dashboard - ..." in the tab title while there are unread messages.
-  function setTitleCount(count) {
-    const base = document.title.replace(/^\(\d+\+?\)\s*/, "");
-    document.title = count ? `(${count > 99 ? "99+" : count}) ${base}` : base;
   }
 
   let lastThreadsKey = null;
-  let lastThreadsData = null;
-  const inboxTabs = threadList ? threadList.querySelectorAll(".chat-inbox-tab") : [];
-  const threadListEmptyText = document.getElementById("chatThreadListEmptyText");
-
-  function threadRowHtml(name, avatarUrl, online, unread, preview, role) {
-    return presenceAvatarHtml(avatarUrl, name, "chat-avatar-sm", online) +
-      `<div class="chat-thread-text">` +
-      `<div class="chat-thread-name"><span class="chat-thread-name-text">${escapeHtml(name)}</span>` +
-      (role ? `<span class="chat-role-badge">${escapeHtml(role)}</span>` : "") +
-      (unread ? `<span class="chat-thread-badge">${unread}</span>` : "") + `</div>` +
-      `<div class="chat-thread-preview${preview ? "" : " is-placeholder"}">${escapeHtml(preview || CONTACT_LABELS.startConversation || "")}</div>` +
-      `</div>`;
-  }
-
-  function renderThreads() {
-    const data = lastThreadsData;
-    if (!data) return;
-    const farmers = data.threads || [];
-    const team = data.team || [];
-    // Unread totals on the tabs.
-    const totals = {
-      farmers: farmers.reduce((n, t) => n + (t.unread_count || 0), 0),
-      team: team.reduce((n, t) => n + (t.unread_count || 0), 0),
-    };
-    threadList.querySelectorAll("[data-tab-badge]").forEach((badge) => {
-      const n = totals[badge.dataset.tabBadge];
-      badge.hidden = !n;
-      badge.textContent = n > 99 ? "99+" : String(n);
-    });
-    inboxTabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === inboxTab));
-
-    const rows = inboxTab === "team" ? team : farmers;
-    threadListEmpty.hidden = rows.length !== 0;
-    if (threadListEmptyText) threadListEmptyText.textContent = threadListEmpty.dataset[inboxTab === "team" ? "emptyTeam" : "emptyFarmers"];
-    threadList.querySelectorAll(".chat-thread-item").forEach((el) => el.remove());
-    for (const t of rows) {
-      const item = document.createElement("button");
-      item.type = "button";
-      item.className = "chat-thread-item";
-      if (inboxTab === "team") {
-        item.innerHTML = threadRowHtml(t.full_name, t.avatar_url, t.is_online, t.unread_count, t.last_message, t.role);
-        item.addEventListener("click", () => openPeer(t.peer_id, t.full_name, t.avatar_url));
-      } else {
-        item.innerHTML = threadRowHtml(t.full_name, t.avatar_url, t.is_online, t.unread_count, t.last_message, "");
-        item.addEventListener("click", () => openThread(t.user_id, t.full_name, t.avatar_url));
-      }
-      threadList.appendChild(item);
-    }
-  }
 
   function loadThreads() {
     fetchJson("/chat/api/threads").then((data) => {
-      const key = JSON.stringify([
-        (data.threads || []).map((t) => [t.user_id, t.last_at, t.unread_count, t.is_online]),
-        (data.team || []).map((t) => [t.peer_id, t.last_at, t.unread_count, t.is_online]),
-      ]);
+      const threads = data.threads || [];
+      const key = threads.map((t) => `${t.user_id}:${t.last_at}:${t.unread_count}:${t.is_online}`).join("|");
       if (key === lastThreadsKey) return;   // nothing changed — don't rebuild and reset scroll
       lastThreadsKey = key;
-      lastThreadsData = data;
-      renderThreads();
+
+      threadListEmpty.hidden = threads.length !== 0;
+      threadList.querySelectorAll(".chat-thread-item").forEach((el) => el.remove());
+      for (const t of threads) {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "chat-thread-item";
+        item.innerHTML =
+          presenceAvatarHtml(t.avatar_url, t.full_name, "chat-avatar-sm", t.is_online) +
+          `<div class="chat-thread-text">` +
+          `<div class="chat-thread-name">${escapeHtml(t.full_name)}${t.unread_count ? `<span class="chat-thread-badge">${t.unread_count}</span>` : ""}</div>` +
+          `<div class="chat-thread-preview">${escapeHtml(t.last_message)}</div>` +
+          `</div>`;
+        item.addEventListener("click", () => openThread(t.user_id, t.full_name, t.avatar_url));
+        threadList.appendChild(item);
+      }
     });
   }
 
-  inboxTabs.forEach((tab) => tab.addEventListener("click", () => {
-    if (inboxTab === tab.dataset.tab) return;
-    inboxTab = tab.dataset.tab;
-    renderThreads();
-    threadList.scrollTop = 0;
-  }));
-
-  function showConversation(name, avatarUrl) {
+  function openThread(userId, name, avatarUrl) {
+    activeUserId = userId;
     panelTitle.textContent = name;
     if (panelAvatar) {
       panelAvatar.innerHTML = avatarInner(avatarUrl, name);
@@ -667,25 +473,9 @@ function initChatWidget() {
     input.focus();
   }
 
-  // A normal user's support thread.
-  function openThread(userId, name, avatarUrl) {
-    activeUserId = userId;
-    activePeerId = null;
-    showConversation(name, avatarUrl);
-  }
-
-  // A direct conversation with another Admin/Doctor.
-  function openPeer(peerId, name, avatarUrl) {
-    activePeerId = peerId;
-    activeUserId = null;
-    inboxTab = "team";
-    showConversation(name, avatarUrl);
-  }
-
   function showThreadList() {
     if (mediaRecorder) finishRecording(false);
     activeUserId = null;
-    activePeerId = null;
     panelTitle.textContent = defaultTitle;
     if (panelAvatar) panelAvatar.hidden = true;
     if (panelIcon) panelIcon.hidden = false;
@@ -693,14 +483,13 @@ function initChatWidget() {
     conversation.hidden = true;
     threadList.hidden = false;
     backBtn.hidden = true;
-    lastThreadsKey = null;   // re-render (the tab may have changed)
     loadThreads();
   }
 
   function startPolling() {
     stopPolling();
     window.__chatPollTimer = setInterval(() => {
-      if (isStaff && !hasTarget()) {
+      if (isStaff && !activeUserId) {
         loadThreads();
       } else {
         loadMessages();
@@ -716,8 +505,8 @@ function initChatWidget() {
   function openPanel() {
     open = true;
     panel.hidden = false;
-    hideNotifyCard();
     toggleBtn.classList.add("is-open");
+    if (toggleIcon) toggleIcon.className = "bi bi-x-lg";
     if (isStaff) {
       showThreadList();
     } else {
@@ -730,23 +519,21 @@ function initChatWidget() {
     open = false;
     panel.hidden = true;
     toggleBtn.classList.remove("is-open");
+    if (toggleIcon) toggleIcon.className = "bi bi-chat-square-text-fill";
     stopPolling();
     if (mediaRecorder) finishRecording(false);
   }
 
-  toggleBtn.addEventListener("click", (e) => {
-    if (open) return closePanel();
-    if (e.isTrusted) askNotificationPermission();   // only a real click may ask (not a scripted open)
-    openPanel();
-  });
+  toggleBtn.addEventListener("click", () => (open ? closePanel() : openPanel()));
   closeBtn.addEventListener("click", closePanel);
   if (backBtn) backBtn.addEventListener("click", showThreadList);
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const body = input.value.trim();
-    if (!body || !hasTarget()) return;
-    const params = addTarget(new URLSearchParams({ body }));
+    if (!body || !activeUserId) return;
+    const params = new URLSearchParams({ body });
+    if (isStaff) params.set("user_id", activeUserId);
     input.value = "";
     fetchJson("/chat/api/send", { method: "POST", body: params }).then(() => {
       loadMessages(true);
@@ -785,13 +572,13 @@ function initChatWidget() {
   }
 
   function uploadRecording(blob) {
-    if (!hasTarget()) return;
+    if (!activeUserId) return;
     const duration = Math.round((Date.now() - recordingStartedAt) / 1000);
     const ext = (blob.type.split("/")[1] || "webm").split(";")[0];
     const fd = new FormData();
     fd.append("audio", blob, `voice.${ext}`);
     fd.append("duration", duration);
-    addTarget(fd);
+    if (isStaff) fd.append("user_id", activeUserId);
     fetch("/chat/api/send-audio", { method: "POST", headers: { "X-CSRFToken": csrfToken }, body: fd })
       .then((r) => r.json())
       .then((data) => {
@@ -806,7 +593,7 @@ function initChatWidget() {
   }
 
   function startRecording() {
-    if (!hasTarget() || mediaRecorder) return;
+    if (!activeUserId || mediaRecorder) return;
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       mediaStream = stream;
       audioChunks = [];
@@ -919,7 +706,7 @@ function initChatWidget() {
       const fd = new FormData();
       fd.append("image", upload);
       if (caption) fd.append("caption", caption);
-      addTarget(fd);
+      if (isStaff) fd.append("user_id", activeUserId);
       return fetch("/chat/api/send-image", { method: "POST", headers: { "X-CSRFToken": csrfToken }, body: fd })
         .then((r) => r.json().catch(() => ({ error: true })))
         .then((data) => {
@@ -929,7 +716,7 @@ function initChatWidget() {
   }
 
   function sendPendingImages() {
-    if (!pendingImages.length || !hasTarget() || sendingImages) return;
+    if (!pendingImages.length || !activeUserId || sendingImages) return;
     const files = pendingImages.map((item) => item.file);
     const caption = imageCaption.value.trim();
     sendingImages = true;
@@ -1008,7 +795,7 @@ function initChatWidget() {
   });
 
   refreshUnreadBadge();
-  window.__chatUnreadTimer = setInterval(refreshUnreadBadge, 10000);
+  window.__chatUnreadTimer = setInterval(refreshUnreadBadge, 15000);
 
   // A "contact the doctor" submission redirects back here with ?open_chat=1.
   const urlParams = new URLSearchParams(window.location.search);

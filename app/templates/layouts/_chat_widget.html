@@ -14,12 +14,14 @@
                 <i class="bi bi-arrow-left"></i>
             </button>
             {% endif %}
-            <span id="chatPanelAvatar" class="chat-avatar chat-avatar-sm" hidden></span>
-            <i id="chatPanelIcon" class="bi bi-chat-square-text-fill chat-panel-icon"></i>
+            <span id="chatPanelPresence" class="chat-presence">
+                <span id="chatPanelAvatar" class="chat-avatar chat-avatar-sm" hidden></span>
+                <i id="chatPanelIcon" class="bi bi-heart-pulse-fill chat-panel-icon"></i>
+            </span>
             <div class="chat-panel-title">
                 <span id="chatPanelTitle">{{ _('ជជែកជាមួយពេទ្យ') }}</span>
                 {% if not is_staff %}
-                <span id="chatPanelSubtitle" class="chat-panel-subtitle">{{ _('ក្រុមជំនួយឆ្លើយតបលឿន') }}</span>
+                <span id="chatPanelSubtitle" class="chat-panel-subtitle" data-offline="{{ _('ក្រុមជំនួយឆ្លើយតបលឿន') }}" data-online="{{ _('ពេទ្យកំពុងអនឡាញ') }}">{{ _('ក្រុមជំនួយឆ្លើយតបលឿន') }}</span>
                 {% endif %}
             </div>
             <button type="button" id="chatCloseBtn" class="chat-close-btn" aria-label="{{ _('បិទ') }}">
@@ -43,9 +45,48 @@
                     <span>{{ _('សរសេរសារដើម្បីចាប់ផ្តើមការសន្ទនា។') }}</span>
                 </div>
             </div>
+            <div id="chatRecordingBar" class="chat-recording-bar" hidden>
+                <span class="chat-recording-dot" aria-hidden="true"></span>
+                <span class="chat-recording-time" id="chatRecordingTime">0:00</span>
+                <span class="chat-recording-label">{{ _('កំពុងថត...') }}</span>
+                <button type="button" id="chatRecordingCancel" class="chat-recording-cancel" aria-label="{{ _('ត្រលប់') }}"><i class="bi bi-x-lg"></i></button>
+                <button type="button" id="chatRecordingSend" class="chat-recording-send" aria-label="{{ _('ផ្ញើ') }}"><i class="bi bi-send-fill"></i></button>
+            </div>
+            <div id="chatDeleteDialog" class="chat-delete-dialog" hidden>
+                <div class="chat-delete-dialog-box" role="dialog" aria-modal="true" aria-labelledby="chatDeleteDialogTitle">
+                    <div class="chat-delete-dialog-title" id="chatDeleteDialogTitle">{{ _('តើអ្នកប្រាកដថាចង់លុបសារនេះមែនទេ?') }}</div>
+                    <button type="button" id="chatDeleteEveryoneBtn" class="chat-delete-option is-danger">
+                        <i class="bi bi-people-fill"></i>{{ _('លុបសម្រាប់គ្រប់គ្នា') }}
+                    </button>
+                    <button type="button" id="chatDeleteMeBtn" class="chat-delete-option is-danger">
+                        <i class="bi bi-person-fill"></i>{{ _('លុបសម្រាប់ខ្ញុំ') }}
+                    </button>
+                    <button type="button" id="chatDeleteCancelBtn" class="chat-delete-option">{{ _('បោះបង់') }}</button>
+                </div>
+            </div>
+            <div id="chatImageDialog" class="chat-modal" hidden>
+                <div class="chat-modal-box chat-image-dialog-box" role="dialog" aria-modal="true" aria-labelledby="chatImageDialogTitle">
+                    <div class="chat-modal-title" id="chatImageDialogTitle"></div>
+                    <div id="chatImagePreviews" class="chat-image-previews"></div>
+                    <input type="text" id="chatImageCaption" class="chat-image-caption" placeholder="{{ _('ចំណងជើងរូបភាព') }}" maxlength="1000" autocomplete="off">
+                    <div class="chat-image-dialog-actions">
+                        <button type="button" id="chatImageAddBtn" class="chat-text-btn"><i class="bi bi-plus-lg"></i>{{ _('បន្ថែម') }}</button>
+                        <span class="flex-grow-1"></span>
+                        <button type="button" id="chatImageCancelBtn" class="chat-text-btn">{{ _('បោះបង់') }}</button>
+                        <button type="button" id="chatImageSendBtn" class="chat-text-btn is-primary">{{ _('ផ្ញើ') }}</button>
+                    </div>
+                </div>
+            </div>
             <form id="chatForm" class="chat-form" autocomplete="off">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="file" id="chatImageInput" accept="image/png,image/jpeg,image/webp" multiple hidden>
+                <button type="button" id="chatAttachBtn" class="chat-mic-btn" aria-label="{{ _('រូបភាព') }}">
+                    <i class="bi bi-image-fill"></i>
+                </button>
                 <input type="text" id="chatInput" name="body" class="chat-input" placeholder="{{ _('វាយសារ...') }}" maxlength="1000" required>
+                <button type="button" id="chatMicBtn" class="chat-mic-btn" aria-label="{{ _('សារជាសំឡេង') }}">
+                    <i class="bi bi-mic-fill"></i>
+                </button>
                 <button type="submit" class="chat-send-btn" aria-label="{{ _('ផ្ញើ') }}">
                     <i class="bi bi-send-fill"></i>
                 </button>
@@ -60,6 +101,21 @@
         flockAge: {{ _('អាយុ (សប្តាហ៍)') | tojson }},
         vaccinated: {{ _('ចាក់វ៉ាក់សាំង') | tojson }},
         deaths: {{ _('ស្លាប់') | tojson }},
-        viewCase: {{ _('មើលករណីរោគវិនិច្ឆ័យ') | tojson }}
+        viewCase: {{ _('មើលករណីរោគវិនិច្ឆ័យ') | tojson }},
+        micPermission: {{ _('សូមអនុញ្ញាតឲ្យប្រើមីក្រូហ្វូន ដើម្បីផ្ញើសារជាសំឡេង។') | tojson }},
+        audioSendError: {{ _('សំឡេងផ្ញើមិនជោគជ័យ។ សូមព្យាយាមម្តងទៀត។') | tojson }},
+        imageSendError: {{ _('រូបភាពផ្ញើមិនជោគជ័យ។ សូមព្យាយាមម្តងទៀត។') | tojson }},
+        editTitle: {{ _('កែប្រែសារ') | tojson }},
+        deleteTitle: {{ _('លុបសារ') | tojson }},
+        deleteConfirm: {{ _('តើអ្នកប្រាកដថាចង់លុបសារនេះមែនទេ?') | tojson }},
+        editedTag: {{ _('បានកែប្រែ') | tojson }},
+        save: {{ _('រក្សាទុក') | tojson }},
+        cancel: {{ _('បោះបង់') | tojson }},
+        online: {{ _('អនឡាញ') | tojson }},
+        sendImage: {{ _('ផ្ញើរូបភាព') | tojson }},
+        sendImages: {{ _('ផ្ញើរូបភាព {n}') | tojson }},
+        removeImage: {{ _('ដករូបភាពចេញ') | tojson }},
+        imageTypeError: {{ _('ឯកសារនេះមិនមែនជារូបភាព JPG, PNG ឬ WebP ត្រឹមត្រូវទេ។') | tojson }},
+        tooManyImages: {{ _('អាចផ្ញើបានច្រើនបំផុត {n} រូបក្នុងពេលតែមួយ។') | tojson }}
     };
 </script>

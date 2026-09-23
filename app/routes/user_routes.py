@@ -1,6 +1,4 @@
 # app/routes/user_routes.py
-from datetime import datetime
-
 from flask import Blueprint, render_template, redirect, url_for, flash, abort, request
 from flask_login import login_required, current_user
 from app.i18n import gettext as _
@@ -12,6 +10,7 @@ from app.forms.user_forms import(
 from app.services.user_service import UserService
 from app.services.audit_service import AuditService
 from app.services.expert_system_service import CaseService
+from utils.timezone import now_kh
 
 # blueprint name define endpoint prefix: tbl_users.*
 user_bp = Blueprint("tbl_users", __name__, url_prefix="/users")
@@ -39,7 +38,7 @@ def profile():
     stats = {
         "cases": len(cases),
         "avg_confidence": round(sum(scored) / len(scored), 1) if scored else None,
-        "days": max((datetime.utcnow() - current_user.created_at).days, 0),
+        "days": max((now_kh() - current_user.created_at).days, 0),
     }
     return render_template(
         "users/profile.html",

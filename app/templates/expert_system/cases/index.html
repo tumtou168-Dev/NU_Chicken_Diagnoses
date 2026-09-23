@@ -24,10 +24,10 @@
                 <i class="bi bi-robot text-primary me-1" style="font-size: 0.85rem;"></i>
                 <div class="btn-group btn-group-sm" role="group" id="casesVoiceLangGroup">
                     <button type="button" class="btn btn-sm btn-outline-primary voice-toggle-btn active" data-lang="km" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 999px 0 0 999px;" title="{{ _('សំឡេងស្រីជាភាសាខ្មែរ (Sreymom)') }}">
-                        🇰🇭 ខ្មែរ
+                        <img class="voice-flag" src="{{ url_for('static', filename='img/flags/kh.svg') }}" alt="" aria-hidden="true">ខ្មែរ
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-primary voice-toggle-btn" data-lang="en" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 0 999px 999px 0;" title="{{ _('Female English Voice (Aria)') }}">
-                        🇬🇧 EN
+                        <img class="voice-flag" src="{{ url_for('static', filename='img/flags/gb.svg') }}" alt="" aria-hidden="true">EN
                     </button>
                 </div>
             </div>
@@ -52,7 +52,7 @@
                 <tr data-row>
                     <td class="text-nowrap">
                         <div class="fw-medium">{{ case.created_at.strftime('%Y-%m-%d') }}</div>
-                        <div class="small text-muted">{{ case.created_at.strftime('%H:%M') }}</div>
+                        <div class="small text-muted">{{ case.created_at.strftime('%I:%M %p') }}</div>
                     </td>
                     {% if show_user %}
                     <td>

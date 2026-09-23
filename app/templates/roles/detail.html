@@ -21,8 +21,8 @@
                     <div class="detail-item"><dt>{{ _('ឈ្មោះ') }}</dt><dd>{{ role.name | dt }}</dd></div>
                     <div class="detail-item"><dt>{{ _('ការពិពណ៌នា') }}</dt><dd>{{ (role.description | dt) or "—" }}</dd></div>
                     <div class="detail-item"><dt>{{ _('អ្នកប្រើប្រាស់') }}</dt><dd>{{ role.users | length }}</dd></div>
-                    <div class="detail-item"><dt>{{ _('បានបង្កើត') }}</dt><dd>{{ role.created_at.strftime('%Y-%m-%d %H:%M') }}</dd></div>
-                    <div class="detail-item"><dt>{{ _('ធ្វើបច្ចុប្បន្នភាព') }}</dt><dd>{{ role.updated_at.strftime('%Y-%m-%d %H:%M') }}</dd></div>
+                    <div class="detail-item"><dt>{{ _('បានបង្កើត') }}</dt><dd>{{ role.created_at.strftime('%Y-%m-%d %I:%M %p') }}</dd></div>
+                    <div class="detail-item"><dt>{{ _('ធ្វើបច្ចុប្បន្នភាព') }}</dt><dd>{{ role.updated_at.strftime('%Y-%m-%d %I:%M %p') }}</dd></div>
                 </dl>
             </div>
         </div>

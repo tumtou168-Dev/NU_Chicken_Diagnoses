@@ -19,7 +19,7 @@
                         {% else %}
                         <span class="badge-soft badge-soft-danger"><span class="dot"></span>{{ bi('បិទ (ការថែទាំ)') }}</span>
                         {% if status.disabled_until %}
-                        <div class="small text-muted mt-1">{{ bi('នឹងបើកឡើងវិញដោយស្វ័យប្រវត្តិនៅ') }} {{ status.disabled_until.strftime('%Y-%m-%d %H:%M') }} UTC</div>
+                        <div class="small text-muted mt-1">{{ bi('នឹងបើកឡើងវិញដោយស្វ័យប្រវត្តិនៅ') }} {{ status.disabled_until.strftime('%Y-%m-%d %I:%M %p') }}</div>
                         {% endif %}
                         {% endif %}
                     </td>

@@ -1,5 +1,7 @@
 # app/models/user.py
-from datetime import datetime
+from datetime import timedelta
+
+from utils.timezone import now_kh
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from extensions import db
@@ -16,9 +18,10 @@ class UserTable(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     avatar = db.Column(db.String(255), nullable=True)  # filename under static/uploads/avatars
+    last_seen_at = db.Column(db.DateTime, nullable=True)  # refreshed by any request; drives the chat "online" dot
     
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=now_kh, nullable=False)
+    updated_at = db.Column(db.DateTime, default=now_kh, onupdate=now_kh, nullable=False)
     
     # NOTE: matches RoleTable.users
     roles = db.relationship("RoleTable", secondary=tbl_user_roles, back_populates="users")
@@ -29,6 +32,13 @@ class UserTable(UserMixin, db.Model):
     def check_password(self, password:str) -> bool:
         return check_password_hash(self.password_hash, password)
     
+    # Any open page polls the chat every 15s, so a user whose tab is open is seen well within this.
+    ONLINE_WINDOW = timedelta(minutes=2)
+
+    @property
+    def is_online(self) -> bool:
+        return self.last_seen_at is not None and now_kh() - self.last_seen_at < self.ONLINE_WINDOW
+
     def has_role(self, role_name: str) -> bool:
         return any(role.name == role_name for role in self.roles)
     

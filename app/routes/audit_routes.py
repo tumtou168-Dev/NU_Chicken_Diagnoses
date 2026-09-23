@@ -64,7 +64,7 @@ def export():
             log.target_id, 
             log.details, 
             log.ip_address, 
-            log.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            log.created_at.strftime("%Y-%m-%d %I:%M:%S %p")
         ])
         
     output.seek(0)

@@ -1,5 +1,5 @@
 # app/models/page_text.py
-from datetime import datetime
+from utils.timezone import now_kh
 from extensions import db
 from app.models.bilingual import BilingualMixin
 
@@ -15,8 +15,8 @@ class PageText(BilingualMixin, db.Model):
     description_km = db.Column(db.String(255))
     text_km = db.Column(db.Text, nullable=False)
     text_en = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=now_kh, nullable=False)
+    updated_at = db.Column(db.DateTime, default=now_kh, onupdate=now_kh, nullable=False)
 
     def __repr__(self) -> str:
         return f"<PageText {self.key}>"

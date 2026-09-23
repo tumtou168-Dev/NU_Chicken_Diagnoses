@@ -137,7 +137,7 @@
                         <tr>
                             <td class="text-nowrap">
                                 <div class="fw-medium">{{ case.created_at.strftime('%Y-%m-%d') }}</div>
-                                <div class="small text-muted">{{ case.created_at.strftime('%H:%M') }}</div>
+                                <div class="small text-muted">{{ case.created_at.strftime('%I:%M %p') }}</div>
                             </td>
                             {% if d.is_staff %}
                             <td>
@@ -174,7 +174,7 @@
                         {{ avatar(log.user.username if log.user else '?', 'sm', avatar_url(log.user) if log.user else None) }}
                         <div class="min-w-0">
                             <div class="small fw-medium text-truncate">{{ log.user.username if log.user else bi('ប្រព័ន្ធ/ភ្ញៀវ') }}</div>
-                            <div class="small text-muted">{{ log.target_type | audit_target }}{% if log.target_id %} #{{ log.target_id }}{% endif %} · {{ log.created_at.strftime('%H:%M') }}</div>
+                            <div class="small text-muted">{{ log.target_type | audit_target }}{% if log.target_id %} #{{ log.target_id }}{% endif %} · {{ log.created_at.strftime('%I:%M %p') }}</div>
                         </div>
                     </div>
                     {{ action_badge(log.action) }}

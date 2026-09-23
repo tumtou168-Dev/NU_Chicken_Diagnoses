@@ -236,6 +236,11 @@ def google_callback():
 @login_required
 def logout():
     user_id = current_user.id
+    # Drop the chat "online" dot right away (updated_at pinned — logging out isn't a profile edit).
+    db.session.execute(
+        db.update(UserTable).where(UserTable.id == user_id).values(last_seen_at=None, updated_at=UserTable.updated_at)
+    )
+    db.session.commit()
     logout_user()
     AuditService.log("LOGOUT", "User", user_id, "User logged out")
     flash(_("អ្នកបានចាកចេញរួចរាល់។"), "info")

@@ -1,9 +1,10 @@
 # app/services/page_feature_service.py
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Optional
 
 from extensions import db
 from app.models.page_feature import PageFeature
+from utils.timezone import now_kh
 
 
 class PageFeatureService:
@@ -20,7 +21,7 @@ class PageFeatureService:
         feature = cls._get(page)
         if feature is None or feature.enabled:
             return True
-        if feature.disabled_until and datetime.utcnow() >= feature.disabled_until:
+        if feature.disabled_until and now_kh() >= feature.disabled_until:
             # The timer ran out - flip it back on now, no scheduler needed.
             feature.enabled = True
             feature.disabled_until = None
@@ -50,7 +51,7 @@ class PageFeatureService:
     @classmethod
     def disable_for(cls, page: str, minutes: int) -> PageFeature:
         feature = cls._get(page)
-        until = datetime.utcnow() + timedelta(minutes=minutes)
+        until = now_kh() + timedelta(minutes=minutes)
         if feature is None:
             feature = PageFeature(page=page, enabled=False, disabled_until=until)
             db.session.add(feature)

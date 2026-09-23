@@ -64,7 +64,7 @@
                         <div class="pf-case d-flex align-items-center justify-content-between gap-2">
                             <a href="{{ url_for('expert_system.cases_detail', case_id=case.id) }}" class="min-w-0 text-decoration-none text-reset flex-grow-1">
                                 <div class="pf-case-name">{{ case.disease.inline("name") if case.disease else _('មិនស្គាល់') }}</div>
-                                <div class="pf-case-date">{{ case.created_at.strftime('%Y-%m-%d · %H:%M') }}</div>
+                                <div class="pf-case-date">{{ case.created_at.strftime('%Y-%m-%d · %I:%M %p') }}</div>
                             </a>
                             <div class="d-flex align-items-center gap-2 flex-shrink-0">
                                 {{ confidence_pill(case.confidence) }}

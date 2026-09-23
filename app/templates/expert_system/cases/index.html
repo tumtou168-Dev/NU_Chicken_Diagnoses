@@ -52,7 +52,7 @@
                 <tr data-row>
                     <td class="text-nowrap">
                         <div class="fw-medium">{{ case.created_at.strftime('%Y-%m-%d') }}</div>
-                        <div class="small text-muted">{{ case.created_at.strftime('%H:%M') }}</div>
+                        <div class="small text-muted">{{ case.created_at.strftime('%I:%M %p') }}</div>
                     </td>
                     {% if show_user %}
                     <td>

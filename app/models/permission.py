@@ -1,5 +1,5 @@
 # app/models/permission.py
-from datetime import datetime
+from utils.timezone import now_kh
 from extensions import db
 from app.models.associations import tbl_role_permissions
 
@@ -13,8 +13,8 @@ class PermissionTable(db.Model):
     description = db.Column(db.String(255))
     module = db.Column(db.String(80), nullable=False, default="General")
     
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=now_kh, nullable=False)
+    updated_at = db.Column(db.DateTime, default=now_kh, onupdate=now_kh, nullable=False)
     
     # NOTE: matches RoleTable.permissions
     roles = db.relationship("RoleTable", secondary=tbl_role_permissions, back_populates="permissions")

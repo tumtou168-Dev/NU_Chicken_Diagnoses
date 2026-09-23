@@ -1,5 +1,5 @@
 # app/models/expert_system.py
-from datetime import datetime
+from utils.timezone import now_kh
 from extensions import db
 from app.models.associations import tbl_cases_symptoms, tbl_rules_symptoms
 from app.models.bilingual import BilingualMixin
@@ -13,7 +13,7 @@ class Category(BilingualMixin, db.Model):
     name_km = db.Column(db.String(120))
     description = db.Column(db.String(255))
     description_km = db.Column(db.String(255))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=now_kh, nullable=False)
 
     diseases = db.relationship("Disease", back_populates="category")
 
@@ -29,7 +29,7 @@ class Symptom(BilingualMixin, db.Model):
     name_km = db.Column(db.String(120))
     description = db.Column(db.String(255))
     description_km = db.Column(db.String(255))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=now_kh, nullable=False)
 
     cases = db.relationship(
         "Case",
@@ -58,7 +58,7 @@ class Disease(BilingualMixin, db.Model):
     treatment_km = db.Column(db.String(255))
     category_id = db.Column(db.Integer, db.ForeignKey("tbl_categories.id"))
     doctor_id = db.Column(db.Integer, db.ForeignKey("tbl_users.id"), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=now_kh, nullable=False)
 
     category = db.relationship("Category", back_populates="diseases")
     doctor = db.relationship("UserTable", foreign_keys=[doctor_id])
@@ -80,7 +80,7 @@ class Rule(BilingualMixin, db.Model):
     priority = db.Column(db.Integer, nullable=False, default=1)
     confidence = db.Column(db.Float, nullable=False, default=80.0)
     disease_id = db.Column(db.Integer, db.ForeignKey("tbl_diseases.id"), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=now_kh, nullable=False)
 
     disease = db.relationship("Disease", back_populates="rules")
     symptoms = db.relationship(
@@ -100,7 +100,7 @@ class Case(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("tbl_users.id"))
     disease_id = db.Column(db.Integer, db.ForeignKey("tbl_diseases.id"))
     confidence = db.Column(db.Float)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=now_kh, nullable=False)
 
     symptoms = db.relationship(
         "Symptom",

@@ -8,6 +8,7 @@ from sqlalchemy import desc, func
 from extensions import db
 from app.i18n import ordered, pair_text
 from app.models.audit_log import AuditLog
+from utils.timezone import now_kh
 from app.models.expert_system import Case, Disease, Rule, Symptom
 from app.models.user import UserTable
 
@@ -59,7 +60,7 @@ class DashboardService:
         # Admins/Doctors see every case (same rule as the Cases page); users only their own.
         scope = [] if is_staff else [Case.user_id == user.id]
 
-        today = datetime.utcnow().date()
+        today = now_kh().date()
         first_day = today - timedelta(days=TREND_DAYS - 1)
         created = db.session.query(Case.created_at).filter(
             *scope, Case.created_at >= datetime.combine(first_day, time.min)

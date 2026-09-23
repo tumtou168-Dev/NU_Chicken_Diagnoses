@@ -1,11 +1,13 @@
 # app/__init__.py
 import os
-from flask import Flask, redirect, url_for, flash, request, render_template
+from flask import Flask, redirect, url_for, flash, request, render_template, jsonify
 from flask_login import current_user
+from datetime import timedelta
 from sqlalchemy import inspect, text
 from config import Config
 from extensions import db, csrf, login_manager
 from app.models.user import UserTable
+from utils.timezone import now_kh
 
 
 def create_app(config_class: type[Config] = Config):
@@ -50,6 +52,24 @@ def create_app(config_class: type[Config] = Config):
     app.register_blueprint(chat_bp)
     
     from app.services.avatar_service import AvatarService
+
+    LAST_SEEN_THROTTLE = timedelta(seconds=30)
+
+    @app.before_request
+    def touch_last_seen():
+        """Record that the signed-in user is active, at most every 30s so polling doesn't write on every request."""
+        if request.endpoint == "static" or not current_user.is_authenticated:
+            return
+        now = now_kh()
+        if current_user.last_seen_at and now - current_user.last_seen_at < LAST_SEEN_THROTTLE:
+            return
+        # Core UPDATE with updated_at pinned, so being online doesn't look like a profile edit.
+        db.session.execute(
+            db.update(UserTable)
+            .where(UserTable.id == current_user.id)
+            .values(last_seen_at=now, updated_at=UserTable.updated_at)
+        )
+        db.session.commit()
 
     from app.forms.permission_forms import MODULE_LABELS
 
@@ -103,6 +123,8 @@ def create_app(config_class: type[Config] = Config):
 
     @app.errorhandler(413)
     def file_too_large(_error):
+        if request.path.startswith("/chat/api/"):  # fetch() callers expect JSON, not a redirect
+            return jsonify({"error": gettext("ឯកសារដែលបានផ្ទុកឡើងធំពេក។ ទំហំអតិបរមាគឺ 2MB។")}), 413
         flash(gettext("ឯកសារដែលបានផ្ទុកឡើងធំពេក។ ទំហំអតិបរមាគឺ 2MB។"), "danger")
         return redirect(request.referrer or url_for("tbl_users.profile"))
 
@@ -151,10 +173,13 @@ def create_app(config_class: type[Config] = Config):
 
 
 def _ensure_user_avatar_column() -> None:
-    """create_all() never alters existing tables, so add tbl_users.avatar if it is missing."""
+    """create_all() never alters existing tables, so add tbl_users.avatar / last_seen_at if missing."""
     columns = {c["name"] for c in inspect(db.engine).get_columns("tbl_users")}
     if "avatar" not in columns:
         db.session.execute(text("ALTER TABLE tbl_users ADD COLUMN avatar VARCHAR(255)"))
+        db.session.commit()
+    if "last_seen_at" not in columns:
+        db.session.execute(text("ALTER TABLE tbl_users ADD COLUMN last_seen_at TIMESTAMP"))
         db.session.commit()
 
 
@@ -192,6 +217,11 @@ CHAT_MESSAGE_COLUMNS = {
     "vaccinated_count": "INTEGER",
     "death_count": "INTEGER",
     "image": "VARCHAR(255)",
+    "audio": "VARCHAR(255)",
+    "audio_duration": "INTEGER",
+    "is_deleted": "BOOLEAN NOT NULL DEFAULT FALSE",
+    "edited_at": "TIMESTAMP",
+    "caption": "VARCHAR(1000)",
 }
 
 

@@ -5,9 +5,11 @@ from flask_login import login_required, current_user
 from app.i18n import gettext as _, data_text
 from app.services.chat_service import ChatService
 from app.services.chat_image_service import ChatImageService
+from app.services.chat_audio_service import ChatAudioService
 from app.services.avatar_service import AvatarService
 from app.services.expert_system_service import CaseService
 from app.models.user import UserTable
+from extensions import db
 
 chat_bp = Blueprint("chat", __name__, url_prefix="/chat")
 
@@ -32,16 +34,29 @@ def _thread_user_id() -> int:
 
 
 def _serialize(message) -> dict:
+    is_mine = message.sender_id == current_user.id
     data = {
         "id": message.id,
-        "body": message.body,
+        "body": ChatService.display_body(message),
         "is_from_staff": message.is_from_staff,
-        "is_mine": message.sender_id == current_user.id,
+        "is_mine": is_mine,
         "sender_name": message.sender.full_name,
         "sender_avatar_url": AvatarService.url(message.sender),
         "sender_role": _role_label(message.sender) if message.is_from_staff else "",
-        "created_at": message.created_at.strftime("%Y-%m-%d %H:%M"),
+        "created_at": message.created_at.strftime("%Y-%m-%d %I:%M %p"),
+        "is_deleted": message.is_deleted,
+        "is_edited": message.edited_at is not None,
+        "can_delete": ChatService.can_delete(message, current_user) and not message.is_deleted,
+        "can_edit": is_mine and message.is_editable,
     }
+    if message.is_deleted:
+        return data
+    if message.is_audio:
+        data["audio_url"] = ChatAudioService.url(message.audio)
+        data["audio_duration"] = message.audio_duration
+    if message.is_image:
+        data["image_url"] = ChatImageService.url(message.image)
+        data["caption"] = message.caption or ""
     if message.is_contact_request:
         data["contact_request"] = {
             "case_id": message.case_id,
@@ -60,8 +75,14 @@ def messages():
     thread_user_id = _thread_user_id()
     is_staff = ChatService.is_staff(current_user)
     ChatService.mark_read(thread_user_id, as_staff=is_staff)
-    items = [_serialize(m) for m in ChatService.thread_messages(thread_user_id)]
-    return jsonify({"messages": items})
+    items = [_serialize(m) for m in ChatService.thread_messages(thread_user_id, current_user)]
+    # The other side's presence for the header dot: the farmer for staff, "any doctor" for a farmer.
+    if is_staff:
+        peer = db.session.get(UserTable, thread_user_id)
+        peer_online = bool(peer and peer.is_online)
+    else:
+        peer_online = ChatService.any_staff_online()
+    return jsonify({"messages": items, "peer_online": peer_online})
 
 
 @chat_bp.route("/api/send", methods=["POST"])
@@ -72,6 +93,76 @@ def send():
     if not body:
         return jsonify({"error": "empty"}), 400
     message = ChatService.send(thread_user_id, current_user, body)
+    return jsonify({"message": _serialize(message)})
+
+
+@chat_bp.route("/api/send-audio", methods=["POST"])
+@login_required
+def send_audio():
+    thread_user_id = _thread_user_id()
+    file = request.files.get("audio")
+    if not file or not file.filename:
+        return jsonify({"error": "empty"}), 400
+
+    error = ChatAudioService.validate(file)
+    if error:
+        return jsonify({"error": error}), 400
+
+    duration = request.form.get("duration", type=int)
+    filename = ChatAudioService.save(file)
+    message = ChatService.send_audio(thread_user_id, current_user, filename, duration)
+    return jsonify({"message": _serialize(message)})
+
+
+@chat_bp.route("/api/send-image", methods=["POST"])
+@login_required
+def send_image():
+    thread_user_id = _thread_user_id()
+    file = request.files.get("image")
+    if not file or not file.filename:
+        return jsonify({"error": "empty"}), 400
+
+    error = ChatImageService.validate(file)
+    if error:
+        return jsonify({"error": error}), 400
+
+    filename = ChatImageService.save(file)
+    message = ChatService.send_image(thread_user_id, current_user, filename, request.form.get("caption", ""))
+    return jsonify({"message": _serialize(message)})
+
+
+@chat_bp.route("/api/edit", methods=["POST"])
+@login_required
+def edit():
+    message_id = request.form.get("message_id", type=int)
+    body = (request.form.get("body") or "").strip()
+    if not message_id or not body:
+        return jsonify({"error": "empty"}), 400
+    try:
+        message = ChatService.edit(message_id, current_user, body)
+    except LookupError:
+        abort(404)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify({"message": _serialize(message)})
+
+
+@chat_bp.route("/api/delete", methods=["POST"])
+@login_required
+def delete():
+    """scope=me hides the message from the current user only; scope=everyone (the default)
+    replaces it with a "message deleted" placeholder for every participant."""
+    message_id = request.form.get("message_id", type=int)
+    scope = request.form.get("scope", "everyone")
+    if not message_id or scope not in ("me", "everyone"):
+        return jsonify({"error": "empty"}), 400
+    try:
+        if scope == "me":
+            ChatService.delete_for_me(message_id, current_user)
+            return jsonify({"hidden": message_id})
+        message = ChatService.delete(message_id, current_user)
+    except LookupError:
+        abort(404)
     return jsonify({"message": _serialize(message)})
 
 
@@ -90,15 +181,16 @@ def unread_count():
 def threads():
     if not ChatService.is_staff(current_user):
         abort(403)
-    rows = ChatService.staff_threads()
+    rows = ChatService.staff_threads(current_user)
     return jsonify({"threads": [
         {
             "user_id": row["user"].id,
             "full_name": row["user"].full_name,
             "avatar_url": AvatarService.url(row["user"]),
-            "last_message": row["last_message"].body,
-            "last_at": row["last_message"].created_at.strftime("%Y-%m-%d %H:%M"),
+            "last_message": row["last_message_preview"],
+            "last_at": row["last_message"].created_at.strftime("%Y-%m-%d %I:%M %p"),
             "unread_count": row["unread_count"],
+            "is_online": row["user"].is_online,
         }
         for row in rows
     ]})

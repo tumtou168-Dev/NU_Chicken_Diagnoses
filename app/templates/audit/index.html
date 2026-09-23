@@ -45,7 +45,7 @@
                 <tr>
                     <td class="text-nowrap">
                         <div class="fw-medium">{{ log.created_at.strftime('%Y-%m-%d') }}</div>
-                        <div class="small text-muted">{{ log.created_at.strftime('%H:%M:%S') }}</div>
+                        <div class="small text-muted">{{ log.created_at.strftime('%I:%M:%S %p') }}</div>
                     </td>
                     <td>
                         {% if log.user %}

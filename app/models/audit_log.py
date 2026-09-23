@@ -1,4 +1,4 @@
-from datetime import datetime
+from utils.timezone import now_kh
 from extensions import db
 
 class AuditLog(db.Model):
@@ -11,7 +11,7 @@ class AuditLog(db.Model):
     target_id = db.Column(db.String(50), nullable=True)
     details = db.Column(db.Text, nullable=True) # JSON or text description of changes
     ip_address = db.Column(db.String(50), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=now_kh, nullable=False)
 
     user = db.relationship("UserTable")
 

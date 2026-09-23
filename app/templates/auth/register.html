@@ -24,7 +24,7 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 }
 </style>
 {% with css='floating' %}{% include "layouts/_lang_switch.html" %}{% include "layouts/_theme_toggle.html" %}{% endwith %}
-<div class="auth-shell">
+<div class="auth-shell auth-register" data-auth-mode="register">
     {% include "auth/_aside.html" %}
     <div class="auth-main">
         <div class="auth-card wide">
@@ -136,8 +136,8 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
                 </div>
 
                 <!-- Vertical Criteria List Card -->
-                <div class="password-criteria-card mb-4 p-3 rounded-3" style="background-color: var(--surface-muted, #f8fafc); border: 1px solid var(--border-color, #e2e8f0);">
-                    <div class="password-criteria d-flex flex-column gap-2">
+                <div class="password-criteria-card mb-3 rounded-3" style="background-color: var(--surface-muted, #f8fafc); border: 1px solid var(--border-color, #e2e8f0);">
+                    <div class="password-criteria">
                         <div class="criteria-item d-flex align-items-center gap-2 small text-muted" id="critLength">
                             <i class="bi bi-circle" style="font-size: 0.68rem; transition: all 0.2s ease;"></i>
                             <span>{{ _('យ៉ាងហោច ៨ តួអក្សរ') }}</span>

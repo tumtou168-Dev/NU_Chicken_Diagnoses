@@ -544,6 +544,8 @@ body > .container-fluid > .row { --bs-gutter-x: 0; margin: 0; }
     flex-shrink: 0;
 }
 .avatar-sm { width: 28px; height: 28px; font-size: 0.75rem; }
+/* Rules table: the approving doctor as avatar + name. */
+.rule-approver { display: inline-flex; align-items: center; gap: 0.5rem; white-space: nowrap; font-weight: 500; }
 .avatar-lg { width: 56px; height: 56px; font-size: 1.25rem; }
 .avatar-xl { width: 96px; height: 96px; font-size: 2.25rem; border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--border-color); }
 .avatar { overflow: hidden; }
@@ -1210,6 +1212,21 @@ td .dual .dual-2, .info-block .dual .dual-2, .symptom-desc .dual .dual-2 { font-
 .dx-panel-treat { background: var(--success-bg); border-color: var(--success-border); }
 .dx-panel-treat .info-label { color: var(--success-fg); }
 .dx-rule { margin-top: 0.85rem; font-size: 0.8125rem; color: var(--text-muted); }
+/* The doctor who approved the matched rule (or a note that none has). */
+.dx-approver {
+    display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 0.6rem;
+    padding: 0.3rem 0.75rem 0.3rem 0.3rem; border-radius: 999px;
+    background: var(--success-bg); border: 1px solid var(--success-border); font-size: 0.8125rem; color: var(--text-main);
+}
+.dx-approver-avatar {
+    width: 26px; height: 26px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--primary-soft); color: var(--primary-soft-fg); font-weight: 700; font-size: 0.75rem;
+}
+.dx-approver-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dx-approver-text i { color: var(--success-fg); margin-right: 0.3rem; }
+.dx-approver strong { color: var(--heading); }
+.dx-approver.is-pending { gap: 0.4rem; padding: 0.3rem 0.75rem; background: var(--surface-muted); border-color: var(--border-soft); color: var(--text-muted); }
 
 .dx-gauge {
     display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 0.15rem;

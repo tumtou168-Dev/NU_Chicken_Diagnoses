@@ -152,6 +152,7 @@ def create_app(config_class: type[Config] = Config):
         db.create_all()
         _ensure_user_avatar_column()
         _ensure_disease_doctor_column()
+        _ensure_rule_approver_column()
         _ensure_khmer_columns()
         _ensure_page_feature_columns()
         _ensure_chat_message_columns()
@@ -180,6 +181,14 @@ def _ensure_user_avatar_column() -> None:
         db.session.commit()
     if "last_seen_at" not in columns:
         db.session.execute(text("ALTER TABLE tbl_users ADD COLUMN last_seen_at TIMESTAMP"))
+        db.session.commit()
+
+
+def _ensure_rule_approver_column() -> None:
+    """create_all() never alters existing tables, so add tbl_rules.approved_by_id if it is missing."""
+    columns = {c["name"] for c in inspect(db.engine).get_columns("tbl_rules")}
+    if "approved_by_id" not in columns:
+        db.session.execute(text("ALTER TABLE tbl_rules ADD COLUMN approved_by_id INTEGER REFERENCES tbl_users(id)"))
         db.session.commit()
 
 

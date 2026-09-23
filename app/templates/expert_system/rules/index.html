@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% from "layouts/_admin_macros.html" import table_filter, empty_state, stat %}
+{% from "layouts/_admin_macros.html" import table_filter, empty_state, stat, avatar %}
 {% block title %}{{ _('វិធាន') }}{% endblock %}
 {% block page_title %}{{ bi('វិធាន') }}{% endblock %}
 {% block page_subtitle %}{{ bi('ផ្គូផ្គងរោគសញ្ញាទៅនឹងជំងឺ។') }}{% endblock %}
@@ -24,7 +24,7 @@
     </div>
     <div class="table-responsive">
         <table class="table table-hover admin-table" id="rulesTable">
-            <thead><tr><th>{{ bi('ចំណងជើង') }}</th><th>{{ bi('រោគសញ្ញា') }}</th><th>{{ bi('ជំងឺ##one') }}</th><th>{{ bi('ទំនុកចិត្ត') }}</th><th class="text-end">{{ bi('សកម្មភាព') }}</th></tr></thead>
+            <thead><tr><th>{{ bi('ចំណងជើង') }}</th><th>{{ bi('រោគសញ្ញា') }}</th><th>{{ bi('ជំងឺ##one') }}</th><th>{{ bi('ទំនុកចិត្ត') }}</th><th>{{ bi('អនុម័តដោយ') }}</th><th class="text-end">{{ bi('សកម្មភាព') }}</th></tr></thead>
             <tbody>
                 {% for rule in rules %}
                 <tr data-row>
@@ -32,13 +32,23 @@
                     <td><div class="tag-list">{% for s in rule.symptoms %}<span class="badge-soft badge-soft-warning">{{ s.inline("name") }}</span>{% endfor %}</div></td>
                     <td><span class="badge-soft badge-soft-danger">{{ rule.disease.inline("name") }}</span></td>
                     <td>{{ rule.confidence }}%</td>
+                    <td>
+                        {% if rule.approved_by %}
+                        <span class="rule-approver" title="{{ _('ពេទ្យដែលអនុម័ត') }}">
+                            {{ avatar(rule.approved_by.full_name, "sm", avatar_url(rule.approved_by)) }}
+                            <span>{{ rule.approved_by.full_name }}</span>
+                        </span>
+                        {% else %}
+                        <span class="badge-soft badge-soft-warning text-nowrap"><i class="bi bi-hourglass-split me-1"></i>{{ _('មិនទាន់អនុម័ត') }}</span>
+                        {% endif %}
+                    </td>
                     <td class="text-end text-nowrap">
                         <button type="button" class="icon-btn" data-bs-toggle="modal" data-bs-target="#editRuleModal_{{ rule.id }}" title="{{ _('កែប្រែ') }}"><i class="bi bi-pencil"></i></button>
                         <button type="button" class="icon-btn danger" data-bs-toggle="modal" data-bs-target="#deleteRuleModal" data-delete-url="{{ url_for('expert_system.rules_delete', rule_id=rule.id) }}" data-delete-name="{{ rule.pair('title') }}" title="{{ _('លុប') }}"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
                 {% endfor %}
-                <tr data-empty {% if rules %}hidden{% endif %}><td colspan="5">{{ empty_state('diagram-3', _('មិនទាន់មានវិធានទេ។')) }}</td></tr>
+                <tr data-empty {% if rules %}hidden{% endif %}><td colspan="6">{{ empty_state('diagram-3', _('មិនទាន់មានវិធានទេ។')) }}</td></tr>
             </tbody>
         </table>
     </div>

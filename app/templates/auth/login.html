@@ -11,7 +11,7 @@
 
 {% block content %}
 {% with css='floating' %}{% include "layouts/_lang_switch.html" %}{% include "layouts/_theme_toggle.html" %}{% endwith %}
-<div class="auth-shell">
+<div class="auth-shell auth-login" data-auth-mode="login">
     {% include "auth/_aside.html" %}
     <div class="auth-main">
     <div class="auth-card">

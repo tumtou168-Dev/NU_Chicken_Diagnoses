@@ -32,7 +32,7 @@ class UserTable(UserMixin, db.Model):
     def check_password(self, password:str) -> bool:
         return check_password_hash(self.password_hash, password)
     
-    # Any open page polls the chat every 10s, so a user whose tab is open is seen well within this.
+    # Any open page polls the chat every 15s, so a user whose tab is open is seen well within this.
     ONLINE_WINDOW = timedelta(minutes=2)
 
     @property

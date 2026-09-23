@@ -1,8 +1,9 @@
 import re
 import secrets
+import time
 import urllib.parse
 import requests
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import db
 from app.i18n import gettext as _
@@ -10,7 +11,8 @@ from app.models.user import UserTable
 from app.models.role import RoleTable
 from app.services.user_service import UserService
 from app.services.audit_service import AuditService
-from app.services.email_service import EmailService, generate_reset_token, verify_reset_token
+from app.models.password_reset import PasswordResetCode
+from app.services.password_reset_service import PasswordResetService
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -20,7 +22,8 @@ def login():
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
         
-        user = UserTable.query.filter_by(username=username).first()
+        # Accept email too: Google sign-ups get a generated username they may not know
+        user = UserTable.query.filter_by(username=username).first() or _find_user_by_email(username)
         
         if user and user.check_password(password):
             if not user.is_active:
@@ -184,7 +187,7 @@ def google_callback():
     email = userinfo.get("email", "").strip().lower()
     full_name = userinfo.get("name", "").strip() or email.split("@")[0]
 
-    user = UserTable.query.filter_by(email=email).first()
+    user = _find_user_by_email(email)
 
     if user:
         if not user.is_active:
@@ -194,7 +197,9 @@ def google_callback():
         login_user(user)
         AuditService.log("LOGIN", "User", user.id, f"Google login: {user.username}")
         flash(_("បានចូលតាមរយៈ Google ដោយជោគជ័យ។"), "success")
-        return redirect(url_for("dashboard.index"))
+        if not user.password_set:
+            return redirect(url_for("auth.set_password"))
+        return redirect(url_for(user.landing_endpoint()))
 
     # Register new user from Google account
     default_role = RoleTable.query.filter_by(name="User").first()
@@ -226,10 +231,13 @@ def google_callback():
         role_id=default_role_id,
     )
 
+    new_user.password_set = False  # the random password above is never shown to anyone
+    db.session.commit()
+
     login_user(new_user)
     AuditService.log("REGISTER", "User", new_user.id, f"Google registration: {new_user.username}")
     flash(_("បានចុះឈ្មោះ និងចូលតាមរយៈ Google ដោយជោគជ័យ។"), "success")
-    return redirect(url_for("dashboard.index"))
+    return redirect(url_for("auth.set_password"))
 
 
 @auth_bp.route("/logout")
@@ -243,8 +251,98 @@ def logout():
     db.session.commit()
     logout_user()
     AuditService.log("LOGOUT", "User", user_id, "User logged out")
-    flash(_("អ្នកបានចាកចេញរួចរាល់។"), "info")
+    flash(_("អ្នកបានចាកចេញរួចរាល់។"), "success")
     return redirect(url_for("auth.login"))
+
+
+def _find_user_by_email(email: str) -> UserTable | None:
+    # Emails are stored as typed at registration, so compare case-insensitively.
+    return UserTable.query.filter(db.func.lower(UserTable.email) == email.strip().lower()).first()
+
+
+def _new_password_errors(password: str, confirm_password: str) -> list[str]:
+    """Same strength rules as the admin user form (forms/user_forms.strong_password)."""
+    errors: list[str] = []
+    if not password:
+        errors.append(_("សូមបញ្ចូលពាក្យសម្ងាត់ថ្មី។"))
+    elif len(password) < 8:
+        errors.append(_("ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។"))
+    elif not re.search(r"[A-Z]", password):
+        errors.append(_("ពាក្យសម្ងាត់ត្រូវមានអក្សរធំ (A-Z) យ៉ាងតិចមួយ។"))
+    elif not re.search(r"[a-z]", password):
+        errors.append(_("ពាក្យសម្ងាត់ត្រូវមានអក្សរតូច (a-z) យ៉ាងតិចមួយ។"))
+    elif not re.search(r"[0-9]", password):
+        errors.append(_("ពាក្យសម្ងាត់ត្រូវមានលេខ (0-9) យ៉ាងតិចមួយ។"))
+    elif not re.search(r"[!@#$%^&*()<>?\"{}|<>_\-+=]", password):
+        errors.append(_("ពាក្យសម្ងាត់ត្រូវមាននិមិត្តសញ្ញាពិសេសយ៉ាងតិចមួយ (ឧ. ! @ # $)។"))
+
+    if password and password != confirm_password:
+        errors.append(_("ពាក្យសម្ងាត់មិនដូចគ្នាទេ។"))
+    return errors
+
+
+USERNAME_RE = re.compile(r"^[A-Za-z0-9_.]{3,80}$")
+
+
+def _username_errors(username: str, user: UserTable) -> list[str]:
+    if not USERNAME_RE.match(username):
+        return [_("ឈ្មោះអ្នកប្រើប្រាស់ត្រូវមាន ៣-៨០ តួ ហើយប្រើបានតែអក្សរ លេខ _ និង . ប៉ុណ្ណោះ។")]
+    taken = UserTable.query.filter(
+        db.func.lower(UserTable.username) == username.lower(), UserTable.id != user.id
+    ).first()
+    if taken:
+        return [_("ឈ្មោះអ្នកប្រើប្រាស់នេះមានគេប្រើរួចហើយ។")]
+    return []
+
+
+@auth_bp.before_app_request
+def require_password_setup():
+    """Google sign-ups must pick a username and password before using the app."""
+    if not current_user.is_authenticated or current_user.password_set:
+        return None
+    endpoint = request.endpoint or ""
+    if endpoint in ("static", "auth.set_password", "auth.logout") or endpoint.startswith("lang."):
+        return None
+    if request.path.startswith("/chat/api/"):  # fetch() callers expect JSON, not a redirect
+        return jsonify({"error": "password setup required"}), 403
+    return redirect(url_for("auth.set_password"))
+
+
+@auth_bp.route("/set-password", methods=["GET", "POST"])
+@login_required
+def set_password():
+    """Google sign-ups choose a username and password, so they can also sign in without Google."""
+    if current_user.password_set:
+        return redirect(url_for(current_user.landing_endpoint()))
+
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        errors = _username_errors(username, current_user) + _new_password_errors(
+            password, request.form.get("confirm_password", ""))
+        if errors:
+            for msg in errors:
+                flash(msg, "danger")
+            return render_template("auth/set_password.html", username=username)
+
+        old_username = current_user.username
+        current_user.username = username
+        current_user.set_password(password)
+        db.session.commit()
+        AuditService.log("PASSWORD_SET", "User", current_user.id,
+                         f"Username and password set for {username}" + (f" (was {old_username})" if old_username != username else ""))
+        flash(_("បានបង្កើតគណនីរួចរាល់។ ឥឡូវអ្នកអាចចូលដោយប្រើឈ្មោះអ្នកប្រើប្រាស់ ឬអ៊ីមែល និងពាក្យសម្ងាត់។"), "success")
+        return redirect(url_for(current_user.landing_endpoint()))
+
+    return render_template("auth/set_password.html", username=current_user.username)
+
+
+RESEND_SECONDS = int(PasswordResetCode.RESEND_COOLDOWN.total_seconds())
+
+
+def _clear_reset_session() -> None:
+    for key in ("pw_reset_email", "pw_reset_sent_at", "pw_reset_code_id"):
+        session.pop(key, None)
 
 
 @auth_bp.route("/forgot-password", methods=["GET", "POST"])
@@ -258,67 +356,80 @@ def forgot_password():
             flash(_("សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលរបស់អ្នក។"), "danger")
             return render_template("auth/forgot_password.html", email=email)
 
-        user = UserTable.query.filter_by(email=email).first()
-        if user and user.is_active:
-            token = generate_reset_token(user.email, current_app.config["SECRET_KEY"])
-            reset_url = url_for("auth.reset_password", token=token, _external=True)
-            EmailService.send_password_reset_email(user.email, reset_url, user.full_name)
-            AuditService.log("PASSWORD_RESET_REQUEST", "User", user.id, f"Password reset requested for {user.username}")
+        user = _find_user_by_email(email)
+        if user and user.is_active and PasswordResetService.send_code(user):
+            AuditService.log("PASSWORD_RESET_REQUEST", "User", user.id, f"Password reset code sent to {user.username}")
 
-        # Always show the same message to protect against email enumeration attacks
-        flash(_("ប្រសិនបើអ៊ីមែលនេះមានក្នុងប្រព័ន្ធ យើងបានផ្ញើតំណភ្ជាប់ដើម្បីកំណត់ពាក្យសម្ងាត់ឡើងវិញទៅកាន់អ៊ីមែលរបស់អ្នកហើយ។"), "info")
-        return redirect(url_for("auth.login"))
+        # Same next step whether or not the email exists, to protect against email enumeration attacks
+        _clear_reset_session()
+        session["pw_reset_email"] = email
+        session["pw_reset_sent_at"] = time.time()
+        return redirect(url_for("auth.verify_reset_code"))
 
-    return render_template("auth/forgot_password.html")
+    return render_template("auth/forgot_password.html", email=request.args.get("email", ""))
 
 
-@auth_bp.route("/reset-password/<token>", methods=["GET", "POST"])
-def reset_password(token: str):
+@auth_bp.route("/forgot-password/verify", methods=["GET", "POST"])
+def verify_reset_code():
     if current_user.is_authenticated:
         return redirect(url_for("dashboard.index"))
 
-    email = verify_reset_token(token, current_app.config["SECRET_KEY"], max_age=3600)
+    email = session.get("pw_reset_email")
     if not email:
-        flash(_("តំណភ្ជាប់កំណត់ពាក្យសម្ងាត់ឡើងវិញមិនត្រឹមត្រូវ ឬផុតកំណត់ហើយ។ សូមស្នើសុំម្តងទៀត។"), "danger")
         return redirect(url_for("auth.forgot_password"))
 
-    user = UserTable.query.filter_by(email=email).first()
-    if not user:
-        flash(_("រកមិនឃើញគណនីរបស់អ្នកប្រើប្រាស់នេះទេ។"), "danger")
+    if request.method == "POST":
+        code = re.sub(r"\D", "", request.form.get("code", ""))
+        user = _find_user_by_email(email)
+        record = None
+        if len(code) == 6 and user and user.is_active:
+            record = PasswordResetService.verify(user, code)
+
+        if record:
+            session["pw_reset_code_id"] = record.id
+            return redirect(url_for("auth.reset_password"))
+
+        # One message for wrong, expired, locked-out and unknown-email cases
+        flash(_("លេខកូដមិនត្រឹមត្រូវ ឬផុតកំណត់ហើយ។ សូមពិនិត្យម្តងទៀត ឬស្នើសុំលេខកូដថ្មី។"), "danger")
+        return redirect(url_for("auth.verify_reset_code"))
+
+    elapsed = int(time.time() - session.get("pw_reset_sent_at", 0))
+    resend_wait = max(0, RESEND_SECONDS - elapsed)
+    expires_in = max(0, int(PasswordResetCode.LIFETIME.total_seconds()) - elapsed)
+    return render_template("auth/verify_code.html", email=email, resend_wait=resend_wait, expires_in=expires_in)
+
+
+@auth_bp.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard.index"))
+
+    code_id = session.get("pw_reset_code_id")
+    record = db.session.get(PasswordResetCode, code_id) if code_id else None
+    if not record or not record.can_set_password or not record.user.is_active:
+        _clear_reset_session()
+        flash(_("សម័យកំណត់ពាក្យសម្ងាត់ផុតកំណត់ហើយ។ សូមស្នើសុំលេខកូដថ្មី។"), "danger")
         return redirect(url_for("auth.forgot_password"))
+    user = record.user
+    email = user.email
 
     if request.method == "POST":
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
 
-        errors: list[str] = []
-        if not password:
-            errors.append(_("សូមបញ្ចូលពាក្យសម្ងាត់ថ្មី។"))
-        elif len(password) < 8:
-            errors.append(_("ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។"))
-        elif not re.search(r"[A-Z]", password):
-            errors.append(_("ពាក្យសម្ងាត់ត្រូវមានអក្សរធំ (A-Z) យ៉ាងតិចមួយ។"))
-        elif not re.search(r"[a-z]", password):
-            errors.append(_("ពាក្យសម្ងាត់ត្រូវមានអក្សរតូច (a-z) យ៉ាងតិចមួយ។"))
-        elif not re.search(r"[0-9]", password):
-            errors.append(_("ពាក្យសម្ងាត់ត្រូវមានលេខ (0-9) យ៉ាងតិចមួយ។"))
-        elif not re.search(r"[!@#$%^&*()<>?\"{}|<>_\-+=]", password):
-            errors.append(_("ពាក្យសម្ងាត់ត្រូវមាននិមិត្តសញ្ញាពិសេសយ៉ាងតិចមួយ (ឧ. ! @ # $)។"))
-
-        if password and password != confirm_password:
-            errors.append(_("ពាក្យសម្ងាត់មិនដូចគ្នាទេ។"))
+        errors = _new_password_errors(password, confirm_password)
 
         if errors:
             for msg in errors:
                 flash(msg, "danger")
-            return render_template("auth/reset_password.html", token=token, email=email)
+            return render_template("auth/reset_password.html", email=email)
 
-        user.set_password(password)
-        db.session.commit()
+        PasswordResetService.consume(record, password)
+        _clear_reset_session()
         AuditService.log("PASSWORD_RESET", "User", user.id, f"Password reset successful for {user.username}")
         flash(_("ពាក្យសម្ងាត់របស់អ្នកត្រូវបានកំណត់ឡើងវិញដោយជោគជ័យ។ សូមចូលប្រើប្រាស់។"), "success")
         return redirect(url_for("auth.login"))
 
-    return render_template("auth/reset_password.html", token=token, email=email)
+    return render_template("auth/reset_password.html", email=email)
 
 

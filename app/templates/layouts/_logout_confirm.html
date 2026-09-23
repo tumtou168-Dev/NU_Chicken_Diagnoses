@@ -1,0 +1,24 @@
+{# "Sign out?" confirmation. Any link with data-bs-toggle="modal" data-bs-target="#logoutConfirm" opens it;
+   the link keeps its logout href, so it still works if JavaScript is off. #}
+<div class="modal fade logout-modal" id="logoutConfirm" tabindex="-1" aria-labelledby="logoutConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="logout-modal-icon"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></div>
+                <h5 class="logout-modal-title" id="logoutConfirmTitle">{{ _('ចាកចេញពីប្រព័ន្ធ?') }}</h5>
+                <p class="logout-modal-text">{{ _('អ្នកនឹងត្រូវចូលម្តងទៀត ដើម្បីប្រើប្រាស់ IDNS។') }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _('បោះបង់') }}</button>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger-solid">{{ _('ចាកចេញ') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// Start on Cancel, so pressing Enter by accident doesn't sign the user out.
+window.onReady(() => {
+    const modal = document.getElementById("logoutConfirm");
+    modal?.addEventListener("shown.bs.modal", () => modal.querySelector("[data-bs-dismiss]").focus());
+});
+</script>

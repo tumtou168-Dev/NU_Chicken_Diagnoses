@@ -60,3 +60,13 @@ class ChatAudioService:
         filename = f"{uuid.uuid4().hex}.{ext}"
         file.save(os.path.join(ChatAudioService._folder(), filename))
         return filename
+
+    @staticmethod
+    def delete(filename: Optional[str]) -> None:
+        if not filename:
+            return
+        path = os.path.join(ChatAudioService._folder(), os.path.basename(filename))
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            pass

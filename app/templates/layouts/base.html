@@ -155,7 +155,7 @@
                 {% if current_user.is_authenticated %}
                 {# Sign-out, pinned to the bottom of the sidebar. #}
                 <div class="sidebar-footer">
-                    <a href="{{ url_for('auth.logout') }}" class="nav-link nav-logout">
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link nav-logout" data-bs-toggle="modal" data-bs-target="#logoutConfirm">
                         <span class="nav-icon"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></span>
                         <span class="nav-text">{{ bi('ចាកចេញ') }}</span>
                     </a>
@@ -192,34 +192,7 @@
 
                 <div class="{% block content_class %}content-body{% endblock %}">
                 {% block flashes %}
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                  {% if messages %}
-                    {# Warnings and errors stay inline at the top of the page until dismissed. #}
-                    {% for category, message in messages if category not in ('success', 'info') %}
-                      <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0" role="alert">
-                        <div class="d-flex align-items-center">
-                            {% if category == 'danger' %}
-                                <i class="bi bi-exclamation-circle-fill me-2 fs-5"></i>
-                            {% else %}
-                                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
-                            {% endif %}
-                            <div>{{ message }}</div>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ _('បិទ') }}"></button>
-                      </div>
-                    {% endfor %}
-                    {# Success / info become a dark snackbar at the top center that closes itself (main.js). #}
-                    <div class="snackbar-stack" aria-live="polite">
-                    {% for category, message in messages if category in ('success', 'info') %}
-                      <div class="snackbar snackbar-{{ category }}" role="status" data-autohide>
-                        <i class="bi {{ 'bi-check-circle-fill' if category == 'success' else 'bi-info-circle-fill' }} snackbar-icon"></i>
-                        <span class="snackbar-text">{{ message }}</span>
-                        <button type="button" class="snackbar-close" aria-label="{{ _('បិទ') }}"><i class="bi bi-x-lg"></i></button>
-                      </div>
-                    {% endfor %}
-                    </div>
-                  {% endif %}
-                {% endwith %}
+                {% include "layouts/_flashes.html" %}
                 {% endblock %}
 
                 {% block content %}{% endblock %}
@@ -247,8 +220,11 @@
     </button>
     {% endblock %}
 
-    {% if current_user.is_authenticated %}
+    {% if current_user.is_authenticated and current_user.password_set %}
         {% include "layouts/_chat_widget.html" %}
+    {% endif %}
+    {% if current_user.is_authenticated %}
+        {% include "layouts/_logout_confirm.html" %}
     {% endif %}
 
     {% block scripts %}{% endblock %}
@@ -257,7 +233,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    {% if current_user.is_authenticated %}
+    {% if current_user.is_authenticated and current_user.password_set %}
     <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
     {% endif %}
     <script src="{{ url_for('static', filename='js/lang-switch.js') }}"></script>

@@ -302,6 +302,58 @@ a { color: var(--primary-text); }
 }
 
 /* =====================================================================
+   Page entrance animation, on the first page of a visit only (base.html adds html.page-anim once
+   per tab): the title slides in, then each block of the page (alerts, button rows, stat tiles,
+   cards) fades up one after another, top to bottom and left to right; the dashboard's bars grow in. Pure CSS — nothing waits on a script, and it's all off for
+   visitors who prefer reduced motion. Fill mode is `backwards` (hidden during the stagger delay),
+   never `forwards`: a finished block keeps no leftover transform, so fixed-position things inside
+   it (Bootstrap modals) still position against the page.
+   ===================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+    html.page-anim .page-header > div:first-child { animation: pageTitleIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+
+    /* Top-level blocks; a stat grid or a Bootstrap row staggers its own children instead. */
+    html.page-anim .content-body > :not(.stat-grid):not(.row):not(.snackbar-stack):not(script):not(.modal),
+    html.page-anim .content-body > .stat-grid > *,
+    html.page-anim .content-body > .row > * {
+        animation: contentIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+        animation-delay: calc((var(--enter-i, 0) + var(--enter-j, 0)) * 70ms + 60ms);
+    }
+
+    html.page-anim .viz-col { transform-origin: bottom; animation: vizColGrow 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards; animation-delay: 0.35s; }
+    html.page-anim .viz-col-slot:nth-child(2n) .viz-col { animation-delay: 0.39s; }
+    html.page-anim .viz-col-slot:nth-child(3n) .viz-col { animation-delay: 0.43s; }
+    html.page-anim .viz-hbar { transform-origin: left; animation: vizBarGrow 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards; animation-delay: 0.4s; }
+    html.page-anim .viz-hvalue { animation: contentFade 0.4s ease backwards; animation-delay: 0.9s; }
+
+    /* Small tiles lift on hover (uses `translate`, which doesn't fight the entrance transform). */
+    .stat-tile { transition: translate 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease; }
+    .stat-tile:hover { translate: 0 -3px; box-shadow: 0 12px 24px -12px rgba(16, 24, 40, 0.25); }
+}
+/* Stagger order: --enter-i = block position on the page, --enter-j = position within a grid/row. */
+.content-body > :nth-child(2) { --enter-i: 1; }
+.content-body > :nth-child(3) { --enter-i: 2; }
+.content-body > :nth-child(4) { --enter-i: 3; }
+.content-body > :nth-child(5) { --enter-i: 4; }
+.content-body > :nth-child(6) { --enter-i: 5; }
+.content-body > :nth-child(n+7) { --enter-i: 6; }
+.content-body > .stat-grid > :nth-child(2), .content-body > .row > :nth-child(2) { --enter-j: 1; }
+.content-body > .stat-grid > :nth-child(3), .content-body > .row > :nth-child(3) { --enter-j: 2; }
+.content-body > .stat-grid > :nth-child(n+4), .content-body > .row > :nth-child(n+4) { --enter-j: 3; }
+
+@keyframes pageTitleIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: none; }
+}
+@keyframes contentIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: none; }
+}
+@keyframes contentFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes vizColGrow { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes vizBarGrow { from { transform: scaleX(0); } to { transform: none; } }
+
+/* =====================================================================
    Top bar (page header) and content area
    ===================================================================== */
 .content-wrapper { padding: 0; }
@@ -1361,148 +1413,27 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
    on a neutral backing so transparent images never blend into the bubble color. ===== */
 .chat-widget { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 1070; }
 
-/* Launcher: a solid deep brand-green circle (no gloss) with the envelope icon. Hover lifts it,
-   wiggles the icon and slides out a "Chat with the doctor" label; opening morphs the icon into an ✕. */
 .chat-toggle-btn {
-    position: relative; width: 60px; height: 60px; border-radius: 50%; border: none; padding: 0;
-    color: #fff; cursor: pointer;
-    background: #086b50;
-    box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.35), 0 2px 4px rgba(15, 23, 42, 0.08);
+    position: relative; width: 58px; height: 58px; border-radius: 50%; border: none;
+    background: var(--primary-color); color: #fff; font-size: 1.45rem;
     display: flex; align-items: center; justify-content: center;
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+    box-shadow: 0 10px 24px -6px rgba(10, 127, 95, 0.4), var(--pop-shadow);
+    cursor: pointer; transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
-.chat-toggle-btn:hover { background: #075a44; transform: translateY(-2px) scale(1.04); box-shadow: 0 12px 26px -8px rgba(15, 23, 42, 0.4), 0 2px 4px rgba(15, 23, 42, 0.08); }
-.chat-toggle-btn:active { transform: translateY(0) scale(0.95); transition-duration: 0.1s; }
-.chat-toggle-btn:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary-color) 45%, transparent); outline-offset: 3px; }
+.chat-toggle-btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 14px 28px -6px rgba(10, 127, 95, 0.45), var(--pop-shadow); }
+.chat-toggle-btn:active { transform: translateY(0) scale(0.97); }
+.chat-toggle-btn i { transition: transform 0.2s ease; }
+.chat-toggle-btn.is-open i { transform: rotate(-90deg); }
 
-/* The two icons sit on top of each other; one spins out as the other spins in. */
-.chat-toggle-icons { position: relative; width: 26px; height: 26px; display: block; }
-.chat-toggle-icons i {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 1.55rem;
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
-}
-.chat-toggle-icon-close { opacity: 0; transform: rotate(-90deg) scale(0.4); font-size: 1.4rem !important; }
-.chat-toggle-btn.is-open .chat-toggle-icon-chat { opacity: 0; transform: rotate(90deg) scale(0.4); }
-.chat-toggle-btn.is-open .chat-toggle-icon-close { opacity: 1; transform: none; }
-.chat-toggle-btn:not(.is-open):hover .chat-toggle-icon-chat { animation: chatIconWiggle 0.6s ease; }
-@keyframes chatIconWiggle {
-    0%, 100% { transform: rotate(0); }
-    25% { transform: rotate(-12deg) scale(1.08); }
-    50% { transform: rotate(9deg) scale(1.08); }
-    75% { transform: rotate(-4deg); }
-}
-
-/* "Chat with the doctor" label that slides out to the left on hover (desktop only). */
-.chat-toggle-label {
-    position: absolute; right: calc(100% + 12px); top: 50%; white-space: nowrap; pointer-events: none;
-    padding: 0.4rem 0.85rem; border-radius: 999px; font-size: 0.82rem; font-weight: 600; line-height: 1.35;
-    background: var(--surface); color: var(--heading); border: 1px solid var(--border-soft);
-    box-shadow: 0 8px 20px -8px rgba(16, 24, 40, 0.3);
-    opacity: 0; transform: translate(10px, -50%); transition: opacity 0.2s ease, transform 0.25s ease;
-}
-.chat-toggle-btn:not(.is-open):hover .chat-toggle-label { opacity: 1; transform: translate(0, -50%); }
-@media (hover: none) { .chat-toggle-label { display: none; } }
-
-/* Unread messages and the panel closed: a soft ripple keeps spreading out from the launcher. */
-.chat-toggle-btn.has-unread:not(.is-open)::before {
-    content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
-    border: 2px solid rgba(8, 107, 80, 0.55); animation: chatRipple 2s ease-out infinite;
-}
-@keyframes chatRipple {
-    from { transform: scale(1); opacity: 0.9; }
-    to { transform: scale(1.7); opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-    .chat-toggle-btn, .chat-toggle-icons i { transition: none; }
-    .chat-toggle-btn:hover .chat-toggle-icon-chat, .chat-toggle-btn.has-unread::before { animation: none; }
-}
-
-/* The launcher gives a little ring when a new message arrives. */
-.chat-toggle-btn.is-ringing { animation: chatRing 0.7s ease; }
-@keyframes chatRing {
-    0%, 100% { transform: rotate(0); }
-    15% { transform: rotate(-14deg) scale(1.06); }
-    30% { transform: rotate(12deg) scale(1.06); }
-    45% { transform: rotate(-8deg); }
-    60% { transform: rotate(6deg); }
-    75% { transform: rotate(-3deg); }
-}
-
-/* "New message" card: slides in above the launcher; click opens the conversation. */
-.chat-notify {
-    position: absolute; right: 0; bottom: calc(100% + 0.85rem); width: min(320px, calc(100vw - 2.5rem));
-    display: flex; align-items: flex-start; gap: 0.25rem; padding: 0.35rem;
-    background: var(--surface); border: 1px solid var(--border-soft); border-radius: 1rem;
-    box-shadow: 0 18px 40px -12px rgba(16, 24, 40, 0.3), var(--pop-shadow);
-    transform-origin: bottom right; animation: chatNotifyIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.chat-notify[hidden] { display: none; }
-.chat-notify.is-leaving { animation: chatNotifyOut 0.22s ease forwards; }
-.chat-notify::before {   /* green accent stripe */
-    content: ""; position: absolute; left: 0; top: 0.75rem; bottom: 0.75rem; width: 3px; border-radius: 0 3px 3px 0; background: var(--primary-color);
-}
-.chat-notify-body {
-    flex: 1; min-width: 0; display: flex; align-items: center; gap: 0.65rem; text-align: left;
-    border: none; background: transparent; padding: 0.45rem 0.4rem 0.45rem 0.6rem; border-radius: 0.75rem; cursor: pointer; color: inherit;
-    transition: background 0.15s ease;
-}
-.chat-notify-body:hover { background: var(--hover-bg); }
-.chat-notify-avatar {
-    width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%; overflow: hidden;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--primary-soft); color: var(--primary-soft-fg); font-weight: 700;
-}
-.chat-notify-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.chat-notify-text { display: flex; flex-direction: column; min-width: 0; gap: 0.15rem; }
-.chat-notify-title { display: flex; align-items: center; gap: 0.4rem; min-width: 0; font-weight: 700; font-size: 0.86rem; color: var(--heading); }
-.chat-notify-title > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chat-notify-tag {
-    flex-shrink: 0; font-size: 0.6rem; font-weight: 700; padding: 0.12rem 0.4rem; border-radius: 999px;
-    background: var(--primary-soft); color: var(--primary-soft-fg);
-}
-.chat-notify-preview {
-    font-size: 0.8rem; color: var(--text-muted); line-height: 1.35;
-    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere;
-}
-.chat-notify-close {
-    border: none; background: transparent; color: var(--text-faint); width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; font-size: 0.7rem; cursor: pointer; margin: 0.2rem 0.1rem 0 0;
-}
-.chat-notify-close:hover { background: var(--hover-bg); color: var(--text-main); }
-@keyframes chatNotifyIn {
-    from { opacity: 0; transform: translateY(14px) scale(0.92); }
-    to { opacity: 1; transform: none; }
-}
-@keyframes chatNotifyOut {
-    to { opacity: 0; transform: translateY(10px) scale(0.95); }
-}
-@media (prefers-reduced-motion: reduce) {
-    .chat-notify, .chat-notify.is-leaving, .chat-toggle-btn.is-ringing, .chat-unread-badge.is-bump { animation: none; }
-}
-
-/* Round red count badge with a white ring on the launcher's top-right edge (the classic
-   notification-bell look). Same red in both themes; grows into a pill for 10+. */
 .chat-unread-badge {
-    position: absolute; top: -5px; right: -5px; min-width: 25px; height: 25px; padding: 0 6px;
-    border-radius: 999px; background: radial-gradient(circle at 35% 30%, #f87171 0%, #dc2626 55%, #b91c1c 100%);
-    color: #fff; font-size: 0.78rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums;
-    display: flex; align-items: center; justify-content: center;
-    border: 2.5px solid #fff; box-shadow: 0 3px 8px -2px rgba(185, 28, 28, 0.55);
+    position: absolute; top: -3px; right: -3px; min-width: 21px; height: 21px; padding: 0 5px;
+    border-radius: 999px; background: var(--danger-fg); color: #fff; font-size: 0.7rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; border: 2.5px solid var(--bg-body);
     animation: chatBadgePulse 1.8s ease-in-out infinite;
 }
-.chat-unread-badge[hidden] { display: none; }
-/* Pops in bigger and settles whenever the unread number goes up. */
-.chat-unread-badge.is-bump { animation: chatBadgeBump 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), chatBadgePulse 1.8s ease-in-out 0.6s infinite; }
-@keyframes chatBadgeBump {
-    0% { transform: scale(0); }
-    45% { transform: scale(1.45); }
-    70% { transform: scale(0.9); }
-    100% { transform: scale(1); }
-}
 @keyframes chatBadgePulse {
-    0%, 100% { box-shadow: 0 3px 8px -2px rgba(185, 28, 28, 0.55), 0 0 0 0 rgba(220, 38, 38, 0.45); }
-    50% { box-shadow: 0 3px 8px -2px rgba(185, 28, 28, 0.55), 0 0 0 5px rgba(220, 38, 38, 0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(217, 45, 32, 0.45); }
+    50% { box-shadow: 0 0 0 4px rgba(217, 45, 32, 0); }
 }
 
 .chat-panel {
@@ -1543,29 +1474,6 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .chat-back-btn:hover, .chat-close-btn:hover { background: var(--hover-bg); color: var(--text-main); }
 
 .chat-thread-list { flex: 1; overflow-y: auto; background: var(--surface); }
-/* Staff inbox tabs: Farmers (support threads) / Team (direct messages with other staff). */
-.chat-inbox-tabs {
-    position: sticky; top: 0; z-index: 1; display: flex; gap: 0.3rem; padding: 0.55rem 0.75rem;
-    background: var(--surface); border-bottom: 1px solid var(--border-soft);
-}
-.chat-inbox-tab {
-    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
-    border: none; background: transparent; color: var(--text-muted); font-size: 0.82rem; font-weight: 600;
-    padding: 0.45rem 0.6rem; border-radius: 0.65rem; cursor: pointer; transition: background 0.15s, color 0.15s;
-}
-.chat-inbox-tab i { font-size: 0.8rem; }
-.chat-inbox-tab:hover { background: var(--hover-bg); color: var(--text-main); }
-.chat-inbox-tab.active { background: var(--primary-soft); color: var(--primary-text); }
-.chat-inbox-tab-badge {
-    min-width: 17px; height: 17px; padding: 0 5px; border-radius: 999px; background: var(--danger-fg); color: #fff;
-    font-size: 0.64rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
-}
-.chat-inbox-tab-badge[hidden] { display: none; }
-.chat-thread-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.chat-thread-name .chat-role-badge { flex-shrink: 0; }
-.chat-thread-name .chat-thread-badge { margin-left: auto; flex-shrink: 0; }
-.chat-thread-preview.is-placeholder { font-style: italic; color: var(--text-faint); }
-
 .chat-thread-item {
     display: flex; align-items: center; gap: 0.7rem; width: 100%; text-align: left; border: none; border-bottom: 1px solid var(--border-soft);
     background: transparent; padding: 0.7rem 1.1rem; cursor: pointer; transition: background 0.12s ease;

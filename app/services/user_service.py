@@ -86,7 +86,49 @@ class UserService:
 
     @staticmethod
     def delete_user(user: UserTable) -> None:
+        """Delete a user with their cases and chat messages. Audit logs, rules and diseases are kept
+        but unlinked. Without this, the foreign keys (e.g. audit logs) block the delete."""
+        from app.models.audit_log import AuditLog
+        from app.models.chat_message import ChatMessage, ChatMessageHidden
+        from app.models.expert_system import Case, Disease
+        from app.models.password_reset import PasswordResetCode
+        from app.services.chat_audio_service import ChatAudioService
+        from app.services.chat_image_service import ChatImageService
+
+        uid = user.id
         avatar = user.avatar
-        db.session.delete(user)
+
+        messages = ChatMessage.query.filter(db.or_(
+            ChatMessage.thread_user_id == uid, ChatMessage.sender_id == uid, ChatMessage.recipient_id == uid,
+        )).all()
+        chat_images = [m.image for m in messages if m.image]
+        chat_audio = [m.audio for m in messages if m.audio]
+        message_ids = [m.id for m in messages]
+        if message_ids:
+            ChatMessageHidden.query.filter(ChatMessageHidden.message_id.in_(message_ids)).delete(synchronize_session=False)
+            ChatMessage.query.filter(ChatMessage.id.in_(message_ids)).delete(synchronize_session=False)
+        ChatMessageHidden.query.filter_by(user_id=uid).delete(synchronize_session=False)
+
+        cases = Case.query.filter_by(user_id=uid).all()
+        if cases:
+            # other people's messages may still point at a shared case
+            ChatMessage.query.filter(ChatMessage.case_id.in_([c.id for c in cases])).update(
+                {"case_id": None}, synchronize_session=False)
+            for case in cases:
+                db.session.delete(case)  # ORM also clears the case's symptom links
+
+        AuditLog.query.filter_by(user_id=uid).update({"user_id": None}, synchronize_session=False)
+        Disease.query.filter_by(doctor_id=uid).update({"doctor_id": None}, synchronize_session=False)
+        # Legacy column: older databases still have it (with a foreign key), the model no longer does.
+        if "approved_by_id" in {c["name"] for c in db.inspect(db.engine).get_columns("tbl_rules")}:
+            db.session.execute(db.text("UPDATE tbl_rules SET approved_by_id = NULL WHERE approved_by_id = :u"), {"u": uid})
+        PasswordResetCode.query.filter_by(user_id=uid).delete(synchronize_session=False)
+
+        db.session.delete(user)  # ORM also clears the user's role links
         db.session.commit()
+
         AvatarService.delete(avatar)
+        for filename in chat_images:
+            ChatImageService.delete(filename)
+        for filename in chat_audio:
+            ChatAudioService.delete(filename)

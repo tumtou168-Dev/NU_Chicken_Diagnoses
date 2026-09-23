@@ -76,3 +76,13 @@ class ChatImageService:
         with open(os.path.join(ChatImageService._folder(), filename), "wb") as fh:
             fh.write(data)
         return filename
+
+    @staticmethod
+    def delete(filename: Optional[str]) -> None:
+        if not filename:
+            return
+        path = os.path.join(ChatImageService._folder(), os.path.basename(filename))
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            pass

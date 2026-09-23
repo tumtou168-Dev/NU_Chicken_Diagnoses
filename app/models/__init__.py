@@ -6,6 +6,7 @@ from .expert_system import Category, Symptom, Disease, Rule, Case
 from .page_text import PageText
 from .page_feature import PageFeature
 from .chat_message import ChatMessage, ChatMessageHidden
+from .password_reset import PasswordResetCode
 
 __all__ = [
     "UserTable",
@@ -20,4 +21,5 @@ __all__ = [
     "PageFeature",
     "ChatMessage",
     "ChatMessageHidden",
+    "PasswordResetCode",
 ]

@@ -17,6 +17,8 @@ class UserTable(UserMixin, db.Model):
     full_name = db.Column(db.String(120), nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    # False for Google sign-ups until they choose a password (theirs is a random one they never saw)
+    password_set = db.Column(db.Boolean, default=True, nullable=False)
     avatar = db.Column(db.String(255), nullable=True)  # filename under static/uploads/avatars
     last_seen_at = db.Column(db.DateTime, nullable=True)  # refreshed by any request; drives the chat "online" dot
     
@@ -28,6 +30,7 @@ class UserTable(UserMixin, db.Model):
     
     def set_password(self, password:str) -> None:
         self.password_hash = generate_password_hash(password)
+        self.password_set = True
         
     def check_password(self, password:str) -> bool:
         return check_password_hash(self.password_hash, password)

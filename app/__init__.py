@@ -144,6 +144,7 @@ def create_app(config_class: type[Config] = Config):
         from app.models.page_text import PageText
         from app.models.page_feature import PageFeature
         from app.models.chat_message import ChatMessage
+        from app.models.password_reset import PasswordResetCode
 
         # Default RESET_DB to 0 to prevent database reset on restart
         if os.environ.get("RESET_DB", "0") == "1":
@@ -174,13 +175,21 @@ def create_app(config_class: type[Config] = Config):
 
 
 def _ensure_user_avatar_column() -> None:
-    """create_all() never alters existing tables, so add tbl_users.avatar / last_seen_at if missing."""
+    """create_all() never alters existing tables, so add tbl_users.avatar / last_seen_at / password_set if missing."""
     columns = {c["name"] for c in inspect(db.engine).get_columns("tbl_users")}
     if "avatar" not in columns:
         db.session.execute(text("ALTER TABLE tbl_users ADD COLUMN avatar VARCHAR(255)"))
         db.session.commit()
     if "last_seen_at" not in columns:
         db.session.execute(text("ALTER TABLE tbl_users ADD COLUMN last_seen_at TIMESTAMP"))
+        db.session.commit()
+    if "password_set" not in columns:
+        db.session.execute(text("ALTER TABLE tbl_users ADD COLUMN password_set BOOLEAN NOT NULL DEFAULT TRUE"))
+        # Accounts made by Google sign-in only have a random password the owner never saw.
+        db.session.execute(text(
+            "UPDATE tbl_users SET password_set = FALSE WHERE CAST(id AS VARCHAR) IN "
+            "(SELECT target_id FROM tbl_audit_logs WHERE action = 'REGISTER' AND details LIKE 'Google registration:%')"
+        ))
         db.session.commit()
 
 

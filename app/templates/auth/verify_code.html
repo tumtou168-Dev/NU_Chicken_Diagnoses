@@ -1,0 +1,143 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ _('បញ្ចូលលេខកូដ') }}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block main_class %}col-12 p-0{% endblock %}
+{% block mobile_nav_toggle %}{% endblock %}
+{% block page_header %}{% endblock %}
+{% block flashes %}{% endblock %}
+{% block content_class %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+{% with css='floating' %}{% include "layouts/_lang_switch.html" %}{% include "layouts/_theme_toggle.html" %}{% endwith %}
+<div class="auth-shell">
+    {% include "auth/_aside.html" %}
+    <div class="auth-main">
+    <div class="auth-card">
+        {# Shown whether or not the email is registered, so the page never reveals which emails have accounts. #}
+        <div class="auth-status">
+            <div class="auth-status-icon"><i class="bi bi-envelope-check"></i></div>
+            <h1>{{ _('សូមពិនិត្យអ៊ីមែលរបស់អ្នក') }}</h1>
+            <p>{{ _('ប្រសិនបើអ៊ីមែលនេះមានគណនី យើងបានផ្ញើលេខកូដ ៦ ខ្ទង់ទៅកាន់៖') }}</p>
+            <div class="auth-status-email">{{ email }}</div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+        {% endfor %}
+        {% endwith %}
+
+        <form method="POST" id="codeForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="code" id="codeValue">
+            <div class="otp-boxes" id="otpBoxes" role="group" aria-label="{{ _('បញ្ចូលលេខកូដ') }}">
+                {% for i in range(6) %}
+                <input type="text" class="form-control otp-box" id="otp{{ i }}" inputmode="numeric" pattern="[0-9]" maxlength="1"
+                       {% if i == 0 %}autocomplete="one-time-code" autofocus{% else %}autocomplete="off"{% endif %}
+                       aria-label="{{ _('ខ្ទង់ទី') }} {{ i + 1 }}">
+                {% endfor %}
+            </div>
+            <p class="otp-expiry" id="otpExpiry" data-left="{{ expires_in }}" data-label="{{ _('លេខកូដផុតកំណត់ក្នុងរយៈពេល') }}" data-label-expired="{{ _('លេខកូដបានផុតកំណត់ហើយ។ សូមស្នើសុំលេខកូដថ្មី។') }}">
+                <i class="bi bi-clock me-1"></i><span></span>
+            </p>
+            <div class="d-grid"><button type="submit" class="btn btn-primary py-2" id="verifyBtn" disabled>{{ _('ផ្ទៀងផ្ទាត់') }}</button></div>
+        </form>
+
+        <form method="POST" action="{{ url_for('auth.forgot_password') }}" class="otp-resend">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="email" value="{{ email }}">
+            {{ _('មិនបានទទួលលេខកូដ?') }}
+            <button type="submit" class="btn btn-link p-0" id="resendBtn"
+                    data-wait="{{ resend_wait }}" data-label="{{ _('ផ្ញើម្តងទៀត') }}"
+                    {% if resend_wait %}disabled{% endif %}>{{ _('ផ្ញើម្តងទៀត') }}</button>
+            <div class="otp-hint">{{ _('សូមពិនិត្យថត Spam ឬ Promotions ផងដែរ។') }}</div>
+        </form>
+
+        <div class="auth-foot d-flex justify-content-between">
+            <a href="{{ url_for('auth.login') }}"><i class="bi bi-arrow-left me-1"></i>{{ _('ត្រឡប់ទៅការចូល') }}</a>
+            <a href="{{ url_for('auth.forgot_password', email=email) }}"><i class="bi bi-pencil me-1"></i>{{ _('ប្រើអ៊ីមែលផ្សេង') }}</a>
+        </div>
+    </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+window.onReady(() => {
+    const form = document.getElementById("codeForm");
+    const boxes = [...document.querySelectorAll(".otp-box")];
+    const hidden = document.getElementById("codeValue");
+    const verifyBtn = document.getElementById("verifyBtn");
+    if (!form || boxes.length !== 6) return;
+
+    const sync = () => {
+        hidden.value = boxes.map((b) => b.value).join("");
+        verifyBtn.disabled = hidden.value.length !== 6;
+        boxes.forEach((b) => b.classList.toggle("is-filled", b.value !== ""));
+    };
+    const submitIfFull = () => {
+        sync();
+        if (hidden.value.length === 6) {
+            verifyBtn.disabled = true;
+            form.submit();
+        }
+    };
+    // Put digits into the boxes starting at `from` (typing, pasting, or SMS/email autofill of the full code).
+    const fill = (from, digits) => {
+        digits.split("").slice(0, 6 - from).forEach((d, k) => { boxes[from + k].value = d; });
+        boxes[Math.min(from + digits.length, 5)].focus();
+        submitIfFull();
+    };
+
+    boxes.forEach((box, i) => {
+        box.addEventListener("input", () => {
+            const digits = box.value.replace(/\D/g, "");
+            box.value = "";
+            if (digits) fill(i, digits); else sync();
+        });
+        box.addEventListener("keydown", (e) => {
+            if (e.key === "Backspace" && !box.value && i > 0) {
+                boxes[i - 1].value = "";
+                boxes[i - 1].focus();
+                sync();
+                e.preventDefault();
+            } else if (e.key === "ArrowLeft" && i > 0) {
+                boxes[i - 1].focus();
+            } else if (e.key === "ArrowRight" && i < 5) {
+                boxes[i + 1].focus();
+            }
+        });
+        box.addEventListener("paste", (e) => {
+            e.preventDefault();
+            const digits = (e.clipboardData.getData("text") || "").replace(/\D/g, "");
+            if (digits) fill(digits.length >= 6 ? 0 : i, digits);
+        });
+        box.addEventListener("focus", () => box.select());
+    });
+
+    // Countdowns (the server enforces both limits too).
+    const resend = document.getElementById("resendBtn");
+    const expiry = document.getElementById("otpExpiry");
+    let wait = parseInt(resend.dataset.wait, 10) || 0;
+    let left = parseInt(expiry.dataset.left, 10) || 0;
+    const tick = () => {
+        resend.disabled = wait > 0;
+        resend.textContent = wait > 0 ? `${resend.dataset.label} (${wait}s)` : resend.dataset.label;
+        if (left > 0) {
+            const mm = Math.floor(left / 60), ss = String(left % 60).padStart(2, "0");
+            expiry.querySelector("span").textContent = `${expiry.dataset.label} ${mm}:${ss}`;
+        } else {
+            expiry.querySelector("span").textContent = expiry.dataset.labelExpired;
+            expiry.classList.add("is-expired");
+        }
+        wait = Math.max(0, wait - 1);
+        left = Math.max(0, left - 1);
+    };
+    tick();
+    setInterval(tick, 1000);
+});
+</script>
+{% endblock %}

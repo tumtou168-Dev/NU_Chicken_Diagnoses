@@ -19,18 +19,26 @@ def _role_label(user: UserTable) -> str:
     return data_text(role) if role else ""
 
 
-def _thread_user_id() -> int:
-    """The normal-user side of the conversation this request is about.
+def _target() -> dict:
+    """Which conversation this request is about, as ChatService keyword arguments.
 
-    A normal user only ever sees their own thread. Staff (Admin/Doctor) pass
-    ?user_id=<id> to pick which conversation they're viewing.
+    A normal user only ever has their own support thread. Staff (Admin/Doctor) pass
+    ?user_id=<id> for a user's support thread, or ?peer_id=<id> for a direct conversation
+    with another staff member.
     """
     if not ChatService.is_staff(current_user):
-        return current_user.id
+        return {"thread_user_id": current_user.id, "recipient_id": None}
+    peer_id = request.values.get("peer_id", type=int)
+    if peer_id:
+        try:
+            ChatService.direct_peer(current_user, peer_id)
+        except LookupError:
+            abort(404)
+        return {"thread_user_id": None, "recipient_id": peer_id}
     user_id = request.values.get("user_id", type=int)
     if not user_id:
         abort(400)
-    return user_id
+    return {"thread_user_id": user_id, "recipient_id": None}
 
 
 def _serialize(message) -> dict:
@@ -73,34 +81,41 @@ def _serialize(message) -> dict:
 @chat_bp.route("/api/messages")
 @login_required
 def messages():
-    thread_user_id = _thread_user_id()
+    target = _target()
     is_staff = ChatService.is_staff(current_user)
-    ChatService.mark_read(thread_user_id, as_staff=is_staff)
-    items = [_serialize(m) for m in ChatService.thread_messages(thread_user_id, current_user)]
-    # The other side's presence for the header dot: the farmer for staff, "any doctor" for a farmer.
-    if is_staff:
-        peer = db.session.get(UserTable, thread_user_id)
-        peer_online = bool(peer and peer.is_online)
+    if target["recipient_id"]:
+        peer_id = target["recipient_id"]
+        ChatService.mark_direct_read(current_user, peer_id)
+        messages = ChatService.direct_messages(current_user, peer_id)
+        peer_online = db.session.get(UserTable, peer_id).is_online
     else:
-        peer_online = ChatService.any_staff_online()
-    return jsonify({"messages": items, "peer_online": peer_online})
+        thread_user_id = target["thread_user_id"]
+        ChatService.mark_read(thread_user_id, as_staff=is_staff)
+        messages = ChatService.thread_messages(thread_user_id, current_user)
+        # The other side's presence for the header dot: the farmer for staff, "any doctor" for a farmer.
+        if is_staff:
+            peer = db.session.get(UserTable, thread_user_id)
+            peer_online = bool(peer and peer.is_online)
+        else:
+            peer_online = ChatService.any_staff_online()
+    return jsonify({"messages": [_serialize(m) for m in messages], "peer_online": peer_online})
 
 
 @chat_bp.route("/api/send", methods=["POST"])
 @login_required
 def send():
-    thread_user_id = _thread_user_id()
+    target = _target()
     body = (request.form.get("body") or "").strip()
     if not body:
         return jsonify({"error": "empty"}), 400
-    message = ChatService.send(thread_user_id, current_user, body)
+    message = ChatService.send(target["thread_user_id"], current_user, body, recipient_id=target["recipient_id"])
     return jsonify({"message": _serialize(message)})
 
 
 @chat_bp.route("/api/send-audio", methods=["POST"])
 @login_required
 def send_audio():
-    thread_user_id = _thread_user_id()
+    target = _target()
     file = request.files.get("audio")
     if not file or not file.filename:
         return jsonify({"error": "empty"}), 400
@@ -111,14 +126,14 @@ def send_audio():
 
     duration = request.form.get("duration", type=int)
     filename = ChatAudioService.save(file)
-    message = ChatService.send_audio(thread_user_id, current_user, filename, duration)
+    message = ChatService.send_audio(target["thread_user_id"], current_user, filename, duration, recipient_id=target["recipient_id"])
     return jsonify({"message": _serialize(message)})
 
 
 @chat_bp.route("/api/send-image", methods=["POST"])
 @login_required
 def send_image():
-    thread_user_id = _thread_user_id()
+    target = _target()
     file = request.files.get("image")
     if not file or not file.filename:
         return jsonify({"error": "empty"}), 400
@@ -128,7 +143,8 @@ def send_image():
         return jsonify({"error": error}), 400
 
     filename = ChatImageService.save(file)
-    message = ChatService.send_image(thread_user_id, current_user, filename, request.form.get("caption", ""))
+    message = ChatService.send_image(target["thread_user_id"], current_user, filename, request.form.get("caption", ""),
+                                     recipient_id=target["recipient_id"])
     return jsonify({"message": _serialize(message)})
 
 
@@ -171,10 +187,23 @@ def delete():
 @login_required
 def unread_count():
     if ChatService.is_staff(current_user):
-        count = ChatService.unread_count_for_staff()
+        count = ChatService.unread_count_for_staff() + ChatService.unread_direct_count(current_user)
     else:
         count = ChatService.unread_count_for_user(current_user.id)
-    return jsonify({"count": count})
+    latest = ChatService.latest_unread(current_user) if count else None
+    return jsonify({
+        "count": count,
+        # The newest unread message, for the "new message" notification.
+        "latest": latest and {
+            "id": latest.id,
+            "thread_user_id": latest.thread_user_id,
+            "peer_id": latest.sender_id if latest.is_direct else None,   # direct staff message: open that conversation
+            "sender_name": latest.sender.full_name,
+            "sender_avatar_url": AvatarService.url(latest.sender),
+            "sender_role": _role_label(latest.sender) if latest.is_from_staff else "",
+            "preview": ChatService.display_body(latest)[:140],
+        },
+    })
 
 
 @chat_bp.route("/api/threads")
@@ -182,19 +211,36 @@ def unread_count():
 def threads():
     if not ChatService.is_staff(current_user):
         abort(403)
-    rows = ChatService.staff_threads(current_user)
-    return jsonify({"threads": [
-        {
-            "user_id": row["user"].id,
-            "full_name": row["user"].full_name,
-            "avatar_url": AvatarService.url(row["user"]),
-            "last_message": row["last_message_preview"],
-            "last_at": row["last_message"].created_at.strftime("%Y-%m-%d %I:%M %p"),
-            "unread_count": row["unread_count"],
-            "is_online": row["user"].is_online,
-        }
-        for row in rows
-    ]})
+    farmers = ChatService.staff_threads(current_user)
+    team = ChatService.team_threads(current_user)
+    return jsonify({
+        "threads": [
+            {
+                "user_id": row["user"].id,
+                "full_name": row["user"].full_name,
+                "avatar_url": AvatarService.url(row["user"]),
+                "last_message": row["last_message_preview"],
+                "last_at": row["last_message"].created_at.strftime("%Y-%m-%d %I:%M %p"),
+                "unread_count": row["unread_count"],
+                "is_online": row["user"].is_online,
+            }
+            for row in farmers
+        ],
+        # Other Admins/Doctors, for the inbox's Team tab (direct messages).
+        "team": [
+            {
+                "peer_id": row["user"].id,
+                "full_name": row["user"].full_name,
+                "avatar_url": AvatarService.url(row["user"]),
+                "role": _role_label(row["user"]),
+                "last_message": row["last_message_preview"],
+                "last_at": row["last_message"].created_at.strftime("%Y-%m-%d %I:%M %p") if row["last_message"] else "",
+                "unread_count": row["unread_count"],
+                "is_online": row["user"].is_online,
+            }
+            for row in team
+        ],
+    })
 
 
 @chat_bp.route("/contact-doctor", methods=["POST"])

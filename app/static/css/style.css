@@ -190,56 +190,81 @@ a { color: var(--primary-text); }
 * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
 
 /* =====================================================================
-   Sidebar (flat, calm)
+   Sidebar — clean and professional: Font Awesome icons in soft rounded tiles,
+   hairline section labels, a solid green tile for the active page, and the
+   signed-in user pinned to the bottom.
    ===================================================================== */
 .sidebar {
     background: var(--sidebar-bg);
     min-height: 100vh;
-    padding: 1.25rem 0.75rem 1rem;
+    padding: 1rem 0.75rem 0.75rem;
     border-right: 1px solid var(--sidebar-edge);
     scrollbar-color: var(--sidebar-scroll) transparent;
 }
 @media (min-width: 768px) {
     .sidebar { position: sticky; top: 0; height: 100vh; align-self: flex-start; overflow-y: auto; }
+    /* A fixed-width sidebar (Bootstrap's 1/6 column is only ~210px on a 1280px screen, which
+       squeezes the Khmer labels); the page takes the rest. */
+    .sidebar.col-md-3 { flex: 0 0 auto; width: 256px; }
+    .sidebar.col-md-3 ~ main.content-wrapper { flex: 1 1 0; width: auto; max-width: calc(100% - 256px); }
 }
-.sidebar > .position-sticky { position: static; }
+/* Brand on top, menu in the middle, user card at the bottom (even when the menu is short). */
+.sidebar-inner { display: flex; flex-direction: column; min-height: 100%; }
+.sidebar > .sidebar-inner > .position-sticky { position: static; }
+.sidebar-nav { flex: 1 0 auto; padding-bottom: 1rem; }
 
-.brand-section { padding: 0.25rem 0.5rem 1.1rem; }
+.brand-section { padding: 0.25rem 0.5rem 1rem; margin-bottom: 0.25rem; border-bottom: 1px solid var(--sidebar-border); }
 .brand-section a { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
 .brand-logo {
-    width: 40px; height: 40px; flex-shrink: 0; object-fit: contain; margin: 0; max-height: none;
-    background: var(--logo-tile); border-radius: 0.65rem; padding: 2px;
-    box-shadow: 0 0 0 1px var(--sidebar-logo-ring);
+    width: 42px; height: 42px; flex-shrink: 0; object-fit: contain; margin: 0; max-height: none;
+    background: var(--logo-tile); border-radius: 0.75rem; padding: 3px;
+    box-shadow: 0 0 0 1px var(--sidebar-logo-ring), 0 2px 6px -2px rgba(16, 24, 40, 0.12);
 }
 .brand-section .brand-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
-.brand-section h5 { font-size: 1.05rem; line-height: 1.2; letter-spacing: 0.08em; font-weight: 700; color: var(--sidebar-brand); margin: 0; }
+.brand-section h5 { font-size: 1.1rem; line-height: 1.2; letter-spacing: 0.1em; font-weight: 800; color: var(--sidebar-brand); margin: 0; }
 .brand-section small { font-size: 0.72rem; color: var(--sidebar-heading) !important; }
 
+/* Section label with a hairline running to the edge. */
 .nav-section-label {
-    display: flex; align-items: center;
-    font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+    display: flex; align-items: center; gap: 0.6rem;
+    font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
     color: var(--sidebar-heading);
-    margin: 1.4rem 0 0.4rem; padding-left: 0.75rem;
+    margin: 1.25rem 0 0.45rem; padding: 0 0.6rem;
 }
+.nav-section-label::after { content: ""; flex: 1; height: 1px; background: var(--sidebar-border); }
 .nav-section-label .dual { flex-direction: row; align-items: center; gap: 0; white-space: nowrap; }
 
 .nav-link {
     position: relative;
     display: flex; align-items: center; gap: 0.7rem;
-    padding: 0.5rem 0.75rem; margin-bottom: 2px;
-    border-radius: 0.5rem;
+    padding: 0.4rem 0.6rem 0.4rem 0.45rem; margin-bottom: 2px;
+    border-radius: 0.7rem;
     color: var(--sidebar-text); font-weight: 500; font-size: 0.9rem;
     transition: background-color 0.15s, color 0.15s;
 }
-.nav-link i {
-    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-    width: 1.25rem; margin: 0; font-size: 1.1rem; color: var(--text-faint);
-    transition: color 0.15s;
+/* The icon tile */
+.nav-icon {
+    width: 32px; height: 32px; flex-shrink: 0; border-radius: 0.6rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; color: var(--text-faint);
+    transition: background-color 0.15s, color 0.15s, box-shadow 0.2s,
+                transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);   /* springy overshoot */
 }
+.nav-icon i { font-size: 0.95rem; width: 1.1em; text-align: center; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.nav-text { transition: transform 0.2s ease; }
+/* Hover pop: the tile lifts and grows, the icon tilts, the label nudges right. */
+.nav-link:hover .nav-icon { transform: translateY(-2px) scale(1.12); box-shadow: 0 6px 14px -6px rgba(10, 127, 95, 0.45), 0 0 0 1px var(--sidebar-border); }
+.nav-link:hover .nav-icon i { transform: rotate(-8deg) scale(1.05); }
+.nav-link:hover .nav-text { transform: translateX(3px); }
+.nav-link:active .nav-icon { transform: translateY(0) scale(0.96); transition-duration: 0.1s; }
 .nav-link:hover { background: var(--sidebar-bg-hover); color: var(--sidebar-text-hover); }
-.nav-link:hover i { color: var(--sidebar-icon-hover); }
+.nav-link:hover .nav-icon { background: var(--sidebar-bg); color: var(--sidebar-active-icon); }
 .nav-link.active { background: var(--sidebar-active-bg); color: var(--sidebar-active-text); font-weight: 600; }
-.nav-link.active i { color: var(--sidebar-active-icon); }
+.nav-link.active .nav-icon, .nav-link.active:hover .nav-icon {
+    background: var(--primary-color); color: #fff;
+}
+.nav-link.active .nav-icon { box-shadow: 0 4px 10px -4px rgba(10, 127, 95, 0.6); }
+.nav-link.active:hover .nav-icon { box-shadow: 0 8px 16px -6px rgba(10, 127, 95, 0.7); }
 
 .nav-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
 .nav-text .dual-2 { font-size: 0.72rem; font-weight: 400; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -247,16 +272,34 @@ a { color: var(--primary-text); }
 .nav-section-label .dual-2 { font-weight: 500; opacity: 0.75; font-size: 0.625rem; letter-spacing: 0.04em; }
 .nav-section-label .dual-2::before { content: "\00b7"; margin: 0 0.4rem; }
 
-/* Sign out */
-.nav-link.text-danger { color: var(--sidebar-logout) !important; }
-.nav-link.text-danger i { color: var(--sidebar-logout-icon) !important; }
-.nav-link.text-danger:hover { background: var(--sidebar-logout-hover); }
-
 /* Menu item an admin has temporarily disabled: still clickable, leads to a maintenance message */
 .nav-link-disabled { opacity: 0.55; }
-.nav-maintenance-icon { margin-left: auto; font-size: 0.9rem !important; width: auto !important; color: var(--warning-fg, #b45309) !important; }
+.nav-maintenance-icon { margin-left: auto; font-size: 0.8rem; color: var(--warning-fg, #b45309); }
 
-@media (prefers-reduced-motion: reduce) { .nav-link, .nav-link i { transition: none; } }
+/* Sign-out: an ordinary menu row in red, under a hairline, pinned to the bottom of the sidebar. */
+.sidebar-footer {
+    margin-top: auto; position: sticky; bottom: 0; z-index: 2;
+    background: var(--sidebar-bg); padding-top: 0.5rem; border-top: 1px solid var(--sidebar-border);
+    box-shadow: 0 0.75rem 0 0.75rem var(--sidebar-bg);   /* cover the sidebar's bottom padding too */
+}
+/* Soft fade where a long menu scrolls under it. */
+.sidebar-footer::before {
+    content: ""; position: absolute; left: -0.75rem; right: -0.75rem; bottom: calc(100% + 1px); height: 1.25rem;
+    background: linear-gradient(to bottom, transparent, var(--sidebar-bg)); pointer-events: none;
+}
+.nav-link.nav-logout { color: var(--sidebar-logout); margin-bottom: 0; }
+.nav-logout .nav-icon { color: var(--sidebar-logout-icon); }
+.nav-link.nav-logout:hover { background: var(--sidebar-logout-hover); color: var(--sidebar-logout); }
+.nav-link.nav-logout:hover .nav-icon {
+    background: var(--sidebar-logout-icon); color: #fff;
+    box-shadow: 0 6px 14px -6px color-mix(in srgb, var(--sidebar-logout-icon) 80%, transparent);
+}
+.nav-link.nav-logout:hover .nav-icon i { transform: translateX(2px); }   /* the arrow steps out of the door instead of tilting */
+
+@media (prefers-reduced-motion: reduce) {
+    .nav-link, .nav-icon, .nav-icon i, .nav-text { transition: none; }
+    .nav-link:hover .nav-icon, .nav-link:hover .nav-icon i, .nav-link:hover .nav-text { transform: none; }
+}
 
 /* =====================================================================
    Top bar (page header) and content area

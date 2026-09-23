@@ -74,3 +74,34 @@ function initPasswordUI() {
 
 window.PasswordUI = { init: initPasswordUI };
 window.onReady(initPasswordUI);
+
+// Success / info flash messages ("Logged in successfully", "Saved", ...) show as a snackbar at the
+// top center and close themselves after 5s; hovering holds one open. Warnings and errors are
+// inline alerts that stay until dismissed.
+const FLASH_AUTOHIDE_MS = 5000;
+
+function initFlashAutoHide() {
+  // Drop in just below the top bar — its height varies (long titles wrap), so measure it.
+  const header = document.querySelector(".page-header");
+  document.querySelectorAll(".snackbar-stack").forEach((stack) => {
+    if (header) stack.style.top = `${Math.round(header.getBoundingClientRect().bottom) + 12}px`;
+  });
+  document.querySelectorAll(".snackbar[data-autohide]:not([data-autohide-armed])").forEach((bar) => {
+    bar.setAttribute("data-autohide-armed", "");
+    let hovered = false;
+    let expired = false;
+    const close = () => {
+      if (!bar.isConnected || bar.classList.contains("is-leaving")) return;
+      bar.classList.add("is-leaving");
+      bar.addEventListener("animationend", () => bar.remove(), { once: true });
+      setTimeout(() => bar.remove(), 400);   // in case animations are disabled
+    };
+    bar.querySelector(".snackbar-close")?.addEventListener("click", close);
+    bar.addEventListener("mouseenter", () => { hovered = true; });
+    bar.addEventListener("mouseleave", () => { hovered = false; if (expired) close(); });
+    setTimeout(() => { expired = true; if (!hovered) close(); }, FLASH_AUTOHIDE_MS);
+  });
+}
+
+window.FlashAutoHide = { init: initFlashAutoHide };
+window.onReady(initFlashAutoHide);

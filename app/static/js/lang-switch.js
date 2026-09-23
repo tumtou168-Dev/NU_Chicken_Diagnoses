@@ -20,6 +20,7 @@ window.onReady(function () {
   function reinitSharedScripts() {
     window.ThemeUI && window.ThemeUI.init();
     window.PasswordUI && window.PasswordUI.init();
+    window.FlashAutoHide && window.FlashAutoHide.init();
     window.AdminTableFilter && window.AdminTableFilter.init();
     window.ChatWidget && window.ChatWidget.init();
   }

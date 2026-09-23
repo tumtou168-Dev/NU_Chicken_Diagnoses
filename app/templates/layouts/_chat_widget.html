@@ -3,9 +3,26 @@
 {% set is_staff = current_user.has_role('Admin') or current_user.has_role('Doctor') %}
 <div id="chatWidget" class="chat-widget" data-is-staff="{{ 'true' if is_staff else 'false' }}" data-user-id="{{ current_user.id }}">
     <button type="button" id="chatToggleBtn" class="chat-toggle-btn" aria-label="{{ _('ជជែកជាមួយពេទ្យ') }}">
-        <i id="chatToggleIcon" class="bi bi-chat-square-text-fill"></i>
+        {# Both icons are always there; CSS morphs one into the other when the panel opens. #}
+        <span class="chat-toggle-icons" aria-hidden="true">
+            <i class="fa-solid fa-square-envelope chat-toggle-icon-chat"></i>
+            <i class="fa-solid fa-xmark chat-toggle-icon-close"></i>
+        </span>
+        <span class="chat-toggle-label" aria-hidden="true">{{ _('ជជែកជាមួយពេទ្យ') }}</span>
         <span id="chatUnreadBadge" class="chat-unread-badge" hidden>0</span>
     </button>
+
+    {# "New message" card that slides in above the launcher (chat.js). #}
+    <div id="chatNotify" class="chat-notify" role="status" aria-live="polite" hidden>
+        <button type="button" class="chat-notify-body" id="chatNotifyOpen">
+            <span class="chat-notify-avatar" id="chatNotifyAvatar"></span>
+            <span class="chat-notify-text">
+                <span class="chat-notify-title"><span id="chatNotifyName"></span><span class="chat-notify-tag">{{ _('សារថ្មី') }}</span></span>
+                <span class="chat-notify-preview" id="chatNotifyPreview"></span>
+            </span>
+        </button>
+        <button type="button" class="chat-notify-close" id="chatNotifyClose" aria-label="{{ _('បិទ') }}"><i class="bi bi-x-lg"></i></button>
+    </div>
 
     <div id="chatPanel" class="chat-panel" hidden>
         <div class="chat-panel-header">
@@ -31,9 +48,20 @@
 
         {% if is_staff %}
         <div id="chatThreadList" class="chat-thread-list">
-            <div class="chat-empty" id="chatThreadListEmpty" hidden>
+            {# Farmers = support threads with normal users; Team = direct messages with other Admins/Doctors. #}
+            <div class="chat-inbox-tabs" role="tablist">
+                <button type="button" class="chat-inbox-tab active" data-tab="farmers" role="tab">
+                    <i class="fa-solid fa-user-group" aria-hidden="true"></i><span>{{ _('កសិករ') }}</span>
+                    <span class="chat-inbox-tab-badge" data-tab-badge="farmers" hidden></span>
+                </button>
+                <button type="button" class="chat-inbox-tab" data-tab="team" role="tab">
+                    <i class="fa-solid fa-user-doctor" aria-hidden="true"></i><span>{{ _('ក្រុមការងារ') }}</span>
+                    <span class="chat-inbox-tab-badge" data-tab-badge="team" hidden></span>
+                </button>
+            </div>
+            <div class="chat-empty" id="chatThreadListEmpty" hidden data-empty-farmers="{{ _('មិនទាន់មានការសន្ទនាទេ។') }}" data-empty-team="{{ _('មិនទាន់មានបុគ្គលិកផ្សេងទេ។') }}">
                 <i class="bi bi-inboxes"></i>
-                <span>{{ _('មិនទាន់មានការសន្ទនាទេ។') }}</span>
+                <span id="chatThreadListEmptyText">{{ _('មិនទាន់មានការសន្ទនាទេ។') }}</span>
             </div>
         </div>
         {% endif %}
@@ -112,6 +140,8 @@
         save: {{ _('រក្សាទុក') | tojson }},
         cancel: {{ _('បោះបង់') | tojson }},
         online: {{ _('អនឡាញ') | tojson }},
+        newMessage: {{ _('សារថ្មី') | tojson }},
+        startConversation: {{ _('ចាប់ផ្តើមការសន្ទនា') | tojson }},
         sendImage: {{ _('ផ្ញើរូបភាព') | tojson }},
         sendImages: {{ _('ផ្ញើរូបភាព {n}') | tojson }},
         removeImage: {{ _('ដករូបភាពចេញ') | tojson }},

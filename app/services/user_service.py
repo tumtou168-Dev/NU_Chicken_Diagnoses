@@ -98,9 +98,14 @@ class UserService:
         uid = user.id
         avatar = user.avatar
 
-        messages = ChatMessage.query.filter(db.or_(
-            ChatMessage.thread_user_id == uid, ChatMessage.sender_id == uid, ChatMessage.recipient_id == uid,
-        )).all()
+        chat_columns = {c["name"] for c in db.inspect(db.engine).get_columns("tbl_chat_messages")}
+        involved = [ChatMessage.thread_user_id == uid, ChatMessage.sender_id == uid]
+        if "recipient_id" in chat_columns:
+            # Legacy column from the reverted direct-message feature: older databases still have it (with a foreign key).
+            direct_ids = db.session.execute(
+                db.text("SELECT id FROM tbl_chat_messages WHERE recipient_id = :u"), {"u": uid}).scalars().all()
+            involved.append(ChatMessage.id.in_(direct_ids))
+        messages = ChatMessage.query.filter(db.or_(*involved)).all()
         chat_images = [m.image for m in messages if m.image]
         chat_audio = [m.audio for m in messages if m.audio]
         message_ids = [m.id for m in messages]

@@ -3,7 +3,7 @@ import secrets
 import time
 import urllib.parse
 import requests
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import db
 from app.i18n import gettext as _
@@ -42,6 +42,31 @@ def login():
     return render_template("auth/login.html")
 
 
+def _signup_errors(username: str, email: str, full_name: str, password: str, confirm_password: str) -> list[str]:
+    """Checks shared by the normal sign-up form and the "complete your Google account" form."""
+    errors: list[str] = []
+    if not username:
+        errors.append(_("សូមបញ្ចូលឈ្មោះអ្នកប្រើប្រាស់។"))
+    if not email:
+        errors.append(_("សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែល។"))
+    if not full_name:
+        errors.append(_("សូមបញ្ចូលឈ្មោះពេញ។"))
+    if not password:
+        errors.append(_("សូមបញ្ចូលពាក្យសម្ងាត់។"))
+    if password and password != confirm_password:
+        errors.append(_("ពាក្យសម្ងាត់មិនដូចគ្នាទេ។"))
+    if username and UserTable.query.filter_by(username=username).first():
+        errors.append(_("ឈ្មោះអ្នកប្រើប្រាស់នេះមានគេប្រើរួចហើយ។"))
+    if email and _find_user_by_email(email):
+        errors.append(_("អ៊ីមែលនេះត្រូវបានចុះឈ្មោះរួចហើយ។"))
+    return errors
+
+
+def _default_role_id() -> int | None:
+    role = RoleTable.query.filter_by(name="User").first()
+    return role.id if role else None
+
+
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -50,25 +75,8 @@ def register():
         full_name = request.form.get("full_name", "").strip()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
-        
-        errors: list[str] = []
-        
-        if not username:
-            errors.append(_("សូមបញ្ចូលឈ្មោះអ្នកប្រើប្រាស់។"))
-        if not email:
-            errors.append(_("សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែល។"))
-        if not full_name:
-            errors.append(_("សូមបញ្ចូលឈ្មោះពេញ។"))
-        if not password:
-            errors.append(_("សូមបញ្ចូលពាក្យសម្ងាត់។"))
-        if password and password != confirm_password:
-            errors.append(_("ពាក្យសម្ងាត់មិនដូចគ្នាទេ។"))
-            
-        if username and UserTable.query.filter_by(username=username).first():
-            errors.append(_("ឈ្មោះអ្នកប្រើប្រាស់នេះមានគេប្រើរួចហើយ។"))
-        if email and UserTable.query.filter_by(email=email).first():
-            errors.append(_("អ៊ីមែលនេះត្រូវបានចុះឈ្មោះរួចហើយ។"))
-            
+
+        errors = _signup_errors(username, email, full_name, password, confirm_password)
         if errors:
             for msg in errors:
                 flash(msg, "danger")
@@ -79,20 +87,15 @@ def register():
                 full_name=full_name,
             )
             
-        default_role = RoleTable.query.filter_by(name="User").first()
-        default_role_id = default_role.id if default_role else None
-        
-        data = {
-            "username": username,
-            "email": email,
-            "full_name": full_name,
-            "is_active": True,
-        }
-        
         new_user = UserService.create_user(
-            data=data,
+            data={
+                "username": username,
+                "email": email,
+                "full_name": full_name,
+                "is_active": True,
+            },
             password=password,
-            role_id=default_role_id,
+            role_id=_default_role_id(),
         )
         
         login_user(new_user)
@@ -185,7 +188,6 @@ def google_callback():
         return redirect(url_for("auth.login"))
 
     email = userinfo.get("email", "").strip().lower()
-    full_name = userinfo.get("name", "").strip() or email.split("@")[0]
 
     user = _find_user_by_email(email)
 
@@ -197,47 +199,70 @@ def google_callback():
         login_user(user)
         AuditService.log("LOGIN", "User", user.id, f"Google login: {user.username}")
         flash(_("បានចូលតាមរយៈ Google ដោយជោគជ័យ។"), "success")
-        if not user.password_set:
-            return redirect(url_for("auth.set_password"))
         return redirect(url_for(user.landing_endpoint()))
 
-    # Register new user from Google account
-    default_role = RoleTable.query.filter_by(name="User").first()
-    default_role_id = default_role.id if default_role else None
+    # New Google user: nothing is created yet. Keep the verified e-mail for a few minutes and ask
+    # them to fill in their account (username, name, password) before they get into the system.
+    session[GOOGLE_SIGNUP_KEY] = {"email": email, "expires": time.time() + GOOGLE_SIGNUP_TTL}
+    return redirect(url_for("auth.google_complete"))
 
-    # Generate clean unique username
-    base_user = re.sub(r"[^a-zA-Z0-9_]", "", (userinfo.get("given_name") or email.split("@")[0]).lower())
-    if not base_user or len(base_user) < 3:
-        base_user = re.sub(r"[^a-zA-Z0-9_]", "", email.split("@")[0].lower())
-    if not base_user or len(base_user) < 3:
-        base_user = "user"
 
-    candidate_username = base_user[:70]
-    count = 1
-    while UserTable.query.filter_by(username=candidate_username).first():
-        candidate_username = f"{base_user[:65]}_{count}"
-        count += 1
+GOOGLE_SIGNUP_KEY = "google_signup"
+GOOGLE_SIGNUP_TTL = 15 * 60   # seconds to finish the "complete your account" form
 
-    random_pw = secrets.token_urlsafe(24) + "A1!"
 
-    new_user = UserService.create_user(
-        data={
-            "username": candidate_username,
-            "email": email,
-            "full_name": full_name,
-            "is_active": True,
-        },
-        password=random_pw,
-        role_id=default_role_id,
-    )
+def _pending_google_signup() -> dict | None:
+    pending = session.get(GOOGLE_SIGNUP_KEY)
+    if not pending or pending.get("expires", 0) < time.time():
+        session.pop(GOOGLE_SIGNUP_KEY, None)
+        return None
+    return pending
 
-    new_user.password_set = False  # the random password above is never shown to anyone
-    db.session.commit()
 
-    login_user(new_user)
-    AuditService.log("REGISTER", "User", new_user.id, f"Google registration: {new_user.username}")
-    flash(_("បានចុះឈ្មោះ និងចូលតាមរយៈ Google ដោយជោគជ័យ។"), "success")
-    return redirect(url_for("auth.set_password"))
+@auth_bp.route("/google/complete", methods=["GET", "POST"])
+def google_complete():
+    """Step 2 of signing up with Google: the visitor fills in their details; only then is the
+    account created and are they signed in."""
+    if current_user.is_authenticated:
+        return redirect(url_for(current_user.landing_endpoint()))
+    pending = _pending_google_signup()
+    if pending is None:
+        flash(_("ការចុះឈ្មោះតាម Google បានផុតកំណត់។ សូមព្យាយាមម្តងទៀត។"), "warning")
+        return redirect(url_for("auth.register"))
+
+    email = pending["email"]
+    username = full_name = ""   # the visitor types these; nothing is pre-filled from Google
+
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        full_name = request.form.get("full_name", "").strip()
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        errors = _signup_errors(username, email, full_name, password, confirm_password)
+        if not errors:
+            new_user = UserService.create_user(
+                data={"username": username, "email": email, "full_name": full_name, "is_active": True},
+                password=password,
+                role_id=_default_role_id(),
+            )
+            session.pop(GOOGLE_SIGNUP_KEY, None)
+            login_user(new_user)
+            AuditService.log("REGISTER", "User", new_user.id, f"Google registration: {new_user.username}")
+            flash(_("បានចុះឈ្មោះ និងចូលតាមរយៈ Google ដោយជោគជ័យ។"), "success")
+            return redirect(url_for(new_user.landing_endpoint()))
+        for msg in errors:
+            flash(msg, "danger")
+
+    return render_template("auth/google_complete.html", email=email, username=username, full_name=full_name)
+
+
+@auth_bp.route("/google/cancel", methods=["POST"])
+def google_cancel():
+    """Drop a half-finished Google sign-up."""
+    session.pop(GOOGLE_SIGNUP_KEY, None)
+    flash(_("បានបោះបង់ការចុះឈ្មោះតាម Google។"), "info")
+    return redirect(url_for("auth.login"))
 
 
 @auth_bp.route("/logout")
@@ -279,62 +304,6 @@ def _new_password_errors(password: str, confirm_password: str) -> list[str]:
     if password and password != confirm_password:
         errors.append(_("ពាក្យសម្ងាត់មិនដូចគ្នាទេ។"))
     return errors
-
-
-USERNAME_RE = re.compile(r"^[A-Za-z0-9_.]{3,80}$")
-
-
-def _username_errors(username: str, user: UserTable) -> list[str]:
-    if not USERNAME_RE.match(username):
-        return [_("ឈ្មោះអ្នកប្រើប្រាស់ត្រូវមាន ៣-៨០ តួ ហើយប្រើបានតែអក្សរ លេខ _ និង . ប៉ុណ្ណោះ។")]
-    taken = UserTable.query.filter(
-        db.func.lower(UserTable.username) == username.lower(), UserTable.id != user.id
-    ).first()
-    if taken:
-        return [_("ឈ្មោះអ្នកប្រើប្រាស់នេះមានគេប្រើរួចហើយ។")]
-    return []
-
-
-@auth_bp.before_app_request
-def require_password_setup():
-    """Google sign-ups must pick a username and password before using the app."""
-    if not current_user.is_authenticated or current_user.password_set:
-        return None
-    endpoint = request.endpoint or ""
-    if endpoint in ("static", "auth.set_password", "auth.logout") or endpoint.startswith("lang."):
-        return None
-    if request.path.startswith("/chat/api/"):  # fetch() callers expect JSON, not a redirect
-        return jsonify({"error": "password setup required"}), 403
-    return redirect(url_for("auth.set_password"))
-
-
-@auth_bp.route("/set-password", methods=["GET", "POST"])
-@login_required
-def set_password():
-    """Google sign-ups choose a username and password, so they can also sign in without Google."""
-    if current_user.password_set:
-        return redirect(url_for(current_user.landing_endpoint()))
-
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
-        errors = _username_errors(username, current_user) + _new_password_errors(
-            password, request.form.get("confirm_password", ""))
-        if errors:
-            for msg in errors:
-                flash(msg, "danger")
-            return render_template("auth/set_password.html", username=username)
-
-        old_username = current_user.username
-        current_user.username = username
-        current_user.set_password(password)
-        db.session.commit()
-        AuditService.log("PASSWORD_SET", "User", current_user.id,
-                         f"Username and password set for {username}" + (f" (was {old_username})" if old_username != username else ""))
-        flash(_("បានបង្កើតគណនីរួចរាល់។ ឥឡូវអ្នកអាចចូលដោយប្រើឈ្មោះអ្នកប្រើប្រាស់ ឬអ៊ីមែល និងពាក្យសម្ងាត់។"), "success")
-        return redirect(url_for(current_user.landing_endpoint()))
-
-    return render_template("auth/set_password.html", username=current_user.username)
 
 
 RESEND_SECONDS = int(PasswordResetCode.RESEND_COOLDOWN.total_seconds())

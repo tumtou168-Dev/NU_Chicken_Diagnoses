@@ -37,6 +37,7 @@ def _serialize(message) -> dict:
     is_mine = message.sender_id == current_user.id
     data = {
         "id": message.id,
+        "sender_id": message.sender_id,
         "body": ChatService.display_body(message),
         "is_from_staff": message.is_from_staff,
         "is_mine": is_mine,

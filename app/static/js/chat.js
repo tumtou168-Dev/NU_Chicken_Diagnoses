@@ -156,7 +156,10 @@ function initChatWidget() {
 
   function setPeerOnline(online) {
     if (panelPresence) panelPresence.classList.toggle("is-online", !!online);
-    if (panelSubtitle) panelSubtitle.textContent = online ? panelSubtitle.dataset.online : panelSubtitle.dataset.offline;
+    if (panelSubtitle) {
+      panelSubtitle.textContent = online ? panelSubtitle.dataset.online : panelSubtitle.dataset.offline;
+      panelSubtitle.classList.toggle("is-online", !!online);
+    }
   }
 
   function renderContactCard(cr) {
@@ -184,6 +187,8 @@ function initChatWidget() {
   }
 
   let lastMessagesKey = null;
+  let renderedThreadId = null;     // whose messages are on screen, so switching threads doesn't animate everything
+  let renderedIds = new Set();
 
   function renderMessages(items, force) {
     // Include the deleted flag so a "delete for everyone" from the other side re-renders on the next poll.
@@ -198,7 +203,12 @@ function initChatWidget() {
 
     messagesEmpty.hidden = items.length !== 0;
     messagesBox.querySelectorAll(".chat-bubble, .chat-date-divider").forEach((el) => el.remove());
+    const animateNew = renderedThreadId === activeUserId;
+    const seenIds = renderedIds;
+    renderedThreadId = activeUserId;
+    renderedIds = new Set(items.map((m) => m.id));
     let lastDate = null;
+    let prev = null;
     for (const m of items) {
       // "YYYY-MM-DD HH:MM" -> group by day with a divider, show only the time on each bubble.
       const [date, time] = [m.created_at.slice(0, 10), m.created_at.slice(11)];
@@ -208,11 +218,16 @@ function initChatWidget() {
         divider.className = "chat-date-divider";
         divider.innerHTML = `<span>${escapeHtml(date)}</span>`;
         messagesBox.appendChild(divider);
+        prev = null;
       }
+      // Same sender as the bubble just above (same day): join them and don't repeat the name.
+      const grouped = !!prev && prev.sender_id === m.sender_id;
+      prev = m;
 
       const bubble = document.createElement("div");
       bubble.className = "chat-bubble " + (m.is_mine ? "chat-bubble-mine" : "chat-bubble-theirs") +
-        (m.contact_request ? " chat-bubble-card" : "") + (m.image_url ? " chat-bubble-photo" : "") + (m.caption ? " has-caption" : "");
+        (m.contact_request ? " chat-bubble-card" : "") + (m.image_url ? " chat-bubble-photo" : "") + (m.caption ? " has-caption" : "") +
+        (grouped ? " is-grouped" : "") + (animateNew && !seenIds.has(m.id) ? " is-new" : "");
       bubble.dataset.messageId = m.id;
       let body;
       if (m.is_deleted) {
@@ -235,7 +250,7 @@ function initChatWidget() {
         body = `<div class="chat-bubble-body">${escapeHtml(m.body)}</div>`;
       }
       // Show who sent it (with photo) for anything that isn't my own message.
-      const senderRow = !m.is_mine
+      const senderRow = !m.is_mine && !grouped
         ? `<div class="chat-bubble-sender">${avatarHtml(m.sender_avatar_url, m.sender_name, "chat-avatar-xs")}<span>${escapeHtml(m.sender_name)}</span>${m.sender_role ? `<span class="chat-role-badge">${escapeHtml(m.sender_role)}</span>` : ""}</div>`
         : "";
       const editedTag = m.is_edited && !m.is_deleted ? `<span class="chat-bubble-edited-tag">(${escapeHtml(CONTACT_LABELS.editedTag || "edited")})</span>` : "";
@@ -668,6 +683,11 @@ function initChatWidget() {
     images.slice(0, Math.max(0, room)).forEach((file) => pendingImages.push({ file, url: URL.createObjectURL(file) }));
     if (!pendingImages.length) return;
     renderImagePreviews();
+    // Like Telegram: text already typed in the message box becomes the caption.
+    if (imageDialog.hidden && input.value.trim() && !imageCaption.value) {
+      imageCaption.value = input.value.trim();
+      input.value = "";
+    }
     imageDialog.hidden = false;
     imageCaption.focus();
   }

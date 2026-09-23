@@ -4,6 +4,9 @@
     /* Surfaces & text */
     --bg-body: #f6f8f7;
     --surface: #ffffff;
+    --chat-canvas: #f5f7f6;
+    --chat-photo-backing: #ffffff;
+    --chat-photo-frame-theirs: #e9eeeb;
     --surface-muted: #fafbfa;
     --surface-raised: #ffffff;
     --input-bg: #ffffff;
@@ -89,6 +92,9 @@
 
     --bg-body: #0f172a;
     --surface: #1e293b;
+    --chat-canvas: #172033;
+    --chat-photo-backing: #e8edf3;   /* light even in dark mode, so dark logos on transparent PNGs stay readable */
+    --chat-photo-frame-theirs: #1e293b;
     --surface-muted: #172033;
     --surface-raised: #253248;
     --input-bg: #111b2e;
@@ -870,6 +876,8 @@ html.theme-ready .form-control, html.theme-ready .form-select, html.theme-ready 
 .lang-switch.floating { position: fixed; top: 1rem; right: 4rem; z-index: 1100; }
 .lang-switch .lang-flag { width: 1.1rem; height: 0.75rem; border-radius: 2px; object-fit: cover; box-shadow: 0 0 0 1px rgba(0,0,0,0.1); flex-shrink: 0; }
 .lang-switch a.active .lang-flag { box-shadow: 0 0 0 1px rgba(255,255,255,0.6); }
+/* Same flag images in the AI voice-language toggle (emoji flags render as "KH"/"GB" letters on Windows/Linux). */
+.voice-flag { width: 1.1rem; height: 0.75rem; border-radius: 2px; object-fit: cover; box-shadow: 0 0 0 1px rgba(0,0,0,0.1); margin-right: 0.3rem; vertical-align: -1px; }
 @media (max-width: 575.98px) { .lang-switch .lang-label { display: none; } }
 
 /* English reads better with the Latin face first (Khmer glyphs still fall back to Kantumruy Pro) */
@@ -1252,9 +1260,9 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 #appShell { transition: opacity 0.12s ease; }
 #appShell.lang-swapping { opacity: 0.6; }
 
-/* ===== Floating support chat — iMessage-inspired: white canvas, flat bubbles,
-   quiet chrome. Green stays only where it means something (my bubbles, send button,
-   the launcher). ===== */
+/* ===== Floating support chat — clean and quiet: a plain header, a soft plain canvas,
+   solid green for my bubbles and bordered cards for theirs. Photos sit in a thin frame
+   on a neutral backing so transparent images never blend into the bubble color. ===== */
 .chat-widget { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 1070; }
 
 .chat-toggle-btn {
@@ -1281,8 +1289,8 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 }
 
 .chat-panel {
-    position: absolute; right: 0; bottom: calc(100% + 0.85rem); width: min(368px, calc(100vw - 2.5rem));
-    height: min(500px, calc(100vh - 8rem)); background: var(--surface); border: 1px solid var(--border-soft);
+    position: absolute; right: 0; bottom: calc(100% + 0.85rem); width: min(384px, calc(100vw - 2.5rem));
+    height: min(560px, calc(100vh - 8rem)); background: var(--surface); border: 1px solid var(--border-soft);
     border-radius: 1.25rem; box-shadow: 0 24px 48px -12px rgba(16, 24, 40, 0.22), var(--pop-shadow);
     display: flex; flex-direction: column; overflow: hidden;
     transform-origin: bottom right;
@@ -1293,19 +1301,25 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     to { opacity: 1; transform: none; }
 }
 
-/* Quiet, light header — a name and status, not a banner. */
+/* Plain header on the panel surface, split from the conversation by a hairline. */
 .chat-panel-header {
-    display: flex; align-items: center; gap: 0.65rem; padding: 0.8rem 1.1rem; flex-shrink: 0; position: relative;
+    display: flex; align-items: center; gap: 0.7rem; padding: 0.8rem 1rem; flex-shrink: 0; position: relative;
     background: var(--surface); color: var(--heading); border-bottom: 1px solid var(--border-soft);
 }
-.chat-panel-icon { font-size: 1.1rem; color: var(--primary-color); }
-.chat-panel-title { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.25; }
+.chat-panel-icon {
+    width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 1.05rem; color: var(--primary-text); background: var(--primary-soft);
+}
+.chat-panel-icon[hidden] { display: none; }
+.chat-panel-title { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.3; }
 .chat-panel-title span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #chatPanelTitle { font-weight: 600; font-size: 0.95rem; color: var(--heading); }
-.chat-panel-subtitle { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
-.chat-panel-header .chat-avatar { border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border-soft); }
+.chat-panel-subtitle { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 0.35rem; }
+.chat-panel-subtitle.is-online { color: var(--success-fg, #16a34a); }
+.chat-panel-subtitle.is-online::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
+.chat-panel-header .chat-avatar { width: 38px; height: 38px; }
 .chat-back-btn, .chat-close-btn {
-    border: none; background: var(--surface-muted); color: var(--text-muted); width: 30px; height: 30px;
+    border: none; background: transparent; color: var(--text-muted); width: 32px; height: 32px;
     display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; flex-shrink: 0;
     transition: background 0.15s ease, color 0.15s ease;
 }
@@ -1339,7 +1353,7 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     background: #22c55e; border: 2px solid var(--surface);
 }
 .chat-avatar-sm { width: 34px; height: 34px; font-size: 0.85rem; }
-.chat-avatar-xs { width: 16px; height: 16px; font-size: 0.6rem; }
+.chat-avatar-xs { width: 18px; height: 18px; font-size: 0.6rem; }
 .chat-role-badge {
     font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
     background: var(--primary-soft); color: var(--primary-soft-fg); border-radius: 999px; padding: 0.06rem 0.42rem;
@@ -1347,8 +1361,9 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 
 .chat-conversation { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .chat-messages {
-    flex: 1; overflow-y: auto; padding: 1rem 0.9rem; display: flex; flex-direction: column; gap: 0.4rem;
-    background: var(--surface); scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent;
+    flex: 1; overflow-y: auto; padding: 1rem 0.9rem; display: flex; flex-direction: column; gap: 0.45rem;
+    background: var(--chat-canvas);
+    scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent;
 }
 .chat-messages::-webkit-scrollbar, .chat-thread-list::-webkit-scrollbar { width: 6px; }
 .chat-messages::-webkit-scrollbar-thumb, .chat-thread-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
@@ -1356,16 +1371,29 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     margin: auto; color: var(--text-faint); font-size: 0.85rem; text-align: center; padding: 1.5rem 1rem;
     display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
 }
-.chat-empty i { font-size: 1.9rem; opacity: 0.5; }
+.chat-empty i {
+    width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 1.7rem; color: var(--primary-text); background: var(--primary-soft);
+}
 
-/* Flat bubbles, no shadow — the color difference alone carries mine vs. theirs. */
-/* flex-shrink: 0 — the list is a scrolling flex column, so once it overflows, items shrink to fit.
+/* Flat bubbles, no shadow — the color difference alone carries mine vs. theirs.
+   flex-shrink: 0 — the list is a scrolling flex column, so once it overflows, items shrink to fit.
    A photo bubble has overflow: hidden, which drops its content-based minimum height to 0,
    so without this it gets squeezed to nothing and the picture disappears. */
 .chat-bubble {
     position: relative; max-width: 78%; padding: 0.5rem 0.75rem; border-radius: 1.15rem; font-size: 0.87rem; line-height: 1.4;
     flex-shrink: 0;
 }
+/* Only messages that arrived since the last render pop in — a re-render of old ones stays still. */
+.chat-bubble.is-new { animation: chatBubbleIn 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes chatBubbleIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.96); }
+    to { opacity: 1; transform: none; }
+}
+/* Consecutive messages from the same sender: tighter spacing, no repeated name, joined corners. */
+.chat-bubble.is-grouped { margin-top: -0.25rem; }
+.chat-bubble-mine.is-grouped { border-top-right-radius: 0.3rem; }
+.chat-bubble-theirs.is-grouped { border-top-left-radius: 0.3rem; }
 
 .chat-bubble-actions {
     position: absolute; top: -13px; right: 6px; display: flex; gap: 0.25rem;
@@ -1469,27 +1497,47 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .chat-bubble-theirs .chat-bubble-edit-save { background: var(--primary-color); color: #fff; }
 .chat-bubble-theirs .chat-bubble-edit-cancel { background: var(--bg-body); color: var(--text-muted); }
 
-/* "Theirs" — light grey, iMessage-style, no border. */
-.chat-bubble-theirs { align-self: flex-start; background: var(--bg-body); color: var(--text-main); border-bottom-left-radius: 0.3rem; }
+/* "Theirs" — a plain bordered card on the canvas. */
+.chat-bubble-theirs {
+    align-self: flex-start; background: var(--surface); color: var(--text-main); border-bottom-left-radius: 0.3rem;
+    border: 1px solid var(--border-soft);
+}
 .chat-bubble-card { max-width: 92%; }   /* the flock-info card needs more room than a text bubble */
 
-/* A shared photo fills the bubble edge-to-edge instead of sitting inside the text padding,
-   with the timestamp overlaid on the image itself — like WhatsApp/iMessage photo bubbles. */
-.chat-bubble-photo { padding: 0; overflow: hidden; line-height: 0; }
-.chat-bubble-image { display: block; max-width: 220px; max-height: 260px; width: 100%; height: auto; object-fit: cover; cursor: pointer; }
-/* A captioned photo puts the text (and the time) under the image instead of overlaying it. */
-.chat-bubble-photo.has-caption { width: 220px; }   /* the caption wraps to the photo's width instead of widening the bubble */
-.chat-bubble-photo.has-caption .chat-bubble-image { max-width: none; }
-.chat-bubble-photo .chat-bubble-caption { padding: 0.45rem 0.75rem 0; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
-.chat-bubble-photo .chat-bubble-time { padding: 0 0.75rem 0.45rem; line-height: 1.4; }
+/* Framed photo: the bubble color shows as a thin frame around the picture, which sits on a
+   neutral backing (so transparent PNGs never blend into the bubble). Caption and time go below;
+   with no caption the time is a pill on the picture. */
+.chat-bubble-photo { padding: 4px; width: 228px; line-height: 0; }
+.chat-bubble-photo > a { display: block; }
+.chat-bubble-image {
+    display: block; width: 100%; height: auto; max-height: 260px; object-fit: cover; cursor: pointer;
+    border-radius: calc(1.15rem - 4px); background: var(--chat-photo-backing);
+}
+.chat-bubble-photo.chat-bubble-mine { border-bottom-right-radius: 0.3rem; }
+.chat-bubble-photo.chat-bubble-theirs { background: var(--chat-photo-frame-theirs); }   /* frame stays visible around white pictures */
+.chat-bubble-photo.chat-bubble-mine .chat-bubble-image { border-bottom-right-radius: 0.2rem; }
+.chat-bubble-photo.chat-bubble-theirs .chat-bubble-image { border-bottom-left-radius: 0.2rem; }
+.chat-bubble-photo.is-grouped.chat-bubble-mine .chat-bubble-image { border-top-right-radius: 0.2rem; }
+.chat-bubble-photo.is-grouped.chat-bubble-theirs .chat-bubble-image { border-top-left-radius: 0.2rem; }
+/* The hover buttons sit inside the frame's top corner. */
+.chat-bubble-photo .chat-bubble-actions { top: 10px; right: 10px; z-index: 1; }
+.chat-bubble-photo.chat-bubble-theirs .chat-bubble-actions { right: 10px; left: auto; }
+.chat-bubble-photo .chat-bubble-sender { padding: 0.3rem 0.45rem 0.35rem; margin: 0; line-height: 1.3; }
+.chat-bubble-photo .chat-bubble-caption { padding: 0.4rem 0.5rem 0; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+.chat-bubble-photo .chat-bubble-time { padding: 0 0.5rem 0.25rem; line-height: 1.4; }
 .chat-bubble-photo-time {
-    position: absolute; right: 0.5rem; bottom: 0.4rem; font-size: 0.62rem; color: #fff;
-    background: rgba(0, 0, 0, 0.45); padding: 0.1rem 0.4rem; border-radius: 999px; pointer-events: none;
+    position: absolute; right: 12px; bottom: 11px; font-size: 0.62rem; line-height: 1.4; color: #fff;
+    background: rgba(15, 23, 42, 0.62); padding: 0.1rem 0.45rem; border-radius: 999px; pointer-events: none;
+    backdrop-filter: blur(4px);
 }
 
-.chat-date-divider { display: flex; align-items: center; justify-content: center; margin: 0.5rem 0 0.2rem; color: var(--text-faint); font-size: 0.68rem; font-weight: 600; }
+.chat-date-divider { display: flex; align-items: center; justify-content: center; margin: 0.6rem 0 0.3rem; flex-shrink: 0; }
+.chat-date-divider span {
+    font-size: 0.66rem; font-weight: 600; color: var(--text-muted); background: var(--surface);
+    border: 1px solid var(--border-soft); padding: 0.15rem 0.65rem; border-radius: 999px;
+}
 
-/* "Mine" — solid brand green, flat, right-aligned. */
+/* "Mine" — solid brand green, right-aligned. */
 .chat-bubble-mine { align-self: flex-end; background: var(--primary-color); color: #fff; border-bottom-right-radius: 0.3rem; }
 .chat-bubble-sender {
     font-size: 0.7rem; font-weight: 700; color: var(--primary-text); margin-bottom: 0.3rem;
@@ -1498,14 +1546,14 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .chat-bubble-mine .chat-role-badge { background: rgba(255, 255, 255, 0.2); color: #fff; }
 .chat-bubble-time { font-size: 0.62rem; opacity: 0.6; margin-top: 0.2rem; text-align: right; }
 
-/* Light, minimal composer — a grey pill input, quiet mic, green send button. */
+/* Composer — a bordered pill input, round tool buttons, solid green send button. */
 .chat-form { display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 0.75rem; border-top: 1px solid var(--border-soft); background: var(--surface); flex-shrink: 0; }
 .chat-input {
     min-width: 0;
-    flex: 1; border: none; border-radius: 999px; padding: 0.55rem 1rem; background: var(--bg-body);
-    color: var(--text-main); font-size: 0.85rem; transition: box-shadow 0.15s ease;
+    flex: 1; border: 1px solid var(--border-soft); border-radius: 999px; padding: 0.55rem 1rem; background: var(--bg-body);
+    color: var(--text-main); font-size: 0.85rem; transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
-.chat-input:focus { outline: none; box-shadow: 0 0 0 2px var(--primary-soft); }
+.chat-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--primary-soft); }
 .chat-send-btn {
     width: 38px; height: 38px; border-radius: 50%; border: none;
     background: var(--primary-color); color: #fff;
@@ -1521,7 +1569,7 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
     transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
-.chat-mic-btn:hover { background: var(--hover-bg); color: var(--text-main); }
+.chat-mic-btn:hover { background: var(--primary-soft); color: var(--primary-text); }
 .chat-mic-btn:active { transform: scale(0.94); }
 .chat-mic-btn.is-recording {
     background: var(--danger-fg); color: #fff;

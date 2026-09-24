@@ -8,6 +8,9 @@ class Config:
     # Set DATABASE_URL to override (e.g., use SQLite in dev); default is PostgreSQL.
     SQLALCHEMY_DATABASE_URI = (os.environ.get("DATABASE_URL") 
         or "postgresql://postgres:123456789@localhost:5432/chicken_diagnoses")
+    # Hosts such as Render hand out "postgres://" URLs, which SQLAlchemy no longer accepts.
+    if SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
+        SQLALCHEMY_DATABASE_URI = "postgresql://" + SQLALCHEMY_DATABASE_URI[len("postgres://"):]
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

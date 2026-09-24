@@ -1,6 +1,7 @@
 # app/__init__.py
 import os
 from flask import Flask, redirect, url_for, flash, request, render_template, jsonify
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import current_user
 from datetime import timedelta
 from sqlalchemy import inspect, text
@@ -13,6 +14,9 @@ from utils.timezone import now_kh
 def create_app(config_class: type[Config] = Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    # Hosting platforms (Render) serve HTTPS through a proxy; trust its X-Forwarded-* headers so
+    # external URLs such as the Google login callback use https:// and the real host name.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
     
     #init extensions
     db.init_app(app)

@@ -1,7 +1,8 @@
 # Gunicorn settings used by the Docker image.
 import os
 
-bind = "0.0.0.0:8000"
+# Hosting platforms such as Render pass the port to listen on in $PORT.
+bind = f"0.0.0.0:{os.environ.get('PORT', '8000')}"
 workers = int(os.environ.get("WEB_CONCURRENCY", "4"))
 # Each worker handles this many requests concurrently (I/O-bound Flask views spend most of
 # their time waiting on the database, so threads let a worker serve another request meanwhile).

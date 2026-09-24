@@ -1,4 +1,7 @@
 # app/services/seed_service.py
+import os
+import secrets
+
 from extensions import db
 from app.models import PermissionTable, RoleTable, UserTable
 from app.models.expert_system import Category, Symptom, Disease, Rule
@@ -75,11 +78,17 @@ def seed_admin_user():
         return
     admin = UserTable(
         username="admin",
-        email="admin@example.com",
+        email="tumtou168@gmail.com",
         full_name="System Administrator",
         is_active=True,
     )
-    admin.set_password("Admin@123")
+    # The password comes from ADMIN_PASSWORD so it is never stored in the repository. Without it,
+    # a random one is generated and printed once to the log (it is only needed for the first login).
+    password = os.environ.get("ADMIN_PASSWORD")
+    if not password:
+        password = secrets.token_urlsafe(12)
+        print(f"Created user 'admin' with generated password: {password}", flush=True)
+    admin.set_password(password)
     admin.roles = [admin_role]
     db.session.add(admin)
     db.session.commit()

@@ -1,0 +1,133 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ _('អ្នកបង្កើតប្រព័ន្ធ') }}{% endblock %}
+{% block page_title %}{{ bi('អ្នកបង្កើតប្រព័ន្ធ') }}{% endblock %}
+{% block page_subtitle %}{{ bi('អ្នកដែលបានបង្កើត និងប្រភពចំណេះដឹងនៃប្រព័ន្ធនេះ។') }}{% endblock %}
+
+{% block content %}
+{# Project team (Norton University, 2025-2026): name, English name, role, is leader, photo (4:5), role icon, accent colour. #}
+{% set team = [
+    ('ទុំ តូ', 'TUM Tou', 'ប្រធានក្រុម', true, 'tum-tou.jpg', 'flag', '#0a7f5f'),
+    ('ហាក់ អេងតាំង', 'HAK Engtangk', 'អ្នកអភិវឌ្ឍន៍', false, 'hak-engtangk.jpg', 'code-slash', '#4f46e5'),
+    ('គា សំនាង', 'KEA Somneang', 'អ្នកអភិវឌ្ឍន៍កម្មវិធីទូរស័ព្ទ', false, 'kea-somneang.jpg', 'phone', '#c2410c'),
+    ('ឆន ដារ៉ា', 'CHHORN Dara', 'អ្នកសាកល្បងប្រព័ន្ធ', false, 'chhorn-dara.jpg', 'bug', '#be185d'),
+] %}
+{% set tech = [
+    ('Python · Flask', 'ផ្នែកខាងក្រោយ', 'fa-brands fa-python'),
+    ('PostgreSQL · SQLAlchemy', 'មូលដ្ឋានទិន្នន័យ', 'fa-solid fa-database'),
+    ('Flask-Login · Flask-WTF', 'ការចូលប្រើ និងទម្រង់', 'fa-solid fa-lock'),
+    ('Bootstrap 5', 'ចំណុចប្រទាក់', 'fa-brands fa-bootstrap'),
+    ('Bootstrap Icons · Font Awesome', 'រូបតំណាង', 'fa-solid fa-icons'),
+    ('Roboto · Kantumruy Pro', 'ពុម្ពអក្សរ', 'fa-solid fa-font'),
+    ('Google Sign-In', 'ចូលដោយគណនី Google', 'fa-brands fa-google'),
+    ('edge-tts · Pillow', 'សំឡេង និងរូបភាព', 'fa-solid fa-wave-square'),
+    ('Docker · Gunicorn', 'ការដាក់ឱ្យដំណើរការ', 'fa-brands fa-docker'),
+] %}
+
+<div class="row g-4 credits-row">
+    <div class="col-lg-4">
+        <section class="admin-card h-100">
+            <div class="admin-card-header">
+                <h5 class="admin-card-title"><i class="bi bi-person-video3 me-2"></i>{{ bi('សាស្ត្រាចារ្យដឹកនាំ') }}</h5>
+            </div>
+            <div class="admin-card-body">
+                <div class="credits-profile credits-mentor">
+                    <span class="credits-photo"><img src="{{ url_for('static', filename='images/team/sek-socheat.jpg') }}" alt="SEK Socheat"></span>
+                    <div class="credits-name">សេក សុជាតិ</div>
+                    <div class="credits-name-en">SEK Socheat</div>
+                    <span class="credits-role"><i class="bi bi-mortarboard"></i>{{ _('សាស្ត្រាចារ្យបង្រៀន និងដឹកនាំ') }}</span>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div class="col-lg-8">
+        <section class="admin-card h-100">
+            <div class="admin-card-header">
+                <h5 class="admin-card-title"><i class="bi bi-bank me-2"></i>{{ bi('ស្ថាប័ន') }}</h5>
+            </div>
+            <div class="admin-card-body">
+                <dl class="credits-facts">
+                    {% for icon, label, value in [
+                        ('building', 'សាកលវិទ្យាល័យ', 'សាកលវិទ្យាល័យន័រតុន'),
+                        ('diagram-2', 'មហាវិទ្យាល័យ', 'មហាវិទ្យាល័យវិទ្យាសាស្ត្រ · ផ្នែកកុំព្យូទ័រវិទ្យា'),
+                        ('code-slash', 'ជំនាញ', 'វិទ្យាសាស្ត្រកុំព្យូទ័រ / អភិវឌ្ឍន៍កម្មវិធី'),
+                        ('book', 'មុខវិជ្ជា', 'ប្រព័ន្ធឯកទេសជំនាញ'),
+                        ('calendar3', 'ឆ្នាំសិក្សា', 'ឆ្នាំទី៣ ឆមាសទី១ · ២០២៥-២០២៦ · វេនព្រឹក'),
+                        ('people', 'ក្រុម', 'ក្រុម ៦ · Com3MS4'),
+                    ] %}
+                    <div class="credits-fact">
+                        <i class="bi bi-{{ icon }}"></i>
+                        <div><dt>{{ _(label) }}</dt><dd>{{ _(value) }}</dd></div>
+                    </div>
+                    {% endfor %}
+                </dl>
+            </div>
+        </section>
+    </div>
+</div>
+
+<section class="admin-card credits-team">
+    <div class="admin-card-header">
+        <h5 class="admin-card-title"><i class="bi bi-people me-2"></i>{{ bi('ក្រុមអភិវឌ្ឍន៍') }}</h5>
+        <span class="badge-soft badge-soft-primary">{{ _('ក្រុម ៦ · Com3MS4') }}</span>
+    </div>
+    <div class="admin-card-body">
+        <ul class="team-grid">
+            {% for km, en, role, lead, photo, icon, accent in team %}
+            <li class="team-card{% if lead %} is-lead{% endif %}" style="--accent: {{ accent }}">
+                <div class="team-photo">
+                    <img src="{{ url_for('static', filename='images/team/' ~ photo) }}" alt="{{ en }}" loading="lazy">
+                    {% if lead %}<span class="team-lead-chip"><i class="bi bi-star-fill"></i>{{ _('ប្រធានក្រុម') }}</span>{% endif %}
+                    <div class="team-caption">
+                        <div class="team-name">{{ km }}</div>
+                        <div class="team-name-en">{{ en }}</div>
+                    </div>
+                </div>
+                <div class="team-body">
+                    <span class="team-role-icon"><i class="bi bi-{{ icon }}"></i></span>
+                    <span class="team-role">{{ _(role) }}</span>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+<section class="admin-card">
+    <div class="admin-card-header">
+        <h5 class="admin-card-title"><i class="bi bi-journal-medical me-2"></i>{{ bi('ប្រភពចំណេះដឹង') }}</h5>
+    </div>
+    <div class="admin-card-body">
+        <p class="text-muted">{{ _('ជំងឺ រោគសញ្ញា ការព្យាបាល និងវិធានក្នុងប្រព័ន្ធ ត្រូវបានរៀបចំចេញពីឯកសារខាងក្រោម ហើយពេទ្យក្នុងប្រព័ន្ធអាចពិនិត្យ និងអនុម័តវិធាន។') }}</p>
+        <ol class="credits-sources">
+            <li>
+                <div class="credits-name">ឯកសារស្រាវជ្រាវគំរូបច្ចេកទេសចិញ្ចឹមមាន់ស្រុក</div>
+                <div class="text-muted small">{{ _('ក្រុមការងារបច្ចេកទេសនៃធនាគារអភិវឌ្ឍន៍ជនបទ និងកសិកម្ម · ផ្នែក ៣.៨ ជំងឺផ្សេងៗដែលតែងជួបប្រទះលើមាន់') }}</div>
+            </li>
+            <li>
+                <div class="credits-name">ជំងឺមាន់៖ រោគវិនិច្ឆ័យ និង ការព្យាបាល</div>
+                <div class="text-muted small">{{ _('ម៉ូឌុលទី ១៣ · ការត្រួតពិនិត្យខាងក្រៅ ជំងឺផ្លូវដង្ហើម ពោះវៀន ប្រព័ន្ធប្រសាទ ស្បែក និងវិធានការការពារ') }}</div>
+            </li>
+        </ol>
+    </div>
+</section>
+
+<section class="admin-card">
+    <div class="admin-card-header">
+        <h5 class="admin-card-title"><i class="bi bi-cpu me-2"></i>{{ bi('បច្ចេកវិទ្យាដែលប្រើ') }}</h5>
+    </div>
+    <div class="admin-card-body">
+        <ul class="credits-tech">
+            {% for name, use, icon in tech %}
+            <li><i class="{{ icon }}" aria-hidden="true"></i><div><strong>{{ name }}</strong><span>{{ _(use) }}</span></div></li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+<div class="credits-disclaimer">
+    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+    <p class="mb-0">{{ _('ប្រព័ន្ធនេះជាជំនួយក្នុងការធ្វើរោគវិនិច្ឆ័យបឋមប៉ុណ្ណោះ មិនជំនួសពេទ្យសត្វទេ។ បើមាន់ងាប់ច្រើន ឬលឿន សូមទាក់ទងពេទ្យសត្វភ្លាមៗ។') }}</p>
+</div>
+
+<p class="credits-footer">© {{ '២០២៥' if current_lang == 'km' else '2025' }} {{ _('ក្រុម ៦ · សាកលវិទ្យាល័យន័រតុន') }}</p>
+{% endblock %}

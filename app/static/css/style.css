@@ -2128,3 +2128,57 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     color: var(--danger-fg) !important;
     border-color: var(--danger-border) !important;
 }
+
+/* ---- Credits page (about/credits.html) ---- */
+.credits-row { margin-bottom: 1.5rem; }
+.credits-team { margin-bottom: 1.5rem; }
+.credits-profile { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 1.75rem 1rem 1.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); background: var(--surface-muted); transition: translate 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
+.credits-profile:hover { translate: 0 -4px; border-color: var(--focus-border); box-shadow: 0 14px 28px -16px rgba(16, 24, 40, 0.35); }
+.credits-photo { width: 112px; height: 112px; margin-bottom: 1rem; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 2.25rem; font-weight: 700; color: var(--primary-soft-fg); background: var(--primary-soft); box-shadow: 0 0 0 4px var(--surface), 0 0 0 6px var(--border-strong); }
+.credits-photo img { width: 100%; height: 100%; object-fit: cover; }
+.credits-name { font-weight: 600; font-size: 1.05rem; color: var(--heading); }
+.credits-name-en { font-size: 0.8125rem; letter-spacing: 0.02em; color: var(--text-muted); margin-bottom: 0.75rem; }
+.credits-role { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.8125rem; font-weight: 500; color: var(--text-label); background: var(--hover-bg); }
+.credits-mentor { border: 0; background: none; padding: 0.5rem 0 0; }
+.credits-mentor:hover { translate: none; box-shadow: none; }
+.credits-mentor .credits-photo { width: 128px; height: 128px; box-shadow: 0 0 0 4px var(--surface), 0 0 0 7px var(--info-fg); }
+.credits-mentor .credits-role { color: var(--info-fg); background: var(--info-bg); }
+.credits-facts { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.credits-fact { display: flex; gap: 0.875rem; align-items: flex-start; padding: 1rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); }
+.credits-fact > i { width: 2.25rem; height: 2.25rem; flex-shrink: 0; border-radius: 0.625rem; display: flex; align-items: center; justify-content: center; color: var(--primary-soft-fg); background: var(--primary-soft); }
+.credits-fact dt { font-size: 0.8125rem; font-weight: 500; color: var(--text-muted); }
+.credits-fact dd { margin: 0.15rem 0 0; font-weight: 500; color: var(--heading); }
+@media (max-width: 575.98px) {
+    .credits-facts { grid-template-columns: 1fr; }
+}
+.team-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; }
+.team-card { position: relative; border-radius: 1.25rem; overflow: hidden; background: var(--surface); border: 1px solid var(--border-color); box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05); transition: translate 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease; }
+.team-card::before { content: ""; position: absolute; inset: 0 0 auto; height: 4px; z-index: 2; background: var(--accent); }
+.team-card:hover { translate: 0 -6px; border-color: color-mix(in srgb, var(--accent) 45%, var(--border-color)); box-shadow: 0 22px 40px -22px color-mix(in srgb, var(--accent) 60%, transparent); }
+.team-photo { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: var(--hover-bg); }
+.team-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; transition: scale 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+.team-card:hover .team-photo img { scale: 1.06; }
+.team-caption { position: absolute; inset: auto 0 0; padding: 3.5rem 1.1rem 1rem; color: #fff; background: linear-gradient(180deg, transparent, rgba(8, 15, 12, 0.82)); }
+.team-name { font-size: 1.2rem; font-weight: 700; line-height: 1.3; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35); }
+.team-name-en { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.85; }
+.team-lead-chip { position: absolute; top: 0.9rem; left: 0.9rem; display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; color: #fff; background: rgba(10, 127, 95, 0.9); backdrop-filter: blur(6px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); }
+.team-body { display: flex; align-items: center; gap: 0.7rem; padding: 0.9rem 1.1rem; }
+.team-role-icon { width: 2.1rem; height: 2.1rem; flex-shrink: 0; border-radius: 0.65rem; display: flex; align-items: center; justify-content: center; color: #fff; background: var(--accent); }
+.team-role { font-size: 0.875rem; font-weight: 600; color: var(--heading); line-height: 1.35; }
+.team-card.is-lead { border-color: color-mix(in srgb, var(--accent) 40%, var(--border-color)); }
+@media (max-width: 991.98px) {
+    .team-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 575.98px) {
+    .team-grid { grid-template-columns: 1fr; gap: 1rem; }
+    .team-photo { aspect-ratio: 1 / 1; }
+}
+.credits-sources { margin: 0; padding-left: 1.25rem; display: grid; gap: 0.875rem; }
+.credits-tech { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem; }
+.credits-tech li { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); }
+.credits-tech i { width: 2rem; font-size: 1.25rem; text-align: center; color: var(--primary-text); }
+.credits-tech strong { display: block; color: var(--heading); font-weight: 600; }
+.credits-tech span { font-size: 0.8125rem; color: var(--text-muted); }
+.credits-disclaimer { display: flex; gap: 0.75rem; align-items: flex-start; margin-top: 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--warning-border); border-radius: var(--border-radius); background: var(--warning-bg); color: var(--warning-fg); }
+.credits-disclaimer i { font-size: 1.2rem; }
+.credits-footer { margin: 1.5rem 0 0.5rem; text-align: center; font-size: 0.8125rem; color: var(--text-faint); }

@@ -39,6 +39,7 @@ def create_app(config_class: type[Config] = Config):
     from app.routes.lang_routes import lang_bp
     from app.routes.menu_routes import menu_bp
     from app.routes.chat_routes import chat_bp
+    from app.routes.about_routes import about_bp
 
     app.register_blueprint(user_bp)
     app.register_blueprint(role_bp)
@@ -50,6 +51,7 @@ def create_app(config_class: type[Config] = Config):
     app.register_blueprint(lang_bp)
     app.register_blueprint(menu_bp)
     app.register_blueprint(chat_bp)
+    app.register_blueprint(about_bp)
     
     from app.services.avatar_service import AvatarService
 

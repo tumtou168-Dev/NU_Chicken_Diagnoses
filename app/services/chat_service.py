@@ -179,6 +179,15 @@ class ChatService:
             db.session.add(ChatMessageHidden(message_id=message_id, user_id=user.id))
             db.session.commit()
 
+    @staticmethod
+    def is_seen(message: ChatMessage) -> bool:
+        """Whether the other side has opened the conversation since this message was sent.
+        Sending sets the sender's own flag (see _create), so it is the other side's flag that counts:
+        a direct message's recipient, the user for a staff reply, any staff member for a user's message."""
+        if message.is_direct:
+            return message.read_by_recipient
+        return message.read_by_user if message.is_from_staff else message.read_by_staff
+
     @classmethod
     def mark_read(cls, thread_user_id: int, as_staff: bool) -> None:
         column = ChatMessage.read_by_staff if as_staff else ChatMessage.read_by_user

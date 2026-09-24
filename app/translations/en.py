@@ -32,6 +32,8 @@ EN = {
     "កំពុងថត...": "Recording...",
     "សារនេះត្រូវបានលុប": "This message has been deleted",
     "បានកែប្រែ": "edited",
+    "បានឃើញ": "Seen",
+    "បានផ្ញើ": "Sent",
     "កែប្រែសារ": "Edit message",
     "លុបសារ": "Delete message",
     "លុបសម្រាប់ខ្ញុំ": "Delete for me",

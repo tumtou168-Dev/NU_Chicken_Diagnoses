@@ -2092,6 +2092,16 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 }
 .chat-bubble-mine .chat-role-badge { background: rgba(255, 255, 255, 0.2); color: #fff; }
 .chat-bubble-time { font-size: 0.62rem; opacity: 0.6; margin-top: 0.2rem; text-align: right; }
+/* Read receipts on my own messages: ✓ sent, ✓✓ seen (brighter), plus "Seen" under my latest message. */
+.chat-receipt { margin-left: 0.25rem; font-size: 0.85rem; line-height: 0; vertical-align: -0.15em; }
+.chat-bubble-mine .chat-bubble-time:has(.chat-receipt.is-seen) { opacity: 0.9; }
+.chat-receipt.is-seen { color: #a7f3d0; }
+.chat-bubble-photo-time .chat-receipt.is-seen { color: #6ee7b7; }
+.chat-seen-note {
+    align-self: flex-end; display: inline-flex; align-items: center; gap: 0.2rem; flex-shrink: 0;
+    margin: -0.1rem 0.25rem 0.2rem 0; font-size: 0.66rem; font-weight: 600; color: var(--primary-text);
+}
+.chat-seen-note .bi { font-size: 0.85rem; }
 
 /* Composer — a bordered pill input, round tool buttons, solid green send button. */
 .chat-form { display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 0.75rem; border-top: 1px solid var(--border-soft); background: var(--surface); flex-shrink: 0; }

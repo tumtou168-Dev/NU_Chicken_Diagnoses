@@ -83,11 +83,6 @@
                                     {% if not menu_enabled('cases') %}<i class="fa-solid fa-person-digging nav-maintenance-icon" title="{{ bit('កំពុងធ្វើបច្ចុប្បន្នភាព') }}"></i>{% endif %}
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if ep == 'about.credits' %}active{% endif %}" href="{{ url_for('about.credits') }}">
-                                    <span class="nav-icon"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span> <span class="nav-text">{{ bi('អំពីយើង') }}</span>
-                                </a>
-                            </li>
                         </ul>
 
                         {% if current_user.has_role('Admin') or current_user.has_role('Doctor') %}
@@ -123,9 +118,10 @@
                         </ul>
                         {% endif %}
 
-                        {% if current_user.has_role('Admin') %}
+                        {# System: admin tools for Admins, About us for everyone signed in. #}
                         <div class="nav-section-label" data-group="system">{{ bi('ប្រព័ន្ធ') }}</div>
                         <ul class="nav flex-column nav-group" data-group="system">
+                            {% if current_user.has_role('Admin') %}
                             <li class="nav-item">
                                 <a class="nav-link {% if 'tbl_users' in ep and ep != 'tbl_users.profile' %}active{% endif %}" href="{{ url_for('tbl_users.index') }}">
                                     <span class="nav-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span> <span class="nav-text">{{ bi('អ្នកប្រើប្រាស់') }}</span>
@@ -153,8 +149,13 @@
                                 </a>
                             </li>
                             {% endif %}
+                            {% endif %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep == 'about.credits' %}active{% endif %}" href="{{ url_for('about.credits') }}">
+                                    <span class="nav-icon"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span> <span class="nav-text">{{ bi('អំពីយើង') }}</span>
+                                </a>
+                            </li>
                         </ul>
-                        {% endif %}
 
                     {% else %}
                         <div class="nav-section-label" data-group="main">{{ bi('ការចូលប្រើ') }}</div>

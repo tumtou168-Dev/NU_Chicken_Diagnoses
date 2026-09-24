@@ -1,0 +1,156 @@
+{% extends "layouts/base.html" %}
+
+{# Public landing page shown at "/" before sign-in. No sidebar or admin header. #}
+{% block title %}{{ _('សូមស្វាគមន៍') }}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block main_class %}col-12 p-0{% endblock %}
+{% block mobile_nav_toggle %}{% endblock %}
+{% block page_header %}{% endblock %}
+{% block content_class %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="welcome">
+
+<header class="wl-nav">
+    <div class="wl-wrap wl-nav-inner">
+        <a href="{{ url_for('home') }}" class="wl-brand">
+            <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="{{ _('និមិត្តសញ្ញា IDNS') }}">
+            <span><strong>IDNS</strong><small>{{ _('ការធ្វើរោគវិនិច្ឆ័យមាន់') }}</small></span>
+        </a>
+        <nav class="wl-links" aria-label="{{ _('ម៉ឺនុយ') }}">
+            <a href="#how">{{ _('របៀបប្រើ') }}</a>
+            <a href="#features">{{ _('មុខងារ') }}</a>
+            <a href="#diseases">{{ _('ជំងឺ') }}</a>
+            <a href="{{ url_for('about.credits') }}">{{ _('អំពីយើង') }}</a>
+        </nav>
+        <div class="wl-actions">
+            {% include "layouts/_lang_switch.html" %}
+            {% include "layouts/_theme_toggle.html" %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-soft wl-btn-login">{{ _('ចូល') }}</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">{{ _('ចុះឈ្មោះ') }}</a>
+        </div>
+    </div>
+</header>
+
+<section class="wl-hero">
+    <div class="wl-wrap wl-hero-grid">
+        <div class="wl-hero-copy">
+            <span class="wl-eyebrow"><i class="bi bi-stars"></i>{{ _('ប្រព័ន្ធជំនាញសម្រាប់កសិករកម្ពុជា') }}</span>
+            <h1>{{ _('ស្គាល់ជំងឺមាន់របស់អ្នក ក្នុងរយៈពេលតែប៉ុន្មាននាទី') }}</h1>
+            <p class="wl-lead">{{ _('ជ្រើសរើសរោគសញ្ញាដែលអ្នកឃើញ ប្រព័ន្ធនឹងវិភាគតាមវិធានរបស់អ្នកជំនាញ ហើយប្រាប់ជំងឺដែលអាចកើតមាន កម្រិតទំនុកចិត្ត និងវិធីព្យាបាលបឋម។') }}</p>
+            <div class="wl-cta">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg">{{ _('ចាប់ផ្តើមឥតគិតថ្លៃ') }}<i class="bi bi-arrow-right ms-2"></i></a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg">{{ _('ខ្ញុំមានគណនីរួចហើយ') }}</a>
+            </div>
+            <dl class="wl-stats">
+                <div><dt>{{ stats.diseases }}</dt><dd>{{ _('ជំងឺ') }}</dd></div>
+                <div><dt>{{ stats.symptoms }}</dt><dd>{{ _('រោគសញ្ញា') }}</dd></div>
+                <div><dt>{{ stats.rules }}</dt><dd>{{ _('វិធានអ្នកជំនាញ') }}</dd></div>
+            </dl>
+        </div>
+
+        {# Illustrative preview of a diagnosis result (static example, not live data). #}
+        <div class="wl-preview" aria-hidden="true">
+            <div class="wl-preview-card">
+                <div class="wl-preview-head"><i class="bi bi-clipboard2-pulse"></i>{{ _('រោគសញ្ញាដែលបានជ្រើស') }}</div>
+                <div class="wl-chips">
+                    <span>{{ _('រមួលក') }}</span><span>{{ _('រាគពណ៌បៃតង') }}</span><span>{{ _('ធ្លាក់ស្លាប') }}</span>
+                </div>
+                <div class="wl-preview-head mt-3"><i class="bi bi-activity"></i>{{ _('លទ្ធផល') }}</div>
+                {% for name, pct, tone in [(_('ជំងឺញូវកាស'), 92, 'high'), (_('ជំងឺបូទុយលីស'), 61, 'mid'), (_('ជំងឺម៉ារ៉ិក'), 40, 'low')] %}
+                <div class="wl-result">
+                    <div class="wl-result-top"><span>{{ name }}</span><strong>{{ pct }}%</strong></div>
+                    <div class="wl-bar"><span class="{{ tone }}" style="width: {{ pct }}%"></span></div>
+                </div>
+                {% endfor %}
+                <div class="wl-preview-foot"><i class="bi bi-capsule"></i>{{ _('រួមទាំងវិធីព្យាបាល និងការការពារ') }}</div>
+            </div>
+            <div class="wl-float wl-float-a"><i class="bi bi-chat-dots-fill"></i>{{ _('សួរពេទ្យសត្វ') }}</div>
+            <div class="wl-float wl-float-b"><i class="bi bi-patch-check-fill"></i>{{ _('អនុម័តដោយពេទ្យ') }}</div>
+        </div>
+    </div>
+</section>
+
+<section class="wl-section" id="how">
+    <div class="wl-wrap">
+        <div class="wl-heading">
+            <span class="wl-kicker">{{ _('របៀបប្រើ') }}</span>
+            <h2>{{ _('បីជំហានសាមញ្ញ') }}</h2>
+        </div>
+        <ol class="wl-steps">
+            {% for icon, title, text in [
+                ('ui-checks', 'ជ្រើសរើសរោគសញ្ញា', 'សង្កេតមាន់របស់អ្នក ហើយជ្រើសរើសរោគសញ្ញាដែលអ្នកឃើញពីបញ្ជី។'),
+                ('cpu', 'ប្រព័ន្ធវិភាគ', 'ម៉ាស៊ីនវិនិច្ឆ័យប្រៀបធៀបរោគសញ្ញាជាមួយវិធានដែលពេទ្យសត្វបានរៀបចំ។'),
+                ('clipboard2-check', 'ទទួលលទ្ធផល', 'មើលជំងឺដែលអាចកើតមាន កម្រិតទំនុកចិត្ត និងការណែនាំអំពីការព្យាបាល។'),
+            ] %}
+            <li class="wl-step">
+                <span class="wl-step-num">{{ loop.index }}</span>
+                <span class="wl-step-icon"><i class="bi bi-{{ icon }}"></i></span>
+                <h3>{{ _(title) }}</h3>
+                <p>{{ _(text) }}</p>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
+<section class="wl-section wl-section-alt" id="features">
+    <div class="wl-wrap">
+        <div class="wl-heading">
+            <span class="wl-kicker">{{ _('មុខងារ') }}</span>
+            <h2>{{ _('អ្វីៗដែលអ្នកត្រូវការ ដើម្បីថែរក្សាហ្វូងមាន់') }}</h2>
+        </div>
+        <div class="wl-features">
+            {% for icon, title, text in [
+                ('diagram-3', 'វិធានអ្នកជំនាញ', 'មូលដ្ឋានចំណេះដឹងផ្អែកលើឯកសារបច្ចេកទេស ហើយពេទ្យពិនិត្យ និងអនុម័តវិធាន។'),
+                ('chat-heart', 'ជជែកជាមួយពេទ្យ', 'ផ្ញើសារ រូបភាព ឬសារជាសំឡេងទៅពេទ្យសត្វដោយផ្ទាល់។'),
+                ('clock-history', 'ប្រវត្តិរោគវិនិច្ឆ័យ', 'រាល់ការវិនិច្ឆ័យត្រូវបានរក្សាទុក ដើម្បីតាមដានសុខភាពហ្វូងមាន់។'),
+                ('translate', 'ខ្មែរ និងអង់គ្លេស', 'ប្រើប្រាស់ជាភាសាខ្មែរ ឬអង់គ្លេស ប្តូរបានគ្រប់ពេល។'),
+                ('phone', 'ប្រើបានលើទូរស័ព្ទ', 'រចនាឱ្យងាយប្រើលើទូរស័ព្ទ ថេប្លេត និងកុំព្យូទ័រ។'),
+                ('shield-lock', 'សុវត្ថិភាព', 'គណនីផ្ទាល់ខ្លួន ចូលដោយ Google បាន និងការគ្រប់គ្រងសិទ្ធិតាមតួនាទី។'),
+            ] %}
+            <div class="wl-feature">
+                <span class="wl-feature-icon"><i class="bi bi-{{ icon }}"></i></span>
+                <h3>{{ _(title) }}</h3>
+                <p>{{ _(text) }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% if diseases %}
+<section class="wl-section" id="diseases">
+    <div class="wl-wrap">
+        <div class="wl-heading">
+            <span class="wl-kicker">{{ _('ជំងឺ') }}</span>
+            <h2>{{ _('ជំងឺដែលប្រព័ន្ធអាចវិនិច្ឆ័យ') }}</h2>
+            <p>{{ _('មូលដ្ឋានចំណេះដឹងត្រូវបានធ្វើបច្ចុប្បន្នភាពជាប្រចាំដោយពេទ្យសត្វ។') }}</p>
+        </div>
+        <ul class="wl-diseases">
+            {% for d in diseases %}
+            <li><i class="bi bi-virus2"></i>{{ d.loc('name') }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endif %}
+
+<section class="wl-section">
+    <div class="wl-wrap">
+        <div class="wl-band">
+            <div>
+                <h2>{{ _('ត្រៀមខ្លួនការពារហ្វូងមាន់របស់អ្នកហើយឬនៅ?') }}</h2>
+                <p>{{ _('បង្កើតគណនីឥតគិតថ្លៃ ហើយចាប់ផ្តើមធ្វើរោគវិនិច្ឆ័យភ្លាមៗ។') }}</p>
+            </div>
+            <div class="wl-cta">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg">{{ _('បង្កើតគណនី') }}</a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg">{{ _('ចូល') }}</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+</div>
+{% endblock %}

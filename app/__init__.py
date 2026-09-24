@@ -132,9 +132,14 @@ def create_app(config_class: type[Config] = Config):
 
     @app.route("/")
     def home():
+        """Signed-in users go to their start page; visitors see the public welcome page."""
         if current_user.is_authenticated:
             return redirect(url_for(current_user.landing_endpoint()))
-        return redirect(url_for("auth.login"))
+        from app.models.expert_system import Disease, Rule, Symptom
+        count = lambda model: db.session.scalar(db.select(db.func.count(model.id)))
+        stats = {"diseases": count(Disease), "symptoms": count(Symptom), "rules": count(Rule)}
+        diseases = db.session.scalars(db.select(Disease).order_by(Disease.id)).all()
+        return render_template("welcome.html", stats=stats, diseases=diseases)
     
     # create tables
     with app.app_context():

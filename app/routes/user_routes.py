@@ -15,6 +15,17 @@ from utils.timezone import now_kh
 # blueprint name define endpoint prefix: tbl_users.*
 user_bp = Blueprint("tbl_users", __name__, url_prefix="/users")
 
+
+def _delete_blocked_message(user):
+    """Admin and Doctor accounts are protected from deletion: admins run the system,
+    doctors approve rules and answer farmers in chat. Returns the reason, or None."""
+    if user.has_role("Admin"):
+        return _("មិនអាចលុបគណនីអ្នកគ្រប់គ្រងបានទេ។")
+    if user.has_role("Doctor"):
+        return _("មិនអាចលុបគណនីពេទ្យបានទេ។")
+    return None
+
+
 @user_bp.route("/")
 @login_required
 def index():
@@ -147,7 +158,12 @@ def delete_confirm(user_id: int):
     user = UserService.get_user_by_id(user_id)
     if user is None:
         abort(404)
-        
+
+    blocked = _delete_blocked_message(user)
+    if blocked:
+        flash(blocked, "danger")
+        return redirect(url_for("tbl_users.index"))
+
     form = UserConfirmDeleteForm()
     return render_template("users/delete_confirm.html", user=user, form=form)
 
@@ -166,7 +182,12 @@ def delete(user_id: int):
     user = UserService.get_user_by_id(user_id)
     if user is None:
         abort(404)
-        
+
+    blocked = _delete_blocked_message(user)
+    if blocked:
+        flash(blocked, "danger")
+        return redirect(url_for("tbl_users.index"))
+
     username = user.username
     UserService.delete_user(user)
     AuditService.log("DELETE", "User", user_id, f"Deleted user: {username}")

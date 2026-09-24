@@ -477,6 +477,8 @@ EN = {
     "អ្នកប្រើប្រាស់សរុប": "Total users",
     "អ្នកមិនមានសិទ្ធិមើលទំព័រនេះទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រង ប្រសិនបើអ្នកគិតថាមានកំហុស។": "You do not have permission to view this page. Contact the administrator if you think this is a mistake.",
     "អ្នកមិនអាចលុបគណនីរបស់ខ្លួនឯងបានទេ។": "You cannot delete your own account.",
+    "មិនអាចលុបគណនីពេទ្យបានទេ។": "Doctor accounts cannot be deleted.",
+    "មិនអាចលុបគណនីអ្នកគ្រប់គ្រងបានទេ។": "Admin accounts cannot be deleted.",
     "ឧ. user.view": "e.g. user.view",
     "ឯកសារដែលបានផ្ទុកឡើងធំពេក។ ទំហំអតិបរមាគឺ 16MB។": "The uploaded file is too large. The maximum size is 16MB.",
     "ឯកសារនេះមិនមែនជារូបភាព JPG, PNG ឬ WebP ត្រឹមត្រូវទេ។": "This file is not a valid JPG, PNG or WebP image.",

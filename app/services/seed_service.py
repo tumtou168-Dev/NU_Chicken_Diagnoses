@@ -379,3 +379,6 @@ def seed_all():
     seed_doctor_user()
     seed_expert_data()
 
+    from app.services.field_guide_seed import seed_field_guide_data
+    seed_field_guide_data()
+

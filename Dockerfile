@@ -13,7 +13,8 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-# Run as an unprivileged user; profile pictures are written under static/uploads.
+# Run as an unprivileged user. Uploads live in the database (tbl_files); static/uploads only
+# holds files from older versions, which the /media route still serves.
 RUN useradd --system --uid 1000 --create-home appuser \
     && mkdir -p app/static/uploads/avatars \
     && chown -R appuser:appuser app/static/uploads

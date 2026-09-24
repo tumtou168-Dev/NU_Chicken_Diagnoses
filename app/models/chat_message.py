@@ -28,11 +28,11 @@ class ChatMessage(db.Model):
     flock_age_weeks = db.Column(db.Integer, nullable=True)
     vaccinated_count = db.Column(db.Integer, nullable=True)
     death_count = db.Column(db.Integer, nullable=True)
-    image = db.Column(db.String(255), nullable=True)  # filename under static/uploads/chat
+    image = db.Column(db.String(255), nullable=True)  # filename of a StoredFile in the "chat" folder
     caption = db.Column(db.String(1000), nullable=True)  # optional text under a plain image message
 
     # Set only on a voice message recorded in the chat widget.
-    audio = db.Column(db.String(255), nullable=True)  # filename under static/uploads/chat_audio
+    audio = db.Column(db.String(255), nullable=True)  # filename of a StoredFile in the "chat_audio" folder
     audio_duration = db.Column(db.Integer, nullable=True)  # seconds, rounded
 
     # Set only on a direct staff-to-staff message.

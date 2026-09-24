@@ -17,7 +17,7 @@ class UserTable(UserMixin, db.Model):
     full_name = db.Column(db.String(120), nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    avatar = db.Column(db.String(255), nullable=True)  # filename under static/uploads/avatars
+    avatar = db.Column(db.String(255), nullable=True)  # filename of a StoredFile in the "avatars" folder
     last_seen_at = db.Column(db.DateTime, nullable=True)  # refreshed by any request; drives the chat "online" dot
     
     created_at = db.Column(db.DateTime, default=now_kh, nullable=False)

@@ -1,12 +1,11 @@
 # app/services/chat_audio_service.py
-import os
 import uuid
 from typing import Optional
 
-from flask import current_app, url_for
 from werkzeug.datastructures import FileStorage
 
 from app.i18n import gettext as _
+from app.services import file_store
 
 MAX_CHAT_AUDIO_BYTES = 5 * 1024 * 1024
 MAX_CHAT_AUDIO_SECONDS = 120
@@ -29,17 +28,11 @@ def detect_audio_type(header: bytes) -> Optional[str]:
 
 class ChatAudioService:
     """A voice message recorded in the chat widget. Mirrors ChatImageService's
-    signature-based validation, stored separately under uploads/chat_audio."""
-
-    @staticmethod
-    def _folder() -> str:
-        return os.path.join(current_app.static_folder, "uploads", "chat_audio")
+    signature-based validation, stored in the database under the "chat_audio" folder."""
 
     @staticmethod
     def url(filename: Optional[str]) -> Optional[str]:
-        if not filename:
-            return None
-        return url_for("static", filename=f"uploads/chat_audio/{filename}")
+        return file_store.url("chat_audio", filename)
 
     @staticmethod
     def validate(file: FileStorage) -> Optional[str]:
@@ -54,19 +47,12 @@ class ChatAudioService:
 
     @staticmethod
     def save(file: FileStorage) -> str:
-        ext = detect_audio_type(file.stream.read(12))
+        data = file.stream.read()
         file.stream.seek(0)
-        os.makedirs(ChatAudioService._folder(), exist_ok=True)
-        filename = f"{uuid.uuid4().hex}.{ext}"
-        file.save(os.path.join(ChatAudioService._folder(), filename))
+        filename = f"{uuid.uuid4().hex}.{detect_audio_type(data[:12])}"
+        file_store.save("chat_audio", filename, data)
         return filename
 
     @staticmethod
     def delete(filename: Optional[str]) -> None:
-        if not filename:
-            return
-        path = os.path.join(ChatAudioService._folder(), os.path.basename(filename))
-        try:
-            os.remove(path)
-        except FileNotFoundError:
-            pass
+        file_store.delete("chat_audio", filename)

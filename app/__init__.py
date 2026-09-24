@@ -44,6 +44,7 @@ def create_app(config_class: type[Config] = Config):
     from app.routes.menu_routes import menu_bp
     from app.routes.chat_routes import chat_bp
     from app.routes.about_routes import about_bp
+    from app.routes.media_routes import media_bp
 
     app.register_blueprint(user_bp)
     app.register_blueprint(role_bp)
@@ -56,6 +57,7 @@ def create_app(config_class: type[Config] = Config):
     app.register_blueprint(menu_bp)
     app.register_blueprint(chat_bp)
     app.register_blueprint(about_bp)
+    app.register_blueprint(media_bp)
     
     from app.services.avatar_service import AvatarService
 
@@ -156,6 +158,7 @@ def create_app(config_class: type[Config] = Config):
         from app.models.page_feature import PageFeature
         from app.models.chat_message import ChatMessage
         from app.models.password_reset import PasswordResetCode
+        from app.models.stored_file import StoredFile
 
         # Default RESET_DB to 0 to prevent database reset on restart
         if os.environ.get("RESET_DB", "0") == "1":

@@ -1,13 +1,13 @@
 # app/services/chat_image_service.py
 import io
-import os
 import uuid
 from typing import Optional
 
-from flask import current_app, url_for
+from flask import current_app
 from werkzeug.datastructures import FileStorage
 
 from app.i18n import gettext as _
+from app.services import file_store
 from app.services.avatar_service import detect_image_type
 
 MAX_CHAT_IMAGE_BYTES = 2 * 1024 * 1024
@@ -16,17 +16,11 @@ MAX_CHAT_IMAGE_SIDE = 1600
 
 class ChatImageService:
     """Optional photo attached to a "contact the doctor" request. Mirrors AvatarService's
-    signature-based validation, stored separately under uploads/chat."""
-
-    @staticmethod
-    def _folder() -> str:
-        return os.path.join(current_app.static_folder, "uploads", "chat")
+    signature-based validation, stored in the database under the "chat" folder."""
 
     @staticmethod
     def url(filename: Optional[str]) -> Optional[str]:
-        if not filename:
-            return None
-        return url_for("static", filename=f"uploads/chat/{filename}")
+        return file_store.url("chat", filename)
 
     @staticmethod
     def validate(file: FileStorage) -> Optional[str]:
@@ -71,18 +65,10 @@ class ChatImageService:
             shrunk = ChatImageService._shrink(data)
             if shrunk is not None:
                 data, ext = shrunk, "jpg"
-        os.makedirs(ChatImageService._folder(), exist_ok=True)
         filename = f"{uuid.uuid4().hex}.{ext}"
-        with open(os.path.join(ChatImageService._folder(), filename), "wb") as fh:
-            fh.write(data)
+        file_store.save("chat", filename, data)
         return filename
 
     @staticmethod
     def delete(filename: Optional[str]) -> None:
-        if not filename:
-            return
-        path = os.path.join(ChatImageService._folder(), os.path.basename(filename))
-        try:
-            os.remove(path)
-        except FileNotFoundError:
-            pass
+        file_store.delete("chat", filename)

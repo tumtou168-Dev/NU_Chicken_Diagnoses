@@ -2540,3 +2540,44 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     .admin-table.table-stack tbody td { background: transparent; }
     .admin-table.table-stack tbody td[data-actions] { border-top-color: var(--border-color); }
 }
+
+/* Phones: case history rows as result cards — disease and confidence on top, when/who under it,
+   symptoms as chips, actions in a footer. The left stripe takes the confidence colour. */
+@media (max-width: 575.98px) {
+    .admin-table.case-table tbody tr[data-row] {
+        display: grid; grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas: "disease conf" "date date" "user user" "sym sym" "act act";
+        column-gap: 0.75rem; row-gap: 0.45rem; align-items: center;
+        padding: 1rem 1rem 0.85rem 1.15rem; background: var(--surface);
+    }
+    .admin-table.case-table tbody tr[data-row][hidden] { display: none; }
+    .admin-table.case-table tbody tr[data-row] > td { display: block; padding: 0 !important; font-size: 0.85rem; }
+    .admin-table.case-table tbody tr[data-row] > td::before { content: none; }
+    .admin-table.case-table .case-disease { grid-area: disease; font-size: 1.05rem !important; line-height: 1.35; color: var(--heading); }
+    .admin-table.case-table .case-disease .fw-medium { font-weight: 700 !important; }
+    .admin-table.case-table .case-conf { grid-area: conf; justify-self: end; }
+    .admin-table.case-table .case-conf .badge-soft { font-size: 0.85rem; font-weight: 700; padding: 0.3rem 0.65rem; }
+    /* Date and time on one muted line. */
+    .admin-table.case-table .case-date { grid-area: date; display: flex !important; align-items: center; gap: 0.35rem; color: var(--text-muted); }
+    .admin-table.case-table .case-date > div { font-size: 0.8rem; font-weight: 500 !important; color: var(--text-muted) !important; }
+    .admin-table.case-table .case-date > div + div::before { content: "·"; margin-right: 0.35rem; }
+    .admin-table.case-table .case-user { grid-area: user; min-width: 0; font-size: 0.8rem !important; color: var(--text-muted); }
+    .admin-table.case-table .case-user .d-flex > div { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .admin-table.case-table .case-user .badge { display: none !important; }
+    .admin-table.case-table .case-user .avatar-sm { width: 22px; height: 22px; font-size: 0.65rem; }
+    .admin-table.case-table .case-symptoms { grid-area: sym; margin-top: 0.2rem; }
+    .admin-table.case-table .case-symptoms .tag-list { max-width: none !important; }
+    .admin-table.case-table .case-actions {
+        grid-area: act; margin-top: 0.2rem; padding-top: 0.75rem !important; border-top: 1px dashed var(--border-color);
+    }
+    .admin-table.case-table .case-actions > div { display: flex !important; width: 100%; gap: 0.5rem !important; }
+    .admin-table.case-table .case-view-btn {
+        flex: 1; display: inline-flex; align-items: center; justify-content: center; font-weight: 600;
+        background: var(--primary-soft); color: var(--primary-soft-fg); border-color: transparent;
+    }
+    .admin-table.case-table .case-voice-btn { width: 2.5rem; flex: none; }
+    .admin-table.case-table tbody tr[data-row]::before { top: 1rem; bottom: 1rem; width: 4px; }
+    .admin-table.case-table tbody tr[data-row]:has(.case-conf .badge-soft-success)::before { background: var(--success-fg); }
+    .admin-table.case-table tbody tr[data-row]:has(.case-conf .badge-soft-warning)::before { background: var(--warning-fg); }
+    .admin-table.case-table tbody tr[data-row]:has(.case-conf .badge-soft-danger)::before { background: var(--danger-fg); }
+}

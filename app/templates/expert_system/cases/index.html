@@ -36,7 +36,7 @@
         </div>
     </div>
     <div class="table-responsive">
-        <table class="table table-hover admin-table" id="casesTable">
+        <table class="table table-hover admin-table case-table" id="casesTable">
             <thead>
                 <tr>
                     <th>{{ bi('កាលបរិច្ឆេទ') }}</th>
@@ -50,12 +50,12 @@
             <tbody>
                 {% for case in cases %}
                 <tr data-row>
-                    <td class="text-nowrap">
+                    <td class="text-nowrap case-date">
                         <div class="fw-medium">{{ case.created_at.strftime('%Y-%m-%d') }}</div>
                         <div class="small text-muted">{{ case.created_at.strftime('%I:%M %p') }}</div>
                     </td>
                     {% if show_user %}
-                    <td>
+                    <td class="case-user">
                         <div class="d-flex align-items-center gap-2">
                             {{ avatar(case.user.username if case.user else '?', 'sm', avatar_url(case.user) if case.user else None) }}
                             <div>
@@ -70,18 +70,18 @@
                         </div>
                     </td>
                     {% endif %}
-                    <td>
+                    <td class="case-disease">
                         {% if case.disease %}<span class="fw-medium">{{ case.disease.inline("name") }}</span>
                         {% else %}<span class="text-muted">{{ _('មិនស្គាល់') }}</span>{% endif %}
                     </td>
-                    <td>{{ confidence_pill(case.confidence) }}</td>
-                    <td>
+                    <td class="case-conf">{{ confidence_pill(case.confidence) }}</td>
+                    <td class="case-symptoms">
                         <div class="tag-list" style="max-width: 320px;">
                             {% for s in case.symptoms[:3] %}<span class="badge-soft badge-soft-neutral">{{ s.inline("name") }}</span>{% endfor %}
                             {% if case.symptoms | length > 3 %}<span class="badge-soft badge-soft-neutral">+{{ case.symptoms | length - 3 }}</span>{% endif %}
                         </div>
                     </td>
-                    <td class="text-end text-nowrap">
+                    <td class="text-end text-nowrap case-actions">
                         <div class="d-inline-flex align-items-center gap-1">
                             <button type="button" 
                                     class="btn btn-soft btn-sm case-voice-btn" 
@@ -93,7 +93,7 @@
                                 <span class="spinner-border spinner-border-sm case-voice-spinner d-none" role="status" aria-hidden="true" style="width: 0.75rem; height: 0.75rem;"></span>
                                 <span class="case-voice-label d-none d-md-inline ms-1">{{ _('ស្តាប់') }}</span>
                             </button>
-                            <a href="{{ url_for('expert_system.cases_detail', case_id=case.id) }}" class="btn btn-soft btn-sm">{{ _('មើលលម្អិត') }}</a>
+                            <a href="{{ url_for('expert_system.cases_detail', case_id=case.id) }}" class="btn btn-soft btn-sm case-view-btn">{{ _('មើលលម្អិត') }}<i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
                         </div>
                     </td>
                 </tr>

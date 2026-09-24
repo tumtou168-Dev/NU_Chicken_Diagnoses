@@ -38,6 +38,7 @@ services:
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       MAIL_DEFAULT_SENDER: ${MAIL_DEFAULT_SENDER:-}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
     ports:
       - "${APP_PORT:-8000}:8000"
     volumes:

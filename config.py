@@ -32,6 +32,11 @@ class Config:
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "")
 
+    # Brevo (brevo.com) sends email over HTTPS. When the key is set it is used instead of SMTP —
+    # needed on hosts that block SMTP ports, such as Render's free plan. The sender is
+    # MAIL_DEFAULT_SENDER (or MAIL_USERNAME), which must be a verified sender in Brevo.
+    BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+
     # Reject oversized request bodies early. Phone photos are often 5-10 MB; profile and chat
     # pictures are shrunk after upload, so this only needs to fit an unedited photo.
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024

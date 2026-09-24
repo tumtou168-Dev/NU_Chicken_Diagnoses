@@ -18,6 +18,16 @@ def _get_or_create(model, defaults=None, **kwargs):
     return instance
 
 
+def _initial_password(username, env_var):
+    """Password for a seeded account, read from env_var so it is never stored in the repository.
+    Without it, a random one is generated and printed once to the log (only needed for the first login)."""
+    password = os.environ.get(env_var)
+    if not password:
+        password = secrets.token_urlsafe(12)
+        print(f"Created user '{username}' with generated password: {password}", flush=True)
+    return password
+
+
 def seed_permissions_and_roles():
     permissions = [
         ("USER_CREATE", "Create Users", "Users"),
@@ -82,13 +92,7 @@ def seed_admin_user():
         full_name="System Administrator",
         is_active=True,
     )
-    # The password comes from ADMIN_PASSWORD so it is never stored in the repository. Without it,
-    # a random one is generated and printed once to the log (it is only needed for the first login).
-    password = os.environ.get("ADMIN_PASSWORD")
-    if not password:
-        password = secrets.token_urlsafe(12)
-        print(f"Created user 'admin' with generated password: {password}", flush=True)
-    admin.set_password(password)
+    admin.set_password(_initial_password("admin", "ADMIN_PASSWORD"))
     admin.roles = [admin_role]
     db.session.add(admin)
     db.session.commit()
@@ -107,7 +111,7 @@ def seed_doctor_user():
         full_name="Sokha Meas",
         is_active=True,
     )
-    doctor.set_password("Doctor@123")
+    doctor.set_password(_initial_password("doctor", "DOCTOR_PASSWORD"))
     doctor.roles = [doctor_role]
     db.session.add(doctor)
     db.session.commit()

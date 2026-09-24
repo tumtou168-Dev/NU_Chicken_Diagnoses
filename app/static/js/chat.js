@@ -678,7 +678,9 @@ function initChatWidget() {
     conversation.hidden = false;
     backBtn.hidden = false;
     loadMessages(true);
-    input.focus();
+    // Ready to type with a mouse and keyboard; on touch screens focusing would pop the on-screen
+    // keyboard over the conversation, so it waits until the message box is tapped.
+    if (!window.matchMedia("(pointer: coarse)").matches) input.focus();
   }
 
   // A normal user's support thread.

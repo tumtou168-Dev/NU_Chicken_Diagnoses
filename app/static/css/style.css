@@ -2476,6 +2476,15 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     /* No z-index here: it would trap modals under Bootstrap's backdrop (which lives on <body>).
        Being positioned and later in the page is enough to paint over the header. */
     .content-body { position: relative; margin-top: -1.75rem; }
+    /* "Back to …" links sit on the header's curve: a white pill keeps them readable. */
+    .content-body > .back-link {
+        padding: 0.4rem 0.9rem; margin-bottom: 0.9rem; border-radius: 999px; background: var(--surface);
+        color: var(--heading); font-weight: 500; box-shadow: var(--m-card-shadow); border: 1px solid var(--m-card-border);
+    }
+    /* Profile-style actions: the main button stretches, an icon button (delete) keeps its size. */
+    .pf-actions.d-flex { width: 100%; }
+    .pf-actions.d-flex > .btn-primary { flex: 1; }
+    .pf-actions.d-flex > .btn-soft { flex: none; width: 3rem; }
 
     /* Floating cards */
     .admin-card, .stat-tile {

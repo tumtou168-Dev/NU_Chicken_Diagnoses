@@ -7,40 +7,44 @@
 {% block content %}
 <a href="{{ url_for('tbl_users.index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅបញ្ជីអ្នកប្រើប្រាស់') }}</a>
 
-<div class="admin-card form-narrow">
-    <div class="admin-card-header">
-        <div class="entity-header">
-            {{ avatar(user.username, 'lg', avatar_url(user)) }}
-            <div>
-                <h5 class="entity-name">{{ user.full_name }}</h5>
-                <p class="entity-sub">@{{ user.username }}</p>
+<div class="pf">
+    <section class="pf-hero admin-card">
+        <div class="pf-banner" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div class="pf-hero-body">
+            <div class="pf-identity">
+                <div class="pf-avatar">
+                    {{ avatar(user.username, 'xl', avatar_url(user)) }}
+                    <span class="pf-presence {{ 'is-on' if user.is_active else 'is-off' }}" title="{{ _('សកម្ម') if user.is_active else _('អសកម្ម') }}"></span>
+                </div>
+                <div class="min-w-0">
+                    <h2 class="pf-name">{{ user.full_name }}</h2>
+                    <div class="pf-handle">@{{ user.username }}</div>
+                    <div class="pf-tags">
+                        {% for role in user.roles %}<span class="badge-soft badge-soft-primary"><i class="bi bi-shield-check me-1"></i>{{ role.name | dt }}</span>
+                        {% else %}<span class="badge-soft badge-soft-neutral">{{ _('គ្មានតួនាទី') }}</span>{% endfor %}
+                        {{ status_badge(user.is_active) }}
+                    </div>
+                </div>
+            </div>
+            <div class="pf-actions d-flex gap-2">
+                <a href="{{ url_for('tbl_users.edit', user_id=user.id) }}" class="btn btn-primary"><i class="bi bi-pencil me-2"></i>{{ bi('កែប្រែ') }}</a>
+                {% if current_user.id != user.id and not user.has_role('Doctor') and not user.has_role('Admin') %}
+                <a href="{{ url_for('tbl_users.delete_confirm', user_id=user.id) }}" class="btn btn-soft text-danger" title="{{ _('លុប') }}" aria-label="{{ _('លុប') }}"><i class="bi bi-trash"></i></a>
+                {% endif %}
             </div>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('tbl_users.edit', user_id=user.id) }}" class="btn btn-soft btn-sm"><i class="bi bi-pencil me-1"></i>{{ bi('កែប្រែ') }}</a>
-            {% if current_user.id != user.id and not user.has_role('Doctor') and not user.has_role('Admin') %}
-            <a href="{{ url_for('tbl_users.delete_confirm', user_id=user.id) }}" class="btn btn-soft btn-sm text-danger"><i class="bi bi-trash me-1"></i>{{ bi('លុប') }}</a>
-            {% endif %}
+    </section>
+
+    <div class="admin-card mt-4">
+        <div class="admin-card-header"><h5 class="admin-card-title"><i class="bi bi-person-vcard me-2 text-muted"></i>{{ bi('ព័ត៌មានគណនី') }}</h5></div>
+        <div class="admin-card-body pt-2 pb-2">
+            <ul class="pf-facts">
+                <li><span class="pf-fact-icon"><i class="bi bi-person"></i></span><div><div class="pf-fact-label">{{ _('ឈ្មោះពេញ') }}</div><div class="pf-fact-value">{{ user.full_name }}</div></div></li>
+                <li><span class="pf-fact-icon"><i class="bi bi-at"></i></span><div><div class="pf-fact-label">{{ _('ឈ្មោះអ្នកប្រើប្រាស់') }}</div><div class="pf-fact-value">{{ user.username }}</div></div></li>
+                <li><span class="pf-fact-icon"><i class="bi bi-envelope"></i></span><div class="min-w-0"><div class="pf-fact-label">{{ _('អ៊ីមែល') }}</div><div class="pf-fact-value text-break">{{ user.email }}</div></div></li>
+                <li><span class="pf-fact-icon"><i class="bi bi-calendar-check"></i></span><div><div class="pf-fact-label">{{ _('បានបង្កើត') }}</div><div class="pf-fact-value">{{ user.created_at.strftime('%Y-%m-%d · %I:%M %p') }}</div></div></li>
+            </ul>
         </div>
-    </div>
-    <div class="admin-card-body">
-        <dl class="detail-list">
-            <div class="detail-item"><dt>{{ _('ឈ្មោះអ្នកប្រើប្រាស់') }}</dt><dd>{{ user.username }}</dd></div>
-            <div class="detail-item"><dt>{{ _('ឈ្មោះពេញ') }}</dt><dd>{{ user.full_name }}</dd></div>
-            <div class="detail-item"><dt>{{ _('អ៊ីមែល') }}</dt><dd>{{ user.email }}</dd></div>
-            <div class="detail-item"><dt>{{ _('ស្ថានភាព') }}</dt><dd>{{ status_badge(user.is_active) }}</dd></div>
-            <div class="detail-item">
-                <dt>{{ _('តួនាទី##one') }}</dt>
-                <dd>
-                    {% for role in user.roles %}
-                        <span class="badge-soft badge-soft-primary">{{ role.name | dt }}</span>
-                    {% else %}
-                        <span class="text-muted">{{ _('គ្មានតួនាទី') }}</span>
-                    {% endfor %}
-                </dd>
-            </div>
-            <div class="detail-item"><dt>{{ _('បានបង្កើត') }}</dt><dd>{{ user.created_at.strftime('%Y-%m-%d %I:%M %p') }}</dd></div>
-        </dl>
     </div>
 </div>
 {% endblock %}

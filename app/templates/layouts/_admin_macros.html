@@ -54,8 +54,10 @@
 {% endmacro %}
 
 {# Round initial avatar. size: "", "sm" or "lg" #}
+{# A picture that fails to load (e.g. an upload lost before files moved into the database) falls back to the initial. #}
 {% macro avatar(name, size="", src=None) %}
-<span class="avatar{% if size %} avatar-{{ size }}{% endif %}">{% if src %}<img src="{{ src }}" alt="">{% else %}{{ (name or "?")[0] | upper }}{% endif %}</span>
+{% set initial = (name or "?")[0] | upper %}
+<span class="avatar{% if size %} avatar-{{ size }}{% endif %}">{% if src %}<img src="{{ src }}" alt="" data-initial="{{ initial }}" onerror="this.parentNode.textContent=this.dataset.initial">{% else %}{{ initial }}{% endif %}</span>
 {% endmacro %}
 
 {% macro status_badge(active) %}

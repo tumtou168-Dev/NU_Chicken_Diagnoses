@@ -1068,6 +1068,106 @@ html[lang="en"] body, html[lang="en"] h1, html[lang="en"] h2, html[lang="en"] h3
     font-family: 'Roboto', 'Kantumruy Pro', system-ui, sans-serif;
 }
 @media (max-width: 575.98px) { .header-actions { gap: 0.5rem; } .lang-switch a { padding: 0.2rem 0.55rem; } }
+/* Phones: brand at the start of the header controls row (the sidebar with the logo is hidden). */
+.mobile-brand { display: inline-flex; align-items: center; gap: 0.5rem; margin-right: auto; color: var(--heading); text-decoration: none; }
+.mobile-brand img { width: 34px; height: 34px; object-fit: contain; border-radius: 0.6rem; background: var(--surface); border: 1px solid var(--border-color); padding: 2px; }
+.mobile-brand span { font-weight: 700; letter-spacing: 0.08em; font-size: 1rem; }
+@media (min-width: 768px) { .mobile-brand { display: none !important; } }
+
+/* Phones: app-style bottom tab bar. --tabbar-h is what fixed elements (chat button, Analyse bar)
+   and the page bottom padding use to stay clear of it. */
+.tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1045;
+    display: flex; align-items: stretch;
+    padding: 0.3rem 0.25rem calc(0.3rem + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    -webkit-backdrop-filter: saturate(180%) blur(12px); backdrop-filter: saturate(180%) blur(12px);
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -8px 24px -16px rgba(15, 23, 42, 0.25);
+}
+.tabbar-item {
+    flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+    padding: 0.25rem 0.1rem; background: none; border: 0; color: var(--text-muted); text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+}
+.tabbar-icon {
+    display: inline-flex; align-items: center; justify-content: center; width: 3.25rem; height: 1.9rem;
+    border-radius: 999px; font-size: 1.05rem; transition: background-color 0.2s ease, color 0.2s ease;
+}
+.tabbar-label { max-width: 100%; font-size: 0.64rem; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tabbar-item.active { color: var(--primary-text); }
+.tabbar-item.active .tabbar-icon { background: var(--primary-soft); color: var(--primary-color); }
+.tabbar-item.active .tabbar-label { font-weight: 700; }
+.tabbar-item:focus-visible { outline: none; }
+.tabbar-item:focus-visible .tabbar-icon { box-shadow: var(--ring); }
+@media (max-width: 767.98px) {
+    body:has(.tabbar) { --tabbar-h: calc(3.6rem + env(safe-area-inset-bottom)); }
+    body:has(.tabbar) .content-body { padding-bottom: calc(var(--tabbar-h) + 5.5rem); }
+}
+
+/* Phones: the header controls get their own row above the title. Side by side they cannot shrink
+   and pushed the page wider than the screen (cutting off the avatar and the floating buttons).
+   The header also scrolls away instead of sticking, so it does not take a fifth of the screen. */
+@media (max-width: 767.98px) {
+    .page-header { position: relative; flex-wrap: wrap; row-gap: 0.5rem; }
+    .page-header > div:first-child { order: 1; flex: 1 1 100%; min-width: 0; }
+    .header-actions { flex: 1 1 100%; justify-content: flex-end; }
+}
+@media (max-width: 575.98px) {
+    .admin-card-body { padding: 1rem; }
+    .content-body { padding: 1rem 0.75rem 5rem; }
+    .page-header .h3 { font-size: 1.2rem; }
+    .page-header p { font-size: 0.8rem; }
+
+    /* Stat tiles: a compact two-column grid (icon beside the number) instead of one full-width card
+       each; an odd last tile spans the row. */
+    .stat-grid, .stat-grid.stat-grid-3, .stat-grid.stat-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; margin-bottom: 1rem; }
+    .stat-grid > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+    .stat-tile { flex-direction: row; align-items: center; gap: 0.65rem; padding: 0.8rem 0.85rem; }
+    .stat-tile > div:last-child { min-width: 0; }
+    .stat-icon { width: 36px; height: 36px; font-size: 1.05rem; }
+    .stat-value { font-size: 1.2rem; }
+    .stat-label { font-size: 0.72rem; line-height: 1.35; }
+
+    /* Dashboard shortcuts: the main action full width, the others as equal tiles. */
+    .quick-actions { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .quick-actions > .btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem; padding: 0.6rem 0.5rem; font-size: 0.8rem; line-height: 1.4; white-space: normal; }
+    .quick-actions > .btn i { margin: 0 !important; font-size: 1.15rem; }
+    .quick-actions > .btn:first-child { grid-column: 1 / -1; flex-direction: row; gap: 0.5rem; padding: 0.7rem 1rem; font-size: 0.95rem; }
+
+    /* Card toolbars (search + buttons): search on its own row, buttons share the next one. */
+    .admin-card-header > .admin-toolbar { flex-wrap: wrap; }
+    .admin-toolbar > .btn { flex: 1 1 auto; }
+    .admin-toolbar .search-box { min-width: 0; }
+    .quick-actions > .btn:last-child:nth-child(even) { grid-column: 1 / -1; }
+
+    /* Secondary text that repeats the page title or only adds detail; the essentials stay. */
+    .page-header p, .stat-delta, .admin-card-body > .dx-hint { display: none; }
+
+    /* Tables become one card per row: the first cell is the card title, the others sit under it
+       as "label  value" lines (labels copied from the header by main.js), actions at the bottom. */
+    .admin-table.table-stack thead { display: none; }
+    .admin-table.table-stack tbody tr { display: block; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-soft); }
+    .admin-table.table-stack tbody tr:last-child { border-bottom: 0; }
+    .admin-table.table-stack tbody td {
+        display: grid; grid-template-columns: minmax(5.5rem, 34%) minmax(0, 1fr); column-gap: 0.75rem; align-items: center; justify-items: start;
+        padding: 0.3rem 0 !important; border: 0; text-align: left !important; white-space: normal; overflow-wrap: anywhere; font-size: 0.9rem;
+    }
+    .admin-table.table-stack tbody td::before { content: attr(data-label); color: var(--text-muted); font-size: 0.78rem; font-weight: 500; }
+    .admin-table.table-stack tbody td:not([data-label])::before, .admin-table.table-stack tbody td[data-label=""]::before { content: none; }
+    .admin-table.table-stack tbody td:not([data-label]), .admin-table.table-stack tbody td[data-label=""] { display: block; }
+    .admin-table.table-stack tbody td:first-child { display: block; padding-bottom: 0.45rem !important; font-size: 1rem; }
+    .admin-table.table-stack tbody td:first-child::before { content: none; }
+    .admin-table.table-stack tbody td[data-actions] { display: flex; justify-content: flex-end; gap: 0.35rem; margin-top: 0.35rem; padding-top: 0.6rem !important; border-top: 1px dashed var(--border-soft); }
+    .admin-table.table-stack tbody td[data-actions]::before { content: none; }
+    .admin-table.table-stack tbody td[colspan] { display: block; }
+    .admin-table.table-stack tbody td[colspan]::before { content: none; }
+    .admin-table.table-stack tbody tr[hidden] { display: none; }
+    .admin-table.table-stack .tag-list { justify-content: flex-start; }
+
+    /* Chart dates: every fourth day (counted from today) so the labels do not run together. */
+    .viz-xlabels span:not(:nth-last-child(4n+1)) { visibility: hidden; }
+}
 
 /* Longer (English) card titles wrap instead of pushing the action button onto its own row */
 .admin-card-header > div:first-child { flex: 1 1 12rem; min-width: 0; }
@@ -1284,7 +1384,7 @@ td .dual .dual-2, .info-block .dual .dual-2, .symptom-desc .dual .dual-2 { font-
 
 /* Progress steps */
 .dx-steps { list-style: none; display: flex; align-items: center; gap: 0; margin: 0 0 1.5rem; padding: 0; }
-.dx-steps li { display: flex; align-items: center; gap: 0.6rem; color: var(--text-faint); font-weight: 500; font-size: 0.9rem; }
+.dx-steps li { display: flex; align-items: center; gap: 0.6rem; color: var(--text-faint); font-weight: 500; font-size: 0.9rem; white-space: nowrap; }
 .dx-steps li + li::before { content: ""; width: clamp(28px, 6vw, 72px); height: 2px; margin: 0 0.85rem; background: var(--border-strong); border-radius: 2px; }
 .dx-step-n {
     display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex-shrink: 0;
@@ -1332,6 +1432,30 @@ td .dual .dual-2, .info-block .dual .dual-2, .symptom-desc .dual .dual-2 { font-
 .dx-summary-actions { display: grid; gap: 0.5rem; justify-items: center; padding: 1rem 1.25rem 1.1rem; background: var(--surface-muted); border-top: 1px solid var(--border-color); }
 .dx-summary-actions .btn-primary { padding: 0.65rem 1rem; font-weight: 600; }
 .dx-summary-actions .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.dx-count {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 1.5rem; height: 1.5rem;
+    margin-left: 0.5rem; padding: 0 0.4rem; border-radius: 999px;
+    background: #fff; color: var(--primary-color); font-size: 0.8rem; font-weight: 700; vertical-align: 1px;
+}
+.dx-count[hidden] { display: none; }
+/* Phones: the Analyse button stays pinned to the bottom of the screen while picking symptoms,
+   instead of sitting below the whole list. */
+@media (max-width: 767.98px) {
+    .dx-action-bar {
+        position: fixed; left: 0; right: 0; bottom: var(--tabbar-h, 0px); z-index: 1040;
+        padding: 0.6rem 0.75rem;
+        grid-template-columns: minmax(0, 1fr) auto; align-items: center;
+        background: var(--surface); box-shadow: 0 -6px 16px -8px rgba(15, 23, 42, 0.2);
+    }
+    .dx-action-bar { justify-items: stretch; }
+    .dx-action-bar .btn-primary { grid-column: 1; white-space: nowrap; }
+    /* Icon-only clear button next to it (its label stays as the tooltip / screen-reader name). */
+    .dx-action-bar #clearBtn { grid-column: 2; grid-row: 1; font-size: 1.4rem; padding: 0.25rem 0.5rem; }
+    .dx-action-bar #clearBtn .bi { margin: 0 !important; }
+    .dx-action-bar .dx-clear-text { display: none; }
+    .dx:has(.dx-action-bar) { padding-bottom: 4.5rem; }
+    body:not(:has(.tabbar)) .dx-action-bar { padding-bottom: calc(0.6rem + env(safe-area-inset-bottom)); }
+}
 
 /* Results */
 .dx-results { margin-top: 2rem; scroll-margin-top: calc(var(--topbar-height) + 1rem); }
@@ -1341,6 +1465,12 @@ td .dual .dual-2, .info-block .dual .dual-2, .symptom-desc .dual .dual-2 { font-
 .dx-top { display: grid; grid-template-columns: 1fr; border-color: color-mix(in srgb, var(--tone) 45%, var(--border-color)); }
 @media (min-width: 900px) { .dx-top { grid-template-columns: minmax(0, 1fr) 240px; } }
 .dx-top-main { padding: 1.5rem 1.75rem; }
+/* Phones: the result card's voice controls wrap instead of pushing the card wider than the screen. */
+@media (max-width: 575.98px) {
+    .dx-top-main { padding: 1.1rem 1rem; min-width: 0; }
+    .dx-voice-widget { flex-wrap: wrap; border-radius: 1rem !important; }
+    .dx-voice-widget .voice-toggle-btn { white-space: nowrap; }
+}
 .dx-best { display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 0.6rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--primary-soft-fg); }
 .dx-name { font-size: 1.6rem; font-weight: 700; margin: 0 0 0.5rem; letter-spacing: -0.01em; }
 .dx-desc { margin: 0.9rem 0 1.25rem; color: var(--text-main); }
@@ -2045,8 +2175,11 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .chat-bubble-mine .chat-contact-link { color: #fff; text-decoration: underline; }
 
 @media (max-width: 767.98px) {
-    /* Stay clear of the mobile sidebar-toggle button, which also sits bottom-right. */
-    .chat-widget { right: 0.75rem; bottom: 4.75rem; }
+    .chat-widget { right: 0.75rem; bottom: calc(var(--tabbar-h, 0px) + 0.75rem); }
+    .chat-toggle-btn { width: 52px; height: 52px; }
+    /* Diagnose page: sit above the fixed "Analyse" bar. */
+    body:has(.dx-action-bar) .chat-widget { bottom: calc(var(--tabbar-h, 0px) + 5rem); }
+    body:has(#sidebarMenu.show) .chat-widget { visibility: hidden; }
 }
 
 @media (max-width: 575.98px) {
@@ -2293,4 +2426,114 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     .wl-band { padding: 2rem 1.5rem; }
     .wl-float-a { right: 0; }
     .wl-float-b { left: 0; }
+}
+
+/* ==========================================================================
+   Phones: modern app look — a green hero header the content overlaps, soft floating cards,
+   rounded pill controls and a floating tab bar. Desktop is untouched.
+   ========================================================================== */
+:root {
+    --hero-grad: radial-gradient(120% 140% at 100% 0%, rgba(110, 231, 183, 0.35) 0%, transparent 55%),
+                 linear-gradient(140deg, #0c9a73 0%, #0a7f5f 45%, #0b5f58 100%);
+    --m-card-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 10px 28px -14px rgba(16, 24, 40, 0.18);
+    --m-card-border: transparent;
+    --btn-grad: linear-gradient(135deg, #10a57b 0%, #0a7f5f 55%, #086b50 100%);
+}
+:root[data-theme="dark"] {
+    --hero-grad: radial-gradient(120% 140% at 100% 0%, rgba(16, 185, 129, 0.28) 0%, transparent 55%),
+                 linear-gradient(140deg, #0d4a3b 0%, #0b3a33 50%, #0f2a3a 100%);
+    --m-card-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.6);
+    --m-card-border: var(--border-color);
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --hero-grad: radial-gradient(120% 140% at 100% 0%, rgba(16, 185, 129, 0.28) 0%, transparent 55%),
+                     linear-gradient(140deg, #0d4a3b 0%, #0b3a33 50%, #0f2a3a 100%);
+        --m-card-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.6);
+        --m-card-border: var(--border-color);
+    }
+}
+
+@media (max-width: 767.98px) {
+    /* Hero header */
+    .page-header {
+        z-index: 0; padding: 0.85rem 1rem 2.75rem;
+        background: var(--hero-grad); border-bottom: 0; box-shadow: none;
+        border-radius: 0 0 1.75rem 1.75rem;
+        -webkit-backdrop-filter: none; backdrop-filter: none;
+    }
+    .page-header .h3 { color: #fff; font-size: 1.45rem; letter-spacing: -0.015em; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.12); }
+    .page-header .h3 .dual-2, .page-header h2 .dual .dual-2 { color: rgba(255, 255, 255, 0.75); }
+    .page-header .mobile-brand, .page-header .mobile-brand span { color: #fff; }
+    .page-header .mobile-brand img { border-color: rgba(255, 255, 255, 0.35); box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.25); }
+    .page-header .lang-switch { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.25); box-shadow: none; }
+    .page-header .lang-switch a { color: rgba(255, 255, 255, 0.85); }
+    .page-header .lang-switch a.active { background: #fff; color: var(--primary-color); }
+    .page-header .theme-toggle { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.25); color: #fff; }
+    .page-header .user-avatar { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85); }
+    /* The page content rises into the header's curve. */
+    .content-body { position: relative; z-index: 1; margin-top: -1.75rem; }
+
+    /* Floating cards */
+    .admin-card, .stat-tile {
+        border-color: var(--m-card-border); border-radius: 1.25rem; box-shadow: var(--m-card-shadow);
+    }
+    .admin-card-header { border-bottom-color: var(--border-soft); }
+    .stat-icon { width: 40px; height: 40px; border-radius: 999px; }
+    .stat-value { letter-spacing: -0.02em; }
+
+    /* Buttons and search fields */
+    .btn { border-radius: 0.9rem; }
+    .btn-primary:not(:disabled) {
+        background-image: var(--btn-grad); border-color: transparent;
+        box-shadow: 0 10px 20px -10px rgba(10, 127, 95, 0.7);
+    }
+    .btn-primary:active { transform: scale(0.98); }
+    .search-box .form-control, .symptom-search .form-control { border-radius: 999px; background: var(--surface-muted); }
+
+    /* Dashboard shortcuts: icon in a soft circle on a floating tile. */
+    .quick-actions > .btn-soft { background: var(--surface); border-color: var(--m-card-border); box-shadow: var(--m-card-shadow); border-radius: 1.1rem; color: var(--heading); }
+    .quick-actions > .btn-soft i {
+        display: inline-flex; align-items: center; justify-content: center; width: 2.4rem; height: 2.4rem;
+        border-radius: 999px; background: var(--primary-soft); color: var(--primary-color);
+    }
+    .quick-actions > .btn:first-child { border-radius: 1.1rem; padding: 0.9rem 1rem; }
+
+    /* Diagnose: steps on a floating pill, rounder symptom tiles with a round check. */
+    .dx-steps li + li::before { width: 1.25rem; margin: 0 0.5rem; }
+    .dx-steps { justify-content: space-between; background: var(--surface); padding: 0.55rem 0.75rem; border-radius: 999px; box-shadow: var(--m-card-shadow); border: 1px solid var(--m-card-border); }
+    .symptom-card { border-radius: 1rem; padding: 0.85rem 0.95rem; }
+    .symptom-check { border-radius: 999px; width: 22px; height: 22px; }
+    .symptom-input:checked + .symptom-card { background: linear-gradient(135deg, var(--primary-soft), var(--surface)); }
+    .dx-action-bar { border-radius: 1.25rem 1.25rem 0 0; }
+
+    /* Floating tab bar */
+    body:has(.tabbar) { --tabbar-h: calc(4.4rem + env(safe-area-inset-bottom)); }
+    .tabbar {
+        left: 0.75rem; right: 0.75rem; bottom: calc(0.6rem + env(safe-area-inset-bottom));
+        padding: 0.35rem 0.25rem; border: 1px solid var(--border-color); border-radius: 1.5rem;
+        box-shadow: 0 12px 32px -12px rgba(15, 23, 42, 0.35);
+    }
+    .tabbar-item.active .tabbar-label { font-weight: 600; }
+    .tabbar-item.active .tabbar-icon { background: var(--btn-grad); color: #fff; box-shadow: 0 6px 14px -6px rgba(10, 127, 95, 0.7); }
+    .chat-toggle-btn { background-image: var(--btn-grad); }
+}
+
+@media (max-width: 575.98px) {
+    /* Table rows as separate floating mini-cards inside the list card. */
+    .admin-table.table-stack, .admin-table.table-stack tbody { display: block; }
+    .admin-table.table-stack tbody { display: flex; flex-direction: column; gap: 0.7rem; padding: 0.85rem 0.75rem 1rem; }
+    .admin-table.table-stack tbody tr {
+        border: 1px solid var(--border-soft); border-radius: 1rem; background: var(--surface-muted);
+        position: relative; overflow: hidden;
+    }
+    .admin-table.table-stack tbody tr:last-child { border-bottom: 1px solid var(--border-soft); }
+    .admin-table.table-stack tbody tr::before {
+        content: ""; position: absolute; left: 0; top: 0.9rem; bottom: 0.9rem; width: 3px;
+        border-radius: 0 3px 3px 0; background: var(--primary-color); opacity: 0.8;
+    }
+    .admin-table.table-stack tbody tr[data-empty] { background: none; border: 0; }
+    .admin-table.table-stack tbody tr[data-empty]::before { content: none; }
+    .admin-table.table-stack tbody td { background: transparent; }
+    .admin-table.table-stack tbody td[data-actions] { border-top-color: var(--border-color); }
 }

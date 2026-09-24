@@ -7,7 +7,7 @@
 
 {% block content %}
 {# ---------- Quick actions ---------- #}
-<div class="d-flex flex-wrap gap-2 mb-4">
+<div class="quick-actions d-flex flex-wrap gap-2 mb-4">
     <a href="{{ url_for('expert_system.diagnose') }}" class="btn btn-primary"><i class="bi bi-activity me-2"></i>{{ bi('ធ្វើរោគវិនិច្ឆ័យថ្មី') }}</a>
     {% if d.can_view_cases %}<a href="{{ url_for('expert_system.cases_index') }}" class="btn btn-soft"><i class="bi bi-clock-history me-2"></i>{{ bi('មើលប្រវត្តិ') }}</a>{% endif %}
     {% if d.is_staff %}<a href="{{ url_for('expert_system.rules_index') }}" class="btn btn-soft"><i class="bi bi-diagram-3 me-2"></i>{{ bi('គ្រប់គ្រងវិធាន') }}</a>{% endif %}

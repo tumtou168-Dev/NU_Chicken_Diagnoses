@@ -106,9 +106,9 @@
                     <div class="dx-chips" id="dxChips" hidden></div>
                     <p class="dx-tip"><i class="bi bi-lightbulb"></i>{{ _('ជ្រើសរោគសញ្ញាកាន់តែច្រើន លទ្ធផលកាន់តែត្រឹមត្រូវ។') }}</p>
                 </div>
-                <div class="dx-summary-actions">
-                    <button type="submit" class="btn btn-primary w-100" id="analyseBtn"><i class="bi bi-magic me-2"></i>{{ tb('diagnose.submit') }}</button>
-                    <button type="button" class="btn btn-link btn-sm text-decoration-none" id="clearBtn" hidden><i class="bi bi-x-circle me-1"></i>{{ t('diagnose.clear') }}</button>
+                <div class="dx-summary-actions{% if not has_results %} dx-action-bar{% endif %}">
+                    <button type="submit" class="btn btn-primary w-100" id="analyseBtn"><i class="bi bi-magic me-2"></i>{{ tb('diagnose.submit') }}<span class="dx-count" id="analyseCount" hidden></span></button>
+                    <button type="button" class="btn btn-link btn-sm text-decoration-none" id="clearBtn" title="{{ t('diagnose.clear') }}" aria-label="{{ t('diagnose.clear') }}" hidden><i class="bi bi-x-circle me-1"></i><span class="dx-clear-text">{{ t('diagnose.clear') }}</span></button>
                 </div>
             </aside>
         </div>
@@ -262,6 +262,7 @@ window.onReady(function () {
     const pill = document.getElementById('selectedPill');
     const btn = document.getElementById('analyseBtn');
     const clearBtn = document.getElementById('clearBtn');
+    const count = document.getElementById('analyseCount');
     const total = document.getElementById('symptomTotal');
     const empty = document.getElementById('symptomEmpty');
     const chips = document.getElementById('dxChips');
@@ -275,6 +276,8 @@ window.onReady(function () {
         pill.textContent = pill.dataset.template.replace(/\{n\}/g, n);
         pill.hidden = n === 0;
         clearBtn.hidden = n === 0;
+        count.textContent = n;
+        count.hidden = n === 0;
         btn.disabled = n === 0;
         chipsEmpty.hidden = n > 0;
         chips.hidden = n === 0;

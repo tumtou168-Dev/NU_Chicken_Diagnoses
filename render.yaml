@@ -3,7 +3,7 @@
 # are asked for when the Blueprint is created (leave empty to skip Google login / e-mail).
 services:
   - type: web
-    name: idns-chicken
+    name: chicken-diagnosis
     runtime: docker
     plan: free
     region: singapore

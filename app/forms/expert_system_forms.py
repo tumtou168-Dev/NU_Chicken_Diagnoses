@@ -39,9 +39,9 @@ def doctor_choices_query():
     )
 
 
-def _doctor_choices():
+def _doctor_choices(none_label: str = "— មិនទាន់អនុម័ត —"):
     doctors = db.session.scalars(doctor_choices_query()).all()
-    return [(0, _("— មិនទាន់អនុម័ត —"))] + [(d.id, d.full_name) for d in doctors]
+    return [(0, _(none_label))] + [(d.id, d.full_name) for d in doctors]
 
 
 def _symptom_choices():
@@ -75,11 +75,17 @@ class DiseaseForm(FlaskForm):
     treatment = TextAreaField(lazy("ការព្យាបាលដែលបានណែនាំ (អង់គ្លេស)"), validators=[val.required(), val.length(min=5, max=255)])
     treatment_km = TextAreaField(lazy("ការព្យាបាលដែលបានណែនាំ (ខ្មែរ)"), validators=[val.length(max=255)])
     category_id = SelectField(lazy("ប្រភេទ##one"), coerce=int)
+    doctor_id = SelectField(lazy("វេជ្ជបណ្ឌិតផ្ទៀងផ្ទាត់"), coerce=int, default=0)   # 0 = not verified yet
     submit = SubmitField(lazy("រក្សាទុក"))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.category_id.choices = _category_choices()
+        self.doctor_id.choices = _doctor_choices("— មិនទាន់ផ្ទៀងផ្ទាត់ —")
+        # Keep a previous verifier who is no longer an active doctor selectable (and valid) for this disease.
+        obj = kwargs.get("obj")
+        if obj is not None and obj.doctor and obj.doctor_id not in dict(self.doctor_id.choices):
+            self.doctor_id.choices.append((obj.doctor_id, obj.doctor.full_name))
 
 
 class RuleForm(FlaskForm):
@@ -87,8 +93,8 @@ class RuleForm(FlaskForm):
     title_km = StringField(lazy("ចំណងជើងវិធាន (ខ្មែរ)"), validators=[val.length(max=120)])
     description = TextAreaField(lazy("ការពិពណ៌នាវិធាន (អង់គ្លេស)"), validators=[val.required(), val.length(min=5, max=255)])
     description_km = TextAreaField(lazy("ការពិពណ៌នាវិធាន (ខ្មែរ)"), validators=[val.length(max=255)])
-    priority = IntegerField(lazy("អាទិភាព"), validators=[val.required(), val.number_range(min=1, max=100)])
-    confidence = FloatField(lazy("ទំនុកចិត្តមូលដ្ឋាន (%)"), validators=[val.required(), val.number_range(min=1, max=100)])
+    priority = IntegerField(lazy("អាទិភាព"), validators=[val.required(), val.number_range(min=1, max=3)], render_kw={"min": 1, "max": 3})
+    confidence = FloatField(lazy("ទំនុកចិត្តមូលដ្ឋាន (%)"), validators=[val.required(), val.number_range(min=1, max=99)], render_kw={"type": "number", "min": 1, "max": 99, "step": "any"})
     disease_id = SelectField(lazy("ជំងឺ##one"), coerce=int, validators=[val.required()])
     approved_by_id = SelectField(lazy("ពេទ្យដែលអនុម័ត"), coerce=int, default=0)   # 0 = not approved yet
     symptom_ids = MultiCheckboxField(lazy("រោគសញ្ញា"), coerce=int)

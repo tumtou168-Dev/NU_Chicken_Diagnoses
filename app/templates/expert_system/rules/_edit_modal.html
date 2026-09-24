@@ -35,11 +35,11 @@
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label class="form-label is-required">{{ _('អាទិភាព') }}</label>
-                            <input type="number" name="priority" class="form-control" min="1" max="100" required value="{{ rule.priority }}">
+                            <input type="number" name="priority" class="form-control" min="1" max="3" required value="{{ rule.priority }}">
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label is-required">{{ _('ទំនុកចិត្តមូលដ្ឋាន (%)') }}</label>
-                            <input type="number" step="any" name="confidence" class="form-control" min="1" max="100" required value="{{ rule.confidence }}">
+                            <input type="number" step="any" name="confidence" class="form-control" min="1" max="99" required value="{{ rule.confidence }}">
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label is-required">{{ _('ជំងឺ##one') }}</label>

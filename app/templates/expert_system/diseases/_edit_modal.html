@@ -28,7 +28,8 @@
                             <input type="text" name="name" class="form-control" required value="{{ disease.name or '' }}" maxlength="120">
                         </div>
                     </div>
-                    <div class="mb-3">
+                    <div class="row">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">{{ _('ប្រភេទ##one') }}</label>
                         <select name="category_id" class="form-select">
                             <option value="0" {% if not disease.category_id %}selected{% endif %}>{{ _('គ្មានប្រភេទ') }}</option>
@@ -38,6 +39,20 @@
                             {% endfor %}
                             {% endif %}
                         </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ _('វេជ្ជបណ្ឌិតផ្ទៀងផ្ទាត់') }}</label>
+                        <select name="doctor_id" class="form-select">
+                            <option value="0">{{ _('— មិនទាន់ផ្ទៀងផ្ទាត់ —') }}</option>
+                            {% for doc in doctors or [] %}
+                            <option value="{{ doc.id }}" {% if disease.doctor_id == doc.id %}selected{% endif %}>{{ doc.full_name }}</option>
+                            {% endfor %}
+                            {# A previous verifier who is no longer an active doctor stays selectable for this disease. #}
+                            {% if disease.doctor and disease.doctor not in (doctors or []) %}
+                            <option value="{{ disease.doctor.id }}" selected>{{ disease.doctor.full_name }}</option>
+                            {% endif %}
+                        </select>
+                    </div>
                     </div>
 
                     <div class="form-section-title">{{ _('ការពិពណ៌នា') }}</div>

@@ -112,7 +112,7 @@ class DiseaseService:
         disease.treatment_km = data.get("treatment_km") or None
         disease.category_id = data.get("category_id") or None
         if "doctor_id" in data:
-            disease.doctor_id = data["doctor_id"]
+            disease.doctor_id = data["doctor_id"] or None
         db.session.commit()
         return disease
 

@@ -86,7 +86,30 @@ class UserService:
 
     @staticmethod
     def delete_user(user: UserTable) -> None:
+        """Delete a user. Rows that point at them via a foreign key would otherwise make PostgreSQL
+        reject the delete: history keeps its rows with the user cleared, chat messages go with them."""
+        from app.models.audit_log import AuditLog
+        from app.models.chat_message import ChatMessage, ChatMessageHidden
+        from app.models.expert_system import Case, Disease, Rule
+
+        uid = user.id
         avatar = user.avatar
+        AuditLog.query.filter_by(user_id=uid).update({"user_id": None}, synchronize_session=False)
+        Case.query.filter_by(user_id=uid).update({"user_id": None}, synchronize_session=False)
+        Disease.query.filter_by(doctor_id=uid).update({"doctor_id": None}, synchronize_session=False)
+        Rule.query.filter_by(approved_by_id=uid).update({"approved_by_id": None}, synchronize_session=False)
+
+        messages = db.select(ChatMessage.id).where(db.or_(
+            ChatMessage.thread_user_id == uid,
+            ChatMessage.sender_id == uid,
+            ChatMessage.recipient_id == uid,
+        ))
+        ChatMessageHidden.query.filter(db.or_(
+            ChatMessageHidden.user_id == uid,
+            ChatMessageHidden.message_id.in_(messages),
+        )).delete(synchronize_session=False)
+        ChatMessage.query.filter(ChatMessage.id.in_(messages)).delete(synchronize_session=False)
+
         db.session.delete(user)
         db.session.commit()
         AvatarService.delete(avatar)

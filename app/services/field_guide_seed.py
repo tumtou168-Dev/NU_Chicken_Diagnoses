@@ -138,9 +138,9 @@ DISEASES = [
         "trembling, swollen or bruised comb and wattles, bruised legs, not eating, huddling, ruffled feathers.",
         "ជំងឺបង្កដោយវីរុស។ បើមាន់ងាប់ច្រើន និងលឿន ត្រូវគិតដល់ជំងឺនេះ។ រោគសញ្ញា៖ ពិបាកដកដង្ហើម ខ្វិន ញ័រក្បាល "
         "ហើម/ជាំឈាមនៅសិរ និងលេង ជាំឈាមនៅជើង មិនស៊ីចំណី សំកុក រោមបះ។",
-        "Do not cut open dead birds. Call a vet or the National Veterinary Research Institute (012 833-795 / "
-        "012 214-970). Isolate sick birds, burn or bury dead ones, disinfect the coop, never sell sick birds.",
-        "កុំវះកាត់សាកសព។ ទូរស័ព្ទទៅពេទ្យសត្វ ឬវិទ្យាស្ថានជាតិស្រាវជ្រាវបសុព្យាបាល (012 833-795 / 012 214-970)។ "
+        "Do not cut open dead birds. "
+        "Isolate sick birds, burn or bury dead ones, disinfect the coop, never sell sick birds.",
+        "កុំវះកាត់សាកសព។ "
         "ញែកបក្សីឈឺ ដុត ឬកប់បក្សីងាប់ សម្អាតទ្រុង និងមិនលក់បក្សីឈឺ។",
     ),
     (

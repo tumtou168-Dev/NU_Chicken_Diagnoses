@@ -308,6 +308,7 @@ EN = {
     "បានកែប្រែអ្នកប្រើប្រាស់ '%(username)s' ដោយជោគជ័យ។": "User '%(username)s' was updated successfully.",
     "បានចូលដោយជោគជ័យ។": "Signed in successfully.",
     "បានចូលរួម": "Joined",
+    "សកម្មចុងក្រោយ": "Last active",
     "បានបង្កើត": "Created",
     "បានបង្កើតគណនីដោយជោគជ័យ។ អ្នកបានចូលរួចហើយ។": "Account created successfully. You are now signed in.",
     "បានបង្កើតជំងឺ '%(name)s' ដោយជោគជ័យ។": "Disease '%(name)s' was created successfully.",

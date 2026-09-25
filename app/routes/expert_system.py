@@ -216,6 +216,40 @@ def cases_detail(case_id: int):
     return render_template("expert_system/cases/detail.html", case=case)
 
 
+# ---------- Disease library (read-only, for everyone who can run a diagnosis) ----------
+@expert_system_bp.route("/library")
+@login_required
+@require_permission("run_diagnosis")
+def library_index():
+    if not PageFeatureService.is_enabled("library"):
+        return render_template("layouts/maintenance.html")
+
+    diseases = DiseaseService.get_all()
+    return render_template(
+        "expert_system/library/index.html",
+        diseases=diseases,
+        symptom_counts={d.id: len(DiseaseService.symptoms_of(d)) for d in diseases},
+        categories=[c for c in CategoryService.get_all() if c.diseases],
+    )
+
+
+@expert_system_bp.route("/library/<int:disease_id>")
+@login_required
+@require_permission("run_diagnosis")
+def library_detail(disease_id: int):
+    if not PageFeatureService.is_enabled("library"):
+        return render_template("layouts/maintenance.html")
+
+    disease = DiseaseService.get_by_id(disease_id)
+    if disease is None:
+        abort(404)
+    return render_template(
+        "expert_system/library/detail.html",
+        disease=disease,
+        symptoms=DiseaseService.symptoms_of(disease),
+    )
+
+
 @expert_system_bp.route("/categories")
 @login_required
 @require_permission("manage_categories")

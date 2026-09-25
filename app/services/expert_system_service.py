@@ -121,6 +121,12 @@ class DiseaseService:
         db.session.delete(disease)
         db.session.commit()
 
+    @staticmethod
+    def symptoms_of(disease: Disease) -> List[Symptom]:
+        """Every symptom named by any of the disease's rules, once each, sorted by name."""
+        symptoms = {s.id: s for rule in disease.rules for s in rule.symptoms}
+        return sorted(symptoms.values(), key=lambda s: s.name)
+
 
 class RuleService:
     @staticmethod

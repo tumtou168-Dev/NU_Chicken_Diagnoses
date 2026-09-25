@@ -1297,6 +1297,24 @@ td .dual .dual-2, .info-block .dual .dual-2, .symptom-desc .dual .dual-2 { font-
 .pf-facts > div:last-child { border-bottom: 0; }
 .pf-facts dt { font-size: 0.875rem; font-weight: 400; color: var(--text-muted); }
 .pf-facts dd { margin: 0; font-size: 0.9rem; font-weight: 500; color: var(--heading); min-width: 0; }
+/* User details (admin view): the account facts as a grid of icon tiles */
+.pf-handle { color: var(--text-muted); font-size: 0.95rem; }
+.pf-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-top: 0.6rem; }
+.pf-info { list-style: none; margin: 0; padding: 0.5rem 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+.pf-info li {
+    display: flex; align-items: center; gap: 0.85rem; min-width: 0;
+    padding: 0.85rem 1rem; border: 1px solid var(--border-soft); border-radius: 0.75rem; background: var(--surface-muted);
+}
+.pf-fact-icon {
+    width: 40px; height: 40px; flex-shrink: 0; border-radius: 0.65rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--primary-soft); color: var(--primary-text); font-size: 1.1rem;
+}
+.pf-fact-label { font-size: 0.8rem; color: var(--text-muted); line-height: 1.3; }
+.pf-fact-value { font-size: 0.95rem; font-weight: 600; color: var(--heading); line-height: 1.4; }
+@media (max-width: 575.98px) {
+    .pf-info { grid-template-columns: 1fr; }
+}
 .pf-online { display: inline-flex; align-items: center; gap: 0.4rem; color: #067647; }
 .pf-online::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #12b76a; }
 

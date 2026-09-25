@@ -221,7 +221,7 @@ a { color: var(--primary-text); }
     box-shadow: 0 0 0 1px var(--sidebar-logo-ring), 0 2px 6px -2px rgba(16, 24, 40, 0.12);
 }
 .brand-section .brand-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
-.brand-section h5 { font-size: 1.1rem; line-height: 1.2; letter-spacing: 0.1em; font-weight: 800; color: var(--sidebar-brand); margin: 0; }
+.brand-section h5 { font-size: 0.95rem; line-height: 1.3; font-weight: 700; color: var(--sidebar-brand); margin: 0; }
 .brand-section small { font-size: 0.72rem; color: var(--sidebar-heading) !important; }
 
 /* Section label with a hairline running to the edge. */
@@ -843,7 +843,7 @@ body > .container-fluid > .row { --bs-gutter-x: 0; margin: 0; }
 .auth-register .password-criteria { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem 1rem; }
 .auth-register .password-criteria .criteria-item { font-size: 0.8rem; }
 
-.auth-aside-brand { display: flex; align-items: center; gap: 0.8rem; font-weight: 700; font-size: 1.2rem; letter-spacing: 0.08em; color: #fff; }
+.auth-aside-brand { display: flex; align-items: center; gap: 0.8rem; font-weight: 700; font-size: 1.1rem; color: #fff; }
 .auth-aside-brand img { width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 0.7rem; padding: 3px; }
 .auth-aside-body { position: relative; z-index: 1; max-width: 430px; }
 .auth-aside-body h2 { color: #fff; font-size: 1.85rem; line-height: 1.35; font-weight: 700; margin-bottom: 0.85rem; letter-spacing: -0.01em; }
@@ -1075,7 +1075,6 @@ html[lang="en"] body, html[lang="en"] h1, html[lang="en"] h2, html[lang="en"] h3
 /* Phones: brand at the start of the header controls row (the sidebar with the logo is hidden). */
 .mobile-brand { display: inline-flex; align-items: center; gap: 0.5rem; margin-right: auto; color: var(--heading); text-decoration: none; }
 .mobile-brand img { width: 34px; height: 34px; object-fit: contain; border-radius: 0.6rem; background: var(--surface); border: 1px solid var(--border-color); padding: 2px; }
-.mobile-brand span { font-weight: 700; letter-spacing: 0.08em; font-size: 1rem; }
 @media (min-width: 768px) { .mobile-brand { display: none !important; } }
 
 /* Phones: app-style bottom tab bar. --tabbar-h is what fixed elements (chat button, Analyse bar)
@@ -2374,19 +2373,18 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .wl-brand { display: flex; align-items: center; gap: 0.65rem; text-decoration: none; color: var(--heading); }
 .wl-brand img { width: 40px; height: 40px; object-fit: contain; border-radius: 0.7rem; background: var(--logo-tile); padding: 3px; border: 1px solid var(--border-color); }
 .wl-brand span { display: flex; flex-direction: column; line-height: 1.15; }
-.wl-brand strong { font-size: 1.05rem; letter-spacing: 0.12em; }
-.wl-brand small { font-size: 0.72rem; color: var(--text-muted); }
+.wl-brand strong { font-size: 1rem; }
 .wl-links { display: flex; gap: 1.75rem; margin-left: 1.5rem; }
 .wl-links a { color: var(--text-muted); text-decoration: none; font-weight: 500; font-size: 0.925rem; transition: color 0.2s; }
 .wl-links a:hover { color: var(--primary-text); }
 .wl-actions { margin-left: auto; display: flex; align-items: center; gap: 0.6rem; }
 .wl-actions .btn { border-radius: 999px; padding: 0.45rem 1.1rem; font-weight: 600; }
-.wl-links a, .wl-actions .btn, .wl-brand small { white-space: nowrap; }
+.wl-links a, .wl-actions .btn, .wl-brand strong { white-space: nowrap; }
 .wl-links, .wl-actions, .wl-brand { flex-shrink: 0; }
 @media (max-width: 1199.98px) {
     .wl-nav-inner { gap: 1rem; }
     .wl-links { gap: 1.1rem; margin-left: 0.5rem; }
-    .wl-brand small { display: none; }
+    .wl-brand strong { display: none; }
 }
 
 .wl-hero { position: relative; overflow: hidden; color: #eafff6; padding: 5rem 0 6rem;
@@ -2467,7 +2465,7 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 @media (max-width: 575.98px) {
     .wl-wrap { padding: 0 1rem; }
     .wl-nav-inner { gap: 0.5rem; }
-    .wl-brand small, .wl-actions .theme-toggle, .wl-btn-login { display: none; }
+    .wl-actions .theme-toggle, .wl-btn-login { display: none; }
     .wl-actions .btn { padding: 0.4rem 0.9rem; }
     .wl-stats { gap: 1.5rem; }
     .wl-stats dt { font-size: 1.6rem; }
@@ -2515,7 +2513,6 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     }
     .page-header .h3 { color: #fff; font-size: 1.45rem; letter-spacing: -0.015em; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.12); }
     .page-header .h3 .dual-2, .page-header h2 .dual .dual-2 { color: rgba(255, 255, 255, 0.75); }
-    .page-header .mobile-brand, .page-header .mobile-brand span { color: #fff; }
     .page-header .mobile-brand img { border-color: rgba(255, 255, 255, 0.35); box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.25); }
     .page-header .lang-switch { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.25); box-shadow: none; }
     .page-header .lang-switch a { color: rgba(255, 255, 255, 0.85); }

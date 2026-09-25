@@ -50,10 +50,9 @@
               <div class="sidebar-inner">
                 <div class="brand-section">
                     <a href="{{ url_for(current_user.landing_endpoint()) if current_user.is_authenticated else url_for('auth.login') }}" class="text-decoration-none">
-                        <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="{{ _('និមិត្តសញ្ញា IDNS') }}" class="brand-logo">
+                        <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="" class="brand-logo">
                         <div class="brand-text">
-                            <h5 class="brand-font mb-0">IDNS</h5>
-                            <small class="text-muted">{{ _('ការធ្វើរោគវិនិច្ឆ័យមាន់') }}</small>
+                            <h5 class="brand-font mb-0">{{ _('ការធ្វើរោគវិនិច្ឆ័យមាន់') }}</h5>
                         </div>
                     </a>
                 </div>
@@ -118,9 +117,10 @@
                         </ul>
                         {% endif %}
 
-                        {% if current_user.has_role('Admin') %}
+                        {# System: admin tools for Admins, About us for everyone signed in. #}
                         <div class="nav-section-label" data-group="system">{{ bi('ប្រព័ន្ធ') }}</div>
                         <ul class="nav flex-column nav-group" data-group="system">
+                            {% if current_user.has_role('Admin') %}
                             <li class="nav-item">
                                 <a class="nav-link {% if 'tbl_users' in ep and ep != 'tbl_users.profile' %}active{% endif %}" href="{{ url_for('tbl_users.index') }}">
                                     <span class="nav-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span> <span class="nav-text">{{ bi('អ្នកប្រើប្រាស់') }}</span>
@@ -148,8 +148,13 @@
                                 </a>
                             </li>
                             {% endif %}
+                            {% endif %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep == 'about.credits' %}active{% endif %}" href="{{ url_for('about.credits') }}">
+                                    <span class="nav-icon"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span> <span class="nav-text">{{ bi('អំពីយើង') }}</span>
+                                </a>
+                            </li>
                         </ul>
-                        {% endif %}
 
                     {% else %}
                         <div class="nav-section-label" data-group="main">{{ bi('ការចូលប្រើ') }}</div>
@@ -162,6 +167,11 @@
                             <li class="nav-item">
                                 <a class="nav-link {% if 'auth.register' in ep %}active{% endif %}" href="{{ url_for('auth.register') }}">
                                     <span class="nav-icon"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span> <span class="nav-text">{{ bi('ចុះឈ្មោះ') }}</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if ep == 'about.credits' %}active{% endif %}" href="{{ url_for('about.credits') }}">
+                                    <span class="nav-icon"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span> <span class="nav-text">{{ bi('អំពីយើង') }}</span>
                                 </a>
                             </li>
                         </ul>
@@ -191,13 +201,17 @@
                     </div>
 
                     <div class="header-actions">
+                    {# Phones: the sidebar is hidden, so the brand sits at the start of the header controls row. #}
+                    <a href="{{ url_for(current_user.landing_endpoint()) if current_user.is_authenticated else url_for('auth.login') }}" class="mobile-brand d-md-none">
+                        <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="{{ _('ការធ្វើរោគវិនិច្ឆ័យមាន់') }}">
+                    </a>
                     {% include "layouts/_lang_switch.html" %}
                     {% include "layouts/_theme_toggle.html" %}
                     {% block page_header_content %}
                     {% if current_user.is_authenticated %}
                     <a href="{{ url_for('tbl_users.profile') }}" class="user-profile" title="{{ current_user.full_name }} • {{ (current_user.roles[0].name if current_user.roles else 'User') | dt }}">
                         <div class="user-avatar">
-                            {% if avatar_url(current_user) %}<img src="{{ avatar_url(current_user) }}" alt="{{ current_user.full_name }}">{% else %}{{ current_user.username[0] | upper }}{% endif %}
+                            {% if avatar_url(current_user) %}<img src="{{ avatar_url(current_user) }}" alt="{{ current_user.full_name }}" data-initial="{{ current_user.username[0] | upper }}" onerror="this.parentNode.textContent=this.dataset.initial">{% else %}{{ current_user.username[0] | upper }}{% endif %}
                         </div>
                     </a>
                     {% endif %}
@@ -222,18 +236,31 @@
     <!-- Footer removed as requested -->
     {% endblock %}
 
-    <!-- Mobile Menu Toggle Button (Visible only on small screens) -->
+    {# Phones: app-style bottom tab bar with the main destinations; "Menu" opens the full sidebar. #}
     {% block mobile_nav_toggle %}
-    <button class="btn btn-primary d-md-none position-fixed bottom-0 end-0 m-3 rounded-circle shadow-lg"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#sidebarMenu"
-            aria-controls="sidebarMenu"
-            aria-expanded="false"
-            aria-label="{{ _('បើក/បិទម៉ឺនុយ') }}"
-            style="width: 56px; height: 56px; z-index: 1060;">
-        <i class="bi bi-list fs-4"></i>
-    </button>
+    {% if current_user.is_authenticated %}
+    {% set ep = request.endpoint or '' %}
+    <nav class="tabbar d-md-none" aria-label="{{ _('ម៉ឺនុយ') }}">
+        {% if current_user.has_role('Admin') or current_user.has_role('Doctor') %}
+        <a class="tabbar-item {% if ep == 'dashboard.index' %}active{% endif %}" href="{{ url_for('dashboard.index') }}" {% if ep == 'dashboard.index' %}aria-current="page"{% endif %}>
+            <span class="tabbar-icon"><i class="fa-solid fa-chart-column" aria-hidden="true"></i></span><span class="tabbar-label">{{ _('ផ្ទាំងគ្រប់គ្រង') }}</span>
+        </a>
+        {% endif %}
+        <a class="tabbar-item {% if 'expert_system.diagnose' in ep %}active{% endif %}" href="{{ url_for('expert_system.diagnose') }}" {% if 'expert_system.diagnose' in ep %}aria-current="page"{% endif %}>
+            <span class="tabbar-icon"><i class="fa-solid fa-stethoscope" aria-hidden="true"></i></span><span class="tabbar-label">{{ _('ធ្វើរោគវិនិច្ឆ័យ') }}</span>
+        </a>
+        <a class="tabbar-item {% if 'expert_system.cases' in ep %}active{% endif %}" href="{{ url_for('expert_system.cases_index') }}" {% if 'expert_system.cases' in ep %}aria-current="page"{% endif %}>
+            <span class="tabbar-icon"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span><span class="tabbar-label">{{ _('ប្រវត្តិ') }}</span>
+        </a>
+        <a class="tabbar-item {% if ep == 'tbl_users.profile' %}active{% endif %}" href="{{ url_for('tbl_users.profile') }}" {% if ep == 'tbl_users.profile' %}aria-current="page"{% endif %}>
+            <span class="tabbar-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span><span class="tabbar-label">{{ _('ប្រវត្តិរូប') }}</span>
+        </a>
+        <button class="tabbar-item" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu"
+                aria-controls="sidebarMenu" aria-expanded="false" aria-label="{{ _('បើក/បិទម៉ឺនុយ') }}">
+            <span class="tabbar-icon"><i class="fa-solid fa-bars" aria-hidden="true"></i></span><span class="tabbar-label">{{ _('ម៉ឺនុយ') }}</span>
+        </button>
+    </nav>
+    {% endif %}
     {% endblock %}
 
     {% if current_user.is_authenticated %}

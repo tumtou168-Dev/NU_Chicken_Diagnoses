@@ -13,7 +13,7 @@ class DiagnosisService:
         return Rule.query.all()
 
     @staticmethod
-    def run_inference(selected_symptom_ids):
+    def run_inference(selected_symptom_ids, limit=3):
         """
         Forward Chaining Inference Engine: Matches user input against Doctor rules.
         """
@@ -40,8 +40,18 @@ class DiagnosisService:
                     "rule": rule,
                 })
 
-        # Sort by highest match percentage
-        return sorted(results, key=lambda x: x['confidence'], reverse=True)
+        # Sort by highest match percentage, keep only the best rule per disease,
+        # and return the top `limit` diseases.
+        results.sort(key=lambda x: x['confidence'], reverse=True)
+        top, seen = [], set()
+        for result in results:
+            if result["disease"].id in seen:
+                continue
+            seen.add(result["disease"].id)
+            top.append(result)
+            if len(top) == limit:
+                break
+        return top
 
     @staticmethod
     def record_case(user_id, selected_symptom_ids, top_result):

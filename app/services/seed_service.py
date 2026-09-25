@@ -1,4 +1,7 @@
 # app/services/seed_service.py
+import os
+import secrets
+
 from extensions import db
 from app.models import PermissionTable, RoleTable, UserTable
 from app.models.expert_system import Category, Symptom, Disease, Rule
@@ -13,6 +16,16 @@ def _get_or_create(model, defaults=None, **kwargs):
     instance = model(**params)
     db.session.add(instance)
     return instance
+
+
+def _initial_password(username, env_var):
+    """Password for a seeded account, read from env_var so it is never stored in the repository.
+    Without it, a random one is generated and printed once to the log (only needed for the first login)."""
+    password = os.environ.get(env_var)
+    if not password:
+        password = secrets.token_urlsafe(12)
+        print(f"Created user '{username}' with generated password: {password}", flush=True)
+    return password
 
 
 def seed_permissions_and_roles():
@@ -75,11 +88,11 @@ def seed_admin_user():
         return
     admin = UserTable(
         username="admin",
-        email="admin@example.com",
+        email="tumtou168@gmail.com",
         full_name="System Administrator",
         is_active=True,
     )
-    admin.set_password("Admin@123")
+    admin.set_password(_initial_password("admin", "ADMIN_PASSWORD"))
     admin.roles = [admin_role]
     db.session.add(admin)
     db.session.commit()
@@ -98,7 +111,7 @@ def seed_doctor_user():
         full_name="Sokha Meas",
         is_active=True,
     )
-    doctor.set_password("Doctor@123")
+    doctor.set_password(_initial_password("doctor", "DOCTOR_PASSWORD"))
     doctor.roles = [doctor_role]
     db.session.add(doctor)
     db.session.commit()
@@ -378,4 +391,7 @@ def seed_all():
     seed_admin_user()
     seed_doctor_user()
     seed_expert_data()
+
+    from app.services.field_guide_seed import seed_field_guide_data
+    seed_field_guide_data()
 

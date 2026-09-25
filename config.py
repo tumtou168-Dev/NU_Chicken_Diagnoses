@@ -8,6 +8,9 @@ class Config:
     # Set DATABASE_URL to override (e.g., use SQLite in dev); default is PostgreSQL.
     SQLALCHEMY_DATABASE_URI = (os.environ.get("DATABASE_URL") 
         or "postgresql://postgres:123456789@localhost:5432/chicken_diagnoses")
+    # Hosts such as Render hand out "postgres://" URLs, which SQLAlchemy no longer accepts.
+    if SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
+        SQLALCHEMY_DATABASE_URI = "postgresql://" + SQLALCHEMY_DATABASE_URI[len("postgres://"):]
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -28,6 +31,11 @@ class Config:
     MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "")
+
+    # Brevo (brevo.com) sends email over HTTPS. When the key is set it is used instead of SMTP —
+    # needed on hosts that block SMTP ports, such as Render's free plan. The sender is
+    # MAIL_DEFAULT_SENDER (or MAIL_USERNAME), which must be a verified sender in Brevo.
+    BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
 
     # Reject oversized request bodies early. Phone photos are often 5-10 MB; profile and chat
     # pictures are shrunk after upload, so this only needs to fit an unedited photo.

@@ -105,3 +105,42 @@ function initFlashAutoHide() {
 
 window.FlashAutoHide = { init: initFlashAutoHide };
 window.onReady(initFlashAutoHide);
+
+// Phones: the open sidebar dims the page behind it; a tap on that dimmed area closes the sidebar
+// (and is swallowed, so it does not also press whatever sits underneath).
+document.addEventListener("click", (e) => {
+  const sidebar = document.getElementById("sidebarMenu");
+  if (!sidebar || !sidebar.classList.contains("show") || sidebar.contains(e.target)) return;
+  if (getComputedStyle(sidebar).position !== "fixed") return;   // desktop: sidebar is part of the layout
+  e.preventDefault();
+  e.stopPropagation();
+  bootstrap.Collapse.getOrCreateInstance(sidebar, { toggle: false }).hide();
+}, true);
+
+// Phones: admin tables are shown as one card per row (CSS: .table-stack). Each cell gets its
+// column's header as data-label; the actions column (text-end, holding buttons) gets data-actions.
+function labelTableCells(table) {
+  const heads = [...table.querySelectorAll("thead th")].map((th) => {
+    const first = th.querySelector(".dual-1");
+    return (first ? first.textContent : th.textContent).trim();
+  });
+  table.querySelectorAll("tbody tr").forEach((tr) => {
+    [...tr.children].forEach((td, i) => {
+      if (td.hasAttribute("colspan")) return;
+      td.setAttribute("data-label", heads[i] || "");
+      if (i === tr.children.length - 1 && td.querySelector("button, a.icon-btn, .icon-btn, form")) td.setAttribute("data-actions", "");
+    });
+  });
+}
+
+function initStackedTables() {
+  document.querySelectorAll("table.admin-table").forEach((table) => {
+    if (table.querySelectorAll("thead th").length < 3) return;   // two-column tables already fit
+    table.classList.add("table-stack");
+    labelTableCells(table);
+    const body = table.tBodies[0];
+    if (body) new MutationObserver(() => labelTableCells(table)).observe(body, { childList: true });
+  });
+}
+
+window.onReady(initStackedTables);

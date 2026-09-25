@@ -205,7 +205,8 @@ function initChatWidget() {
 
   function renderMessages(items, force) {
     // Include the deleted flag so a "delete for everyone" from the other side re-renders on the next poll.
-    const key = targetKey() + ":" + items.map((m) => m.id + (m.is_deleted ? "d" : "")).join(",");
+    // ...and the seen flag, so read receipts turn green on the next poll.
+    const key = targetKey() + ":" + items.map((m) => m.id + (m.is_deleted ? "d" : "") + (m.is_seen ? "s" : "")).join(",");
     if (!force && key === lastMessagesKey) return;   // nothing new — don't touch the DOM or scroll position
     lastMessagesKey = key;
 
@@ -215,13 +216,15 @@ function initChatWidget() {
     const prevScrollTop = messagesBox.scrollTop;
 
     messagesEmpty.hidden = items.length !== 0;
-    messagesBox.querySelectorAll(".chat-bubble, .chat-date-divider").forEach((el) => el.remove());
+    messagesBox.querySelectorAll(".chat-bubble, .chat-date-divider, .chat-seen-note").forEach((el) => el.remove());
     const animateNew = renderedThreadId === targetKey();
     const seenIds = renderedIds;
     renderedThreadId = targetKey();
     renderedIds = new Set(items.map((m) => m.id));
     let lastDate = null;
     let prev = null;
+    // "Seen" is spelled out only under my latest message; the others just carry the ticks.
+    const lastMine = [...items].reverse().find((m) => m.is_mine && !m.is_deleted);
     for (const m of items) {
       // "YYYY-MM-DD HH:MM" -> group by day with a divider, show only the time on each bubble.
       const [date, time] = [m.created_at.slice(0, 10), m.created_at.slice(11)];
@@ -273,16 +276,27 @@ function initChatWidget() {
         (m.can_edit ? `<button type="button" class="chat-bubble-action-btn chat-bubble-edit-btn" title="${escapeHtml(CONTACT_LABELS.editTitle || "Edit")}"><i class="bi bi-pencil-fill"></i></button>` : "") +
         `<button type="button" class="chat-bubble-action-btn is-danger chat-bubble-delete-btn" title="${escapeHtml(CONTACT_LABELS.deleteTitle || "Delete")}"><i class="bi bi-trash3-fill"></i></button>` +
         `</div>`;
-      const timeHtml = `<div class="chat-bubble-time">${time}${editedTag}</div>`;
+      // Read receipt on my own messages: one tick when sent, two green ticks once the other side has seen it.
+      const receiptLabel = m.is_seen ? (CONTACT_LABELS.seen || "Seen") : (CONTACT_LABELS.sent || "Sent");
+      const ticks = m.is_mine && !m.is_deleted
+        ? `<i class="bi ${m.is_seen ? "bi-check2-all" : "bi-check2"} chat-receipt${m.is_seen ? " is-seen" : ""}" title="${escapeHtml(receiptLabel)}" aria-label="${escapeHtml(receiptLabel)}"></i>`
+        : "";
+      const timeHtml = `<div class="chat-bubble-time">${time}${editedTag}${ticks}</div>`;
       const timeOverlay = m.image_url && !m.caption;
       bubble.innerHTML = actions + senderRow + body + (timeOverlay ? "" : timeHtml);
       if (timeOverlay) {
         const overlay = document.createElement("div");
         overlay.className = "chat-bubble-photo-time";
-        overlay.textContent = time;
+        overlay.innerHTML = escapeHtml(time) + ticks;
         bubble.appendChild(overlay);
       }
       messagesBox.appendChild(bubble);
+      if (m === lastMine && m.is_seen) {
+        const seenNote = document.createElement("div");
+        seenNote.className = "chat-seen-note";
+        seenNote.innerHTML = `<i class="bi bi-check2-all"></i>${escapeHtml(CONTACT_LABELS.seen || "Seen")}`;
+        messagesBox.appendChild(seenNote);
+      }
       if (m.audio_url && !m.is_deleted) wireVoicePlayer(bubble.querySelector(".voice-player"));
       if (m.can_edit) {
         const editBtn = bubble.querySelector(".chat-bubble-edit-btn");
@@ -664,7 +678,9 @@ function initChatWidget() {
     conversation.hidden = false;
     backBtn.hidden = false;
     loadMessages(true);
-    input.focus();
+    // Ready to type with a mouse and keyboard; on touch screens focusing would pop the on-screen
+    // keyboard over the conversation, so it waits until the message box is tapped.
+    if (!window.matchMedia("(pointer: coarse)").matches) input.focus();
   }
 
   // A normal user's support thread.

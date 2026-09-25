@@ -57,6 +57,8 @@ def _serialize(message) -> dict:
         "is_edited": message.edited_at is not None,
         "can_delete": ChatService.can_delete(message, current_user) and not message.is_deleted,
         "can_edit": is_mine and message.is_editable,
+        # Read receipt, only for my own messages: has the other side seen it yet?
+        "is_seen": is_mine and ChatService.is_seen(message),
     }
     if message.is_deleted:
         return data

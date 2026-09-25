@@ -1,6 +1,7 @@
 # app/__init__.py
 import os
 from flask import Flask, redirect, url_for, flash, request, render_template, jsonify
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import current_user
 from datetime import timedelta
 from sqlalchemy import inspect, text
@@ -13,6 +14,9 @@ from utils.timezone import now_kh
 def create_app(config_class: type[Config] = Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    # Hosting platforms (Render) serve HTTPS through a proxy; trust its X-Forwarded-* headers so
+    # external URLs such as the Google login callback use https:// and the real host name.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
     
     #init extensions
     db.init_app(app)
@@ -39,6 +43,8 @@ def create_app(config_class: type[Config] = Config):
     from app.routes.lang_routes import lang_bp
     from app.routes.menu_routes import menu_bp
     from app.routes.chat_routes import chat_bp
+    from app.routes.about_routes import about_bp
+    from app.routes.media_routes import media_bp
 
     app.register_blueprint(user_bp)
     app.register_blueprint(role_bp)
@@ -50,6 +56,8 @@ def create_app(config_class: type[Config] = Config):
     app.register_blueprint(lang_bp)
     app.register_blueprint(menu_bp)
     app.register_blueprint(chat_bp)
+    app.register_blueprint(about_bp)
+    app.register_blueprint(media_bp)
     
     from app.services.avatar_service import AvatarService
 
@@ -130,9 +138,14 @@ def create_app(config_class: type[Config] = Config):
 
     @app.route("/")
     def home():
+        """Signed-in users go to their start page; visitors see the public welcome page."""
         if current_user.is_authenticated:
             return redirect(url_for(current_user.landing_endpoint()))
-        return redirect(url_for("auth.login"))
+        from app.models.expert_system import Disease, Rule, Symptom
+        count = lambda model: db.session.scalar(db.select(db.func.count(model.id)))
+        stats = {"diseases": count(Disease), "symptoms": count(Symptom), "rules": count(Rule)}
+        diseases = db.session.scalars(db.select(Disease).order_by(Disease.id)).all()
+        return render_template("welcome.html", stats=stats, diseases=diseases)
     
     # create tables
     with app.app_context():
@@ -145,6 +158,7 @@ def create_app(config_class: type[Config] = Config):
         from app.models.page_feature import PageFeature
         from app.models.chat_message import ChatMessage
         from app.models.password_reset import PasswordResetCode
+        from app.models.stored_file import StoredFile
 
         # Default RESET_DB to 0 to prevent database reset on restart
         if os.environ.get("RESET_DB", "0") == "1":

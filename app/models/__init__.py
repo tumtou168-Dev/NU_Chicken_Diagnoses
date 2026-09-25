@@ -7,6 +7,7 @@ from .page_text import PageText
 from .page_feature import PageFeature
 from .chat_message import ChatMessage, ChatMessageHidden
 from .password_reset import PasswordResetCode
+from .stored_file import StoredFile
 
 __all__ = [
     "UserTable",
@@ -22,4 +23,5 @@ __all__ = [
     "ChatMessage",
     "ChatMessageHidden",
     "PasswordResetCode",
+    "StoredFile",
 ]

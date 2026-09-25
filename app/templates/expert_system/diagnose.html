@@ -106,9 +106,9 @@
                     <div class="dx-chips" id="dxChips" hidden></div>
                     <p class="dx-tip"><i class="bi bi-lightbulb"></i>{{ _('ជ្រើសរោគសញ្ញាកាន់តែច្រើន លទ្ធផលកាន់តែត្រឹមត្រូវ។') }}</p>
                 </div>
-                <div class="dx-summary-actions">
-                    <button type="submit" class="btn btn-primary w-100" id="analyseBtn"><i class="bi bi-magic me-2"></i>{{ tb('diagnose.submit') }}</button>
-                    <button type="button" class="btn btn-link btn-sm text-decoration-none" id="clearBtn" hidden><i class="bi bi-x-circle me-1"></i>{{ t('diagnose.clear') }}</button>
+                <div class="dx-summary-actions{% if not has_results %} dx-action-bar{% endif %}">
+                    <button type="submit" class="btn btn-primary w-100" id="analyseBtn"><i class="bi bi-magic me-2"></i>{{ tb('diagnose.submit') }}<span class="dx-count" id="analyseCount" hidden></span></button>
+                    <button type="button" class="btn btn-link btn-sm text-decoration-none" id="clearBtn" title="{{ t('diagnose.clear') }}" aria-label="{{ t('diagnose.clear') }}" hidden><i class="bi bi-x-circle me-1"></i><span class="dx-clear-text">{{ t('diagnose.clear') }}</span></button>
                 </div>
             </aside>
         </div>
@@ -153,22 +153,24 @@
                     </div>
 
                     <!-- AI Reading Voice Widget (Female Khmer & Female English) -->
-                    <div class="dx-voice-widget d-inline-flex align-items-center gap-2 p-1 px-2 rounded-pill shadow-sm" style="background-color: var(--surface-raised, #ffffff); border: 1px solid var(--border-color, #e2e8f0);">
-                        <div class="btn-group btn-group-sm" role="group" id="voiceLangGroup">
-                            <button type="button" class="btn btn-sm btn-outline-primary voice-toggle-btn active d-inline-flex align-items-center gap-1" data-lang="km" style="font-size: 0.78rem; padding: 2px 10px; border-radius: 999px 0 0 999px;" title="{{ _('សំឡេងស្រីជាភាសាខ្មែរ (Sreymom)') }}">
-                                <svg viewBox="0 0 27 18" width="16" height="11" style="border-radius:2px;flex-shrink:0;" aria-hidden="true"><rect width="27" height="18" fill="#032ea1"/><rect y="4.5" width="27" height="9" fill="#e00025"/><g fill="#fff"><rect x="11" y="7" width="1.2" height="4"/><rect x="13.4" y="6" width="1.2" height="5"/><rect x="15.8" y="7" width="1.2" height="4"/><rect x="9" y="10" width="10" height="1"/></g></svg>
-                                ស្រី (Khmer)
+                    <div class="dx-voice-widget">
+                        <button type="button" class="btn btn-primary dx-voice-play" id="aiVoiceBtn">
+                            <span class="dx-voice-icon" aria-hidden="true">
+                                <i class="bi bi-volume-up-fill" id="aiVoiceIcon"></i>
+                                <span class="spinner-border spinner-border-sm d-none" id="aiVoiceSpinner" role="status"></span>
+                            </span>
+                            <span id="aiVoiceText">{{ _('ស្តាប់លទ្ធផល') }}</span>
+                        </button>
+                        <div class="dx-voice-seg" role="group" id="voiceLangGroup" aria-label="{{ _('ភាសា') }}">
+                            <button type="button" class="voice-toggle-btn active" data-lang="km" aria-pressed="true" title="{{ _('សំឡេងស្រីជាភាសាខ្មែរ (Sreymom)') }}">
+                                <svg viewBox="0 0 27 18" width="16" height="11" aria-hidden="true"><rect width="27" height="18" fill="#032ea1"/><rect y="4.5" width="27" height="9" fill="#e00025"/><g fill="#fff"><rect x="11" y="7" width="1.2" height="4"/><rect x="13.4" y="6" width="1.2" height="5"/><rect x="15.8" y="7" width="1.2" height="4"/><rect x="9" y="10" width="10" height="1"/></g></svg>
+                                ខ្មែរ
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-primary voice-toggle-btn d-inline-flex align-items-center gap-1" data-lang="en" style="font-size: 0.78rem; padding: 2px 10px; border-radius: 0 999px 999px 0;" title="{{ _('Female English Voice (Aria)') }}">
-                                <svg viewBox="0 0 27 18" width="16" height="11" style="border-radius:2px;flex-shrink:0;" aria-hidden="true"><rect width="27" height="18" fill="#012169"/><path d="M0,0 L27,18 M27,0 L0,18" stroke="#fff" stroke-width="3.6"/><path d="M0,0 L27,18 M27,0 L0,18" stroke="#c8102e" stroke-width="1.2"/><path d="M13.5,0 V18 M0,9 H27" stroke="#fff" stroke-width="6"/><path d="M13.5,0 V18 M0,9 H27" stroke="#c8102e" stroke-width="3.6"/></svg>
-                                Female (EN)
+                            <button type="button" class="voice-toggle-btn" data-lang="en" aria-pressed="false" title="{{ _('Female English Voice (Aria)') }}">
+                                <svg viewBox="0 0 27 18" width="16" height="11" aria-hidden="true"><rect width="27" height="18" fill="#012169"/><path d="M0,0 L27,18 M27,0 L0,18" stroke="#fff" stroke-width="3.6"/><path d="M0,0 L27,18 M27,0 L0,18" stroke="#c8102e" stroke-width="1.2"/><path d="M13.5,0 V18 M0,9 H27" stroke="#fff" stroke-width="6"/><path d="M13.5,0 V18 M0,9 H27" stroke="#c8102e" stroke-width="3.6"/></svg>
+                                EN
                             </button>
                         </div>
-                        <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-1" id="aiVoiceBtn" style="font-size: 0.82rem;">
-                            <i class="bi bi-volume-up-fill" id="aiVoiceIcon"></i>
-                            <span id="aiVoiceText">{{ _('ស្តាប់លទ្ធផល') }}</span>
-                            <span class="spinner-border spinner-border-sm d-none" id="aiVoiceSpinner" role="status" aria-hidden="true" style="width: 0.8rem; height: 0.8rem;"></span>
-                        </button>
                     </div>
                 </div>
 
@@ -262,6 +264,7 @@ window.onReady(function () {
     const pill = document.getElementById('selectedPill');
     const btn = document.getElementById('analyseBtn');
     const clearBtn = document.getElementById('clearBtn');
+    const count = document.getElementById('analyseCount');
     const total = document.getElementById('symptomTotal');
     const empty = document.getElementById('symptomEmpty');
     const chips = document.getElementById('dxChips');
@@ -275,6 +278,8 @@ window.onReady(function () {
         pill.textContent = pill.dataset.template.replace(/\{n\}/g, n);
         pill.hidden = n === 0;
         clearBtn.hidden = n === 0;
+        count.textContent = n;
+        count.hidden = n === 0;
         btn.disabled = n === 0;
         chipsEmpty.hidden = n > 0;
         chips.hidden = n === 0;
@@ -334,8 +339,9 @@ window.onReady(function () {
 
         voiceToggleBtns.forEach(function (btn) {
             btn.addEventListener('click', function () {
-                voiceToggleBtns.forEach(b => b.classList.remove('active'));
+                voiceToggleBtns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
                 this.classList.add('active');
+                this.setAttribute('aria-pressed', 'true');
                 currentLang = this.dataset.lang;
                 if (isPlaying) {
                     stopAudio();

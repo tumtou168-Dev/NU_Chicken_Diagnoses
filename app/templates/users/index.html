@@ -57,7 +57,9 @@
                     <td class="text-end text-nowrap">
                         <a href="{{ url_for('tbl_users.detail', user_id=user.id) }}" class="icon-btn" title="{{ _('មើល') }}"><i class="bi bi-eye"></i></a>
                         <a href="{{ url_for('tbl_users.edit', user_id=user.id) }}" class="icon-btn" title="{{ _('កែប្រែ') }}"><i class="bi bi-pencil"></i></a>
+                        {% if not user.has_role('Doctor') and not user.has_role('Admin') %}
                         <a href="{{ url_for('tbl_users.delete_confirm', user_id=user.id) }}" class="icon-btn danger" title="{{ _('លុប') }}"><i class="bi bi-trash"></i></a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

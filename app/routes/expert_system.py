@@ -368,13 +368,23 @@ def symptoms_delete(symptom_id: int):
     )
 
 
+def _diseases_page_context() -> dict:
+    return {
+        "diseases": DiseaseService.get_all(),
+        "categories": CategoryService.get_all(),
+        "doctors": db.session.scalars(doctor_choices_query()).all(),
+    }
+
+
 @expert_system_bp.route("/diseases")
 @login_required
 @require_permission("manage_diseases")
 def diseases_index():
-    diseases = DiseaseService.get_all()
     form = DiseaseForm()
-    return render_template("expert_system/diseases/index.html", diseases=diseases, form=form, categories=CategoryService.get_all())
+    # A doctor adding a disease is most likely verifying it themselves.
+    if current_user.has_role("Doctor"):
+        form.doctor_id.data = current_user.id
+    return render_template("expert_system/diseases/index.html", form=form, **_diseases_page_context())
 
 
 @expert_system_bp.route("/diseases/create", methods=["GET", "POST"])
@@ -394,18 +404,17 @@ def diseases_create():
                 "treatment": form.treatment.data,
                 "treatment_km": form.treatment_km.data,
                 "category_id": form.category_id.data,
+                "doctor_id": form.doctor_id.data,
             },
-            doctor_id=current_user.id if current_user.is_authenticated else None,
         )
         AuditService.log("CREATE", "Disease", disease.id, f"Created disease: {disease.name}")
         flash(_("បានបង្កើតជំងឺ '%(name)s' ដោយជោគជ័យ។", name=disease.name), "success")
         return redirect(url_for("expert_system.diseases_index"))
-    diseases = DiseaseService.get_all()
     return render_template(
         "expert_system/diseases/index.html",
-        diseases=diseases,
         form=form,
         show_create_modal=True,
+        **_diseases_page_context(),
     )
 
 
@@ -426,9 +435,8 @@ def diseases_edit(disease_id: int):
             "treatment": form.treatment.data,
             "treatment_km": form.treatment_km.data,
             "category_id": form.category_id.data,
+            "doctor_id": form.doctor_id.data,
         }
-        if not disease.doctor_id and current_user.is_authenticated and current_user.has_role("Doctor"):
-            update_data["doctor_id"] = current_user.id
         DiseaseService.update(disease, update_data)
         AuditService.log("UPDATE", "Disease", disease.id, f"Updated disease: {disease.name}")
         flash(_("បានកែប្រែជំងឺដោយជោគជ័យ។"), "success")
@@ -541,7 +549,8 @@ def rules_edit(rule_id: int):
         )
         AuditService.log("UPDATE", "Rule", rule.id, f"Updated rule: {rule.title}")
         flash(_("បានកែប្រែវិធានដោយជោគជ័យ។"), "success")
-        return redirect(url_for("expert_system.rules_index"))
+        # Land back on the edited row (e.g. after a doctor approves it) instead of the top of the list.
+        return redirect(url_for("expert_system.rules_index", _anchor=f"rule-{rule.id}"))
         
     # If validation fails, print errors to console for debugging
     if form.errors:

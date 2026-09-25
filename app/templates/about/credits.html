@@ -4,12 +4,17 @@
 {% block page_subtitle %}{{ bi('អ្នកដែលបានបង្កើត និងប្រភពចំណេះដឹងនៃប្រព័ន្ធនេះ។') }}{% endblock %}
 
 {% block content %}
-{# Project team (Norton University, 2025-2026): name, English name, role, is leader, photo (4:5), role icon, accent colour. #}
+{# Project team (Norton University, 2025-2026): ID, position and contact details (email, phone, Telegram username
+   without @). An empty value shows as "—". photo is a file in static/images/team/. #}
 {% set team = [
-    ('ទុំ តូ', 'TUM Tou', 'ប្រធានក្រុម', true, 'tum-tou.jpg', 'flag', '#0a7f5f'),
-    ('ហាក់ អេងតាំង', 'HAK Engtangk', 'អ្នកអភិវឌ្ឍន៍', false, 'hak-engtangk.jpg', 'code-slash', '#4f46e5'),
-    ('គា សំនាង', 'KEA Somneang', 'អ្នកអភិវឌ្ឍន៍កម្មវិធីទូរស័ព្ទ', false, 'kea-somneang.jpg', 'phone', '#c2410c'),
-    ('ឆន ដារ៉ា', 'CHHORN Dara', 'អ្នកសាកល្បងប្រព័ន្ធ', false, 'chhorn-dara.jpg', 'bug', '#be185d'),
+    {'km': 'ទុំ តូ', 'en': 'TUM Tou', 'role': 'ប្រធានក្រុម', 'lead': true, 'photo': 'tum-tou.jpg', 'accent': '#0a7f5f',
+     'student_id': 'B20241508', 'email': '', 'phone': '', 'telegram': ''},
+    {'km': 'ហាក់ អេងតាំង', 'en': 'HAK Engtangk', 'role': 'អ្នកអភិវឌ្ឍន៍ផ្នែកខាងក្រោយ', 'lead': false, 'photo': 'hak-engtangk.jpg', 'accent': '#4f46e5',
+     'student_id': 'B20242335', 'email': '', 'phone': '', 'telegram': ''},
+    {'km': 'គា សំនាង', 'en': 'KEA Somneang', 'role': 'អ្នកអភិវឌ្ឍន៍ផ្នែកខាងមុខ', 'lead': false, 'photo': 'kea-somneang.jpg', 'accent': '#c2410c',
+     'student_id': 'B20241531', 'email': '', 'phone': '', 'telegram': ''},
+    {'km': 'ឆន ដារ៉ា', 'en': 'CHHORN Dara', 'role': 'អ្នករចនា UX/UI', 'lead': false, 'photo': 'chhorn-dara.jpg', 'accent': '#be185d',
+     'student_id': 'B20241665', 'email': '', 'phone': '', 'telegram': ''},
 ] %}
 {% set tech = [
     ('Python · Flask', 'ផ្នែកខាងក្រោយ', 'fa-brands fa-python'),
@@ -72,20 +77,37 @@
     </div>
     <div class="admin-card-body">
         <ul class="team-grid">
-            {% for km, en, role, lead, photo, icon, accent in team %}
-            <li class="team-card{% if lead %} is-lead{% endif %}" style="--accent: {{ accent }}">
-                <div class="team-photo">
-                    <img src="{{ url_for('static', filename='images/team/' ~ photo) }}" alt="{{ en }}" loading="lazy">
-                    {% if lead %}<span class="team-lead-chip"><i class="bi bi-star-fill"></i>{{ _('ប្រធានក្រុម') }}</span>{% endif %}
-                    <div class="team-caption">
-                        <div class="team-name">{{ km }}</div>
-                        <div class="team-name-en">{{ en }}</div>
+            {% for m in team %}
+            <li class="team-card{% if m.lead %} is-lead{% endif %}" style="--accent: {{ m.accent }}">
+                <div class="team-head">
+                    <img class="team-avatar" src="{{ url_for('static', filename='images/team/' ~ m.photo) }}" alt="{{ m.en }}" loading="lazy">
+                    <div class="min-w-0">
+                        <div class="team-name">{{ m.km }}</div>
+                        <div class="team-name-en">{{ m.en }}</div>
                     </div>
                 </div>
-                <div class="team-body">
-                    <span class="team-role-icon"><i class="bi bi-{{ icon }}"></i></span>
-                    <span class="team-role">{{ _(role) }}</span>
-                </div>
+                <dl class="team-info">
+                    <div>
+                        <dt><i class="bi bi-person-badge"></i>{{ _('អត្តលេខ') }}</dt>
+                        <dd>{{ m.student_id or '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt><i class="bi bi-briefcase"></i>{{ _('មុខតំណែង') }}</dt>
+                        <dd><span class="team-badge">{% if m.lead %}<i class="bi bi-star-fill"></i>{% endif %}{{ _(m.role) }}</span></dd>
+                    </div>
+                    <div>
+                        <dt><i class="bi bi-chat-dots"></i>{{ _('ទំនាក់ទំនង') }}</dt>
+                        <dd>
+                            {% if m.email or m.phone or m.telegram %}
+                            <ul class="team-contacts">
+                                {% if m.email %}<li><i class="bi bi-envelope-fill"></i><a href="mailto:{{ m.email }}">{{ m.email }}</a></li>{% endif %}
+                                {% if m.phone %}<li><i class="bi bi-telephone-fill"></i><a href="tel:{{ m.phone | replace(' ', '') }}">{{ m.phone }}</a></li>{% endif %}
+                                {% if m.telegram %}<li><i class="bi bi-telegram"></i><a href="https://t.me/{{ m.telegram }}" target="_blank" rel="noopener">@{{ m.telegram }}</a></li>{% endif %}
+                            </ul>
+                            {% else %}—{% endif %}
+                        </dd>
+                    </div>
+                </dl>
             </li>
             {% endfor %}
         </ul>

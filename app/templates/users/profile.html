@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% from "layouts/_admin_macros.html" import avatar, status_badge, stat, confidence_pill, empty_state %}
+{% from "layouts/_admin_macros.html" import avatar, status_badge, confidence_pill, empty_state %}
 
 {% block title %}{{ _('ប្រវត្តិរូបរបស់ខ្ញុំ') }}{% endblock %}
 {% block page_title %}{{ bi('ប្រវត្តិរូបរបស់ខ្ញុំ') }}{% endblock %}
@@ -8,81 +8,80 @@
 {% block content %}
 <div class="pf">
     <section class="pf-hero admin-card">
-        <div class="pf-banner" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div class="pf-banner" aria-hidden="true"></div>
         <div class="pf-hero-body">
             <div class="pf-identity">
                 <div class="pf-avatar">
                     {{ avatar(user.username, 'xl', avatar_url(user)) }}
-                    <span class="pf-presence {{ 'is-on' if user.is_active else 'is-off' }}" title="{{ _('សកម្ម') if user.is_active else _('អសកម្ម') }}"></span>
+                    {% if user.is_online %}<span class="pf-presence is-on" title="{{ _('អនឡាញ') }}"></span>{% endif %}
                 </div>
                 <div class="min-w-0">
                     <h2 class="pf-name">{{ user.full_name }}</h2>
-                    <div class="pf-handle">@{{ user.username }}</div>
-                    <div class="pf-tags">
-                        {% for role in user.roles %}<span class="badge-soft badge-soft-primary"><i class="bi bi-shield-check me-1"></i>{{ role.name | dt }}</span>
+                    <div class="pf-meta">
+                        <span>@{{ user.username }}</span>
+                        {% for role in user.roles %}<span class="badge-soft badge-soft-primary">{{ role.name | dt }}</span>
                         {% else %}<span class="badge-soft badge-soft-neutral">{{ _('គ្មានតួនាទី') }}</span>{% endfor %}
                         {{ status_badge(user.is_active) }}
                     </div>
                 </div>
             </div>
             <div class="pf-actions">
-                <a href="{{ url_for('tbl_users.edit', user_id=user.id) }}" class="btn btn-primary"><i class="bi bi-pencil me-2"></i>{{ bi('កែប្រែប្រវត្តិរូប') }}</a>
+                <a href="{{ url_for('tbl_users.edit', user_id=user.id) }}" class="btn btn-outline-secondary"><i class="bi bi-pencil me-2"></i>{{ bi('កែប្រែប្រវត្តិរូប') }}</a>
             </div>
         </div>
+        <dl class="pf-stats">
+            <div class="pf-stat"><dt>{{ _('ករណីសរុប') }}</dt><dd>{{ stats.cases }}</dd></div>
+            <div class="pf-stat"><dt>{{ _('ទំនុកចិត្តមធ្យម') }}</dt><dd>{{ (stats.avg_confidence ~ '%') if stats.avg_confidence is not none else '—' }}</dd></div>
+            <div class="pf-stat"><dt>{{ _('ជាសមាជិកអស់រយៈពេល') }}</dt><dd>{{ _('%(n)s ថ្ងៃ', n=stats.days) }}</dd></div>
+        </dl>
     </section>
 
-    <div class="stat-grid stat-grid-3 mt-4">
-        {{ stat('clipboard2-pulse', stats.cases, _('ករណីសរុប'), 'primary') }}
-        {{ stat('graph-up-arrow', (stats.avg_confidence ~ '%') if stats.avg_confidence is not none else '—', _('ទំនុកចិត្តមធ្យម'), 'success') }}
-        {{ stat('calendar-heart', _('%(n)s ថ្ងៃ', n=stats.days), _('ជាសមាជិកអស់រយៈពេល'), 'warning') }}
-    </div>
-
-    <div class="row g-4">
-        <div class="col-lg-12">
-            <div class="admin-card mb-4">
-                <div class="admin-card-header"><h5 class="admin-card-title"><i class="bi bi-person-vcard me-2 text-muted"></i>{{ bi('ព័ត៌មានគណនី') }}</h5></div>
-                <div class="admin-card-body pt-2 pb-2">
-                    <ul class="pf-facts">
-                        <li><span class="pf-fact-icon"><i class="bi bi-person"></i></span><div><div class="pf-fact-label">{{ _('ឈ្មោះពេញ') }}</div><div class="pf-fact-value">{{ user.full_name }}</div></div></li>
-                        <li><span class="pf-fact-icon"><i class="bi bi-at"></i></span><div><div class="pf-fact-label">{{ _('ឈ្មោះអ្នកប្រើប្រាស់') }}</div><div class="pf-fact-value">{{ user.username }}</div></div></li>
-                        <li><span class="pf-fact-icon"><i class="bi bi-envelope"></i></span><div class="min-w-0"><div class="pf-fact-label">{{ _('អាសយដ្ឋានអ៊ីមែល') }}</div><div class="pf-fact-value text-break">{{ user.email }}</div></div></li>
-                        <li><span class="pf-fact-icon"><i class="bi bi-calendar-check"></i></span><div><div class="pf-fact-label">{{ _('បានចូលរួម') }}</div><div class="pf-fact-value">{{ user.created_at.strftime('%Y-%m-%d') }}</div></div></li>
-                    </ul>
-                </div>
+    <div class="row g-4 mt-0">
+        <div class="col-lg-5">
+            <div class="admin-card h-100">
+                <div class="admin-card-header"><h5 class="admin-card-title">{{ bi('ព័ត៌មានគណនី') }}</h5></div>
+                <dl class="pf-facts">
+                    <div><dt>{{ _('ឈ្មោះពេញ') }}</dt><dd>{{ user.full_name }}</dd></div>
+                    <div><dt>{{ _('ឈ្មោះអ្នកប្រើប្រាស់') }}</dt><dd>{{ user.username }}</dd></div>
+                    <div><dt>{{ _('អាសយដ្ឋានអ៊ីមែល') }}</dt><dd class="text-break">{{ user.email }}</dd></div>
+                    <div><dt>{{ _('បានចូលរួម') }}</dt><dd>{{ user.created_at.strftime('%Y-%m-%d') }}</dd></div>
+                    <div><dt>{{ _('សកម្មចុងក្រោយ') }}</dt><dd>
+                        {% if user.is_online %}<span class="pf-online">{{ _('អនឡាញ') }}</span>
+                        {% elif user.last_seen_at %}{{ user.last_seen_at.strftime('%Y-%m-%d · %I:%M %p') }}{% else %}—{% endif %}
+                    </dd></div>
+                </dl>
             </div>
+        </div>
 
-            <div class="admin-card">
+        <div class="col-lg-7">
+            <div class="admin-card h-100">
                 <div class="admin-card-header">
-                    <h5 class="admin-card-title"><i class="bi bi-clock-history me-2 text-muted"></i>{{ bi('រោគវិនិច្ឆ័យថ្មីៗរបស់ខ្ញុំ') }}</h5>
-                    {% if stats.cases %}<a href="{{ url_for('expert_system.cases_index') }}" class="btn btn-soft btn-sm">{{ _('មើលទាំងអស់') }}</a>{% endif %}
+                    <h5 class="admin-card-title">{{ bi('រោគវិនិច្ឆ័យថ្មីៗរបស់ខ្ញុំ') }}</h5>
+                    {% if stats.cases %}<a href="{{ url_for('expert_system.cases_index') }}" class="btn btn-link btn-sm text-decoration-none p-0">{{ _('មើលទាំងអស់') }} <i class="bi bi-arrow-right"></i></a>{% endif %}
                 </div>
                 {% if recent_cases %}
-                <ol class="pf-timeline">
+                <ul class="pf-cases">
                     {% for case in recent_cases %}
                     <li>
-                        <span class="pf-dot"></span>
-                        <div class="pf-case d-flex align-items-center justify-content-between gap-2">
-                            <a href="{{ url_for('expert_system.cases_detail', case_id=case.id) }}" class="min-w-0 text-decoration-none text-reset flex-grow-1">
-                                <div class="pf-case-name">{{ case.disease.inline("name") if case.disease else _('មិនស្គាល់') }}</div>
-                                <div class="pf-case-date">{{ case.created_at.strftime('%Y-%m-%d · %I:%M %p') }}</div>
-                            </a>
-                            <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                                {{ confidence_pill(case.confidence) }}
-                                <button type="button" 
-                                        class="btn btn-soft btn-sm p-1 px-2 profile-voice-btn" 
-                                        data-case-id="{{ case.id }}" 
-                                        title="{{ _('ស្តាប់លទ្ធផល (Voice AI)') }}"
-                                        style="border-radius: 6px;">
-                                    <i class="bi bi-volume-up-fill voice-icon"></i>
-                                    <span class="spinner-border spinner-border-sm voice-spinner d-none" role="status" style="width: 0.7rem; height: 0.7rem;"></span>
-                                </button>
-                            </div>
-                        </div>
+                        <a href="{{ url_for('expert_system.cases_detail', case_id=case.id) }}" class="pf-case-link min-w-0">
+                            <div class="pf-case-name text-truncate">{{ case.disease.inline("name") if case.disease else _('មិនស្គាល់') }}</div>
+                            <div class="pf-case-date">{{ case.created_at.strftime('%Y-%m-%d · %I:%M %p') }}</div>
+                        </a>
+                        {{ confidence_pill(case.confidence) }}
+                        <button type="button" class="btn btn-sm profile-voice-btn"
+                                data-case-id="{{ case.id }}"
+                                title="{{ _('ស្តាប់លទ្ធផល (Voice AI)') }}" aria-label="{{ _('ស្តាប់លទ្ធផល (Voice AI)') }}">
+                            <i class="bi bi-volume-up voice-icon"></i>
+                            <span class="spinner-border spinner-border-sm voice-spinner d-none" role="status"></span>
+                        </button>
                     </li>
                     {% endfor %}
-                </ol>
+                </ul>
                 {% else %}
-                <div class="admin-card-body">{{ empty_state('clipboard-x', _('មិនទាន់មានករណីរោគវិនិច្ឆ័យទេ។')) }}</div>
+                <div class="admin-card-body">
+                    {{ empty_state('clipboard-x', _('មិនទាន់មានករណីរោគវិនិច្ឆ័យទេ។')) }}
+                    <div class="text-center mt-3"><a href="{{ url_for('expert_system.diagnose') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-stethoscope me-1" aria-hidden="true"></i>{{ bi('ធ្វើរោគវិនិច្ឆ័យ') }}</a></div>
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -106,10 +105,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (currentBtn) {
             const icon = currentBtn.querySelector('.voice-icon');
             const spinner = currentBtn.querySelector('.voice-spinner');
-            if (icon) icon.className = 'bi bi-volume-up-fill voice-icon';
+            if (icon) icon.className = 'bi bi-volume-up voice-icon';
             if (spinner) spinner.classList.add('d-none');
-            currentBtn.classList.remove('btn-danger');
-            currentBtn.classList.add('btn-soft');
+            currentBtn.classList.remove('is-playing');
         }
         currentBtn = null;
         currentCaseId = null;
@@ -154,8 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     icon.className = 'bi bi-stop-circle-fill voice-icon';
                     icon.classList.remove('d-none');
                 }
-                btn.classList.remove('btn-soft');
-                btn.classList.add('btn-danger');
+                btn.classList.add('is-playing');
             }).catch(function (err) {
                 console.error('Audio playback error:', err);
                 stopPlayback();

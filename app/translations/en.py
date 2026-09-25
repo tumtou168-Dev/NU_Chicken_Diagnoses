@@ -701,5 +701,14 @@ EN = {
     'មូលដ្ឋានចំណេះដឹងត្រូវបានធ្វើបច្ចុប្បន្នភាពជាប្រចាំដោយពេទ្យសត្វ។': 'Veterinarians keep the knowledge base up to date.',
     'ត្រៀមខ្លួនការពារហ្វូងមាន់របស់អ្នកហើយឬនៅ?': 'Ready to protect your flock?',
     'បង្កើតគណនីឥតគិតថ្លៃ ហើយចាប់ផ្តើមធ្វើរោគវិនិច្ឆ័យភ្លាមៗ។': 'Create a free account and start diagnosing right away.',
+    # Disease library
+    "បណ្ណាល័យជំងឺ": "Disease library",
+    "ស្វែងយល់ពីជំងឺមាន់ រោគសញ្ញា និងការព្យាបាល។": "Learn about chicken diseases, their symptoms and treatments.",
+    "ទាំងអស់": "All",
+    "%(n)s រោគសញ្ញា": "%(n)s symptoms",
+    "រកមិនឃើញជំងឺទេ។": "No diseases found.",
+    "រោគសញ្ញាទូទៅ": "Common symptoms",
+    "មិនទាន់មានរោគសញ្ញាភ្ជាប់នៅឡើយទេ។": "No symptoms linked yet.",
+    "ព័ត៌មាននេះសម្រាប់ជាឯកសារយោងប៉ុណ្ណោះ។ សូមពិគ្រោះពេទ្យសត្វ មុនពេលព្យាបាល។": "This information is for reference only. Please consult a veterinarian before treating.",
 }
 

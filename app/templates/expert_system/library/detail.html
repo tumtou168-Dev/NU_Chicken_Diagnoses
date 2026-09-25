@@ -1,0 +1,59 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ disease.loc("name") }}{% endblock %}
+{% block page_title %}{{ bi('បណ្ណាល័យជំងឺ') }}{% endblock %}
+{% block page_subtitle %}{{ disease.inline("name") }}{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('expert_system.library_index') }}" class="back-link"><i class="bi bi-arrow-left"></i>{{ bi('ត្រឡប់ទៅបណ្ណាល័យ') }}</a>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <div>
+            <h3 class="h4 mb-1">{{ disease.pair("name") }}</h3>
+            {% if disease.category %}<span class="badge-soft badge-soft-primary">{{ disease.category.inline("name") }}</span>
+            {% else %}<span class="badge-soft badge-soft-neutral">{{ _('គ្មានប្រភេទ') }}</span>{% endif %}
+        </div>
+        {% if disease.doctor and disease.doctor.has_role('Doctor') %}
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-inline-flex align-items-center gap-1 px-2 py-1">
+            <i class="bi bi-patch-check-fill text-primary"></i>
+            <span>{{ _('ផ្ទៀងផ្ទាត់ដោយ') }}: Dr. {{ disease.doctor.full_name }}</span>
+        </span>
+        {% endif %}
+    </div>
+    <div class="row g-0">
+        <div class="col-md-7 p-4 border-end">
+            <div class="mb-4">
+                <div class="info-label"><i class="bi bi-info-circle me-1"></i>{{ _('ការពិពណ៌នា') }}</div>
+                <p class="mb-0">{{ disease.pair("description") }}</p>
+            </div>
+            <div>
+                <div class="info-label"><i class="bi bi-bandaid me-1"></i>{{ _('ការព្យាបាលដែលបានណែនាំ') }}</div>
+                <div class="p-3 rounded-3 treatment-box">
+                    <p class="mb-0">{{ disease.pair("treatment") }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5 p-4" style="background: var(--surface-muted);">
+            <div class="info-label mb-3"><i class="bi bi-clipboard-check me-1"></i>{{ _('រោគសញ្ញាទូទៅ') }}</div>
+            <div class="d-flex flex-column gap-2">
+                {% for symptom in symptoms %}
+                <div class="d-flex align-items-start gap-2 bg-surface px-3 py-2 rounded-3 border">
+                    <i class="bi bi-check-circle-fill text-primary mt-1"></i>
+                    <div>
+                        <div class="fw-medium">{{ symptom.pair("name") }}</div>
+                        {% if symptom.description %}<div class="small text-muted">{{ symptom.loc("description") }}</div>{% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="small text-muted mb-0">{{ _('មិនទាន់មានរោគសញ្ញាភ្ជាប់នៅឡើយទេ។') }}</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="admin-card-footer justify-content-between flex-wrap gap-2">
+        <small class="text-muted"><i class="bi bi-exclamation-triangle me-1"></i>{{ _('ព័ត៌មាននេះសម្រាប់ជាឯកសារយោងប៉ុណ្ណោះ។ សូមពិគ្រោះពេទ្យសត្វ មុនពេលព្យាបាល។') }}</small>
+        <a href="{{ url_for('expert_system.diagnose') }}" class="btn btn-primary btn-sm"><i class="bi bi-activity me-1"></i>{{ bi('ធ្វើរោគវិនិច្ឆ័យ') }}</a>
+    </div>
+</div>
+{% endblock %}

@@ -178,6 +178,7 @@ def create_app(config_class: type[Config] = Config):
             seed_all()
 
         _backfill_khmer_content()
+        _remove_vet_phone_numbers()
 
         # Runs on every start so existing databases also receive newly added page texts.
         PageTextService.ensure_defaults()
@@ -277,6 +278,32 @@ def _ensure_khmer_columns() -> None:
             if name not in existing:
                 db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} VARCHAR({length})"))
     db.session.commit()
+
+
+# Sentences with outside phone numbers that older databases still carry in a disease's treatment text;
+# farmers are pointed to the in-app doctor chat instead.
+_VET_PHONE_SENTENCES = (
+    "Call a vet or the National Veterinary Research Institute (012 833-795 / 012 214-970). ",
+    "ទូរស័ព្ទទៅពេទ្យសត្វ ឬវិទ្យាស្ថានជាតិស្រាវជ្រាវបសុព្យាបាល (012 833-795 / 012 214-970)។ ",
+)
+
+
+def _remove_vet_phone_numbers() -> None:
+    """Strip the phone-number sentences above from existing treatment texts. Runs on every start; a no-op once clean."""
+    from app.models.expert_system import Disease
+
+    changed = False
+    for disease in Disease.query.all():
+        for field in ("treatment", "treatment_km"):
+            text = getattr(disease, field) or ""
+            cleaned = text
+            for sentence in _VET_PHONE_SENTENCES:
+                cleaned = cleaned.replace(sentence, "")
+            if cleaned != text:
+                setattr(disease, field, cleaned)
+                changed = True
+    if changed:
+        db.session.commit()
 
 
 def _backfill_khmer_content() -> None:

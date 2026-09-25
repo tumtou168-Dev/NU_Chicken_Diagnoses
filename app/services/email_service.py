@@ -27,7 +27,7 @@ class EmailService:
         mail_use_ssl = current_app.config.get("MAIL_USE_SSL", False)
         mail_sender = current_app.config.get("MAIL_DEFAULT_SENDER") or mail_username or "noreply@chickendiagnoses.com"
 
-        subject = f"IDNS - លេខកូដកំណត់ពាក្យសម្ងាត់ / Password reset code: {code}"
+        subject = f"Chicken Diagnosis - លេខកូដកំណត់ពាក្យសម្ងាត់ / Password reset code: {code}"
 
         display_name = user_name or to_email
         safe_name = html.escape(display_name)
@@ -40,7 +40,7 @@ class EmailService:
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f6f8f7; margin: 0; padding: 30px 15px;">
             <div style="max-width: 540px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e6ebe8; border-radius: 12px; padding: 32px 28px; box-shadow: 0 4px 16px rgba(0,0,0,0.05);">
                 <div style="text-align: center; margin-bottom: 24px;">
-                    <h2 style="color: #0a7f5f; margin: 0; font-size: 22px; font-weight: 700;">IDNS</h2>
+                    <h2 style="color: #0a7f5f; margin: 0; font-size: 22px; font-weight: 700;">Chicken Diagnosis</h2>
                     <p style="color: #65756e; font-size: 13px; margin: 4px 0 0;">ប្រព័ន្ធជំនាញសម្រាប់រោគវិនិច្ឆ័យមាន់ · Chicken Disease Diagnosis</p>
                 </div>
                 <div style="color: #26332e; font-size: 15px; line-height: 1.6;">
@@ -58,7 +58,7 @@ class EmailService:
         </html>
         """
 
-        text_content = f"""IDNS - Password reset code
+        text_content = f"""Chicken Diagnosis - Password reset code
 
 Hello {display_name},
 
@@ -118,7 +118,7 @@ If you did not request a password reset, please ignore this email.
         verified in Brevo, or Brevo rejects the message."""
         sender_name, sender_email = parseaddr(sender)
         payload = {
-            "sender": {"name": sender_name or "IDNS", "email": sender_email},
+            "sender": {"name": sender_name or "Chicken Diagnosis", "email": sender_email},
             "to": [{"email": to_email, "name": to_name}],
             "subject": subject,
             "htmlContent": html_content,

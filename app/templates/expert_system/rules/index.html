@@ -27,7 +27,7 @@
             <thead><tr><th>{{ bi('ចំណងជើង') }}</th><th>{{ bi('រោគសញ្ញា') }}</th><th>{{ bi('ជំងឺ##one') }}</th><th>{{ bi('ទំនុកចិត្ត') }}</th><th>{{ bi('អនុម័តដោយ') }}</th><th class="text-end">{{ bi('សកម្មភាព') }}</th></tr></thead>
             <tbody>
                 {% for rule in rules %}
-                <tr data-row>
+                <tr data-row id="rule-{{ rule.id }}">
                     <td class="fw-semibold">{{ rule.pair("title") }}</td>
                     <td><div class="tag-list">{% for s in rule.symptoms %}<span class="badge-soft badge-soft-warning">{{ s.inline("name") }}</span>{% endfor %}</div></td>
                     <td><span class="badge-soft badge-soft-danger">{{ rule.disease.inline("name") }}</span></td>

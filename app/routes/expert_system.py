@@ -549,7 +549,8 @@ def rules_edit(rule_id: int):
         )
         AuditService.log("UPDATE", "Rule", rule.id, f"Updated rule: {rule.title}")
         flash(_("បានកែប្រែវិធានដោយជោគជ័យ។"), "success")
-        return redirect(url_for("expert_system.rules_index"))
+        # Land back on the edited row (e.g. after a doctor approves it) instead of the top of the list.
+        return redirect(url_for("expert_system.rules_index", _anchor=f"rule-{rule.id}"))
         
     # If validation fails, print errors to console for debugging
     if form.errors:
